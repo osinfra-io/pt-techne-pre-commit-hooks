@@ -2,66 +2,10 @@ package output
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
+	"pre-commit-hooks/internal/output"
 	"pre-commit-hooks/internal/tofuscan/engine"
-
-	"golang.org/x/term"
-)
-
-// ANSI escape codes — disabled when stdout is not a terminal or NO_COLOR is set.
-var (
-	Reset      = "\033[0m"
-	Bold       = "\033[1m"
-	Dim        = "\033[2m"
-	Red        = "\033[31m"
-	BoldRed    = "\033[1;31m"
-	BoldGreen  = "\033[1;32m"
-	Yellow     = "\033[33m"
-	BoldYellow = "\033[1;33m"
-	Cyan       = "\033[36m"
-	BoldCyan   = "\033[1;36m"
-	BoldWhite  = "\033[1;97m"
-	Gray       = "\033[38;5;245m" // medium gray for metadata
-	DarkGray   = "\033[38;5;240m" // darker gray for secondary metadata
-)
-
-func init() {
-	if !colorEnabled() {
-		Reset = ""
-		Bold = ""
-		Dim = ""
-		Red = ""
-		BoldRed = ""
-		BoldGreen = ""
-		Yellow = ""
-		BoldYellow = ""
-		Cyan = ""
-		BoldCyan = ""
-		BoldWhite = ""
-		Gray = ""
-		DarkGray = ""
-	}
-}
-
-func colorEnabled() bool {
-	if _, ok := os.LookupEnv("NO_COLOR"); ok {
-		return false
-	}
-	fi, err := os.Stdout.Stat()
-	if err != nil {
-		return false
-	}
-	return (fi.Mode() & os.ModeCharDevice) != 0
-}
-
-// Emoji constants.
-const (
-	EmojiSkull   = "💀"
-	EmojiCheck   = "👍"
-	EmojiFile    = "📄"
-	EmojiTag     = "🏷 "
 )
 
 const descWrapWidth = 76
@@ -69,7 +13,7 @@ const descWrapWidth = 76
 // Print writes violations and skipped violations to stdout.
 func Print(violations []engine.Violation, skipped []engine.Violation) {
 	if len(violations) == 0 && len(skipped) == 0 {
-		fmt.Printf("%s %s%s%s\n", EmojiCheck, BoldGreen, "No violations found", Reset)
+		fmt.Printf("%s %s%s%s\n", output.ThumbsUp, output.BoldGreen, "No violations found", output.Reset)
 		return
 	}
 
@@ -102,9 +46,9 @@ func printSkippedViolation(v engine.Violation) {
 		benchmark = "GKE CIS"
 	}
 	fmt.Printf("%s── %s[SKIPPED]%s %s%s · %s %s%s\n",
-		DarkGray, DarkGray, Reset,
-		DarkGray, v.Title,
-		benchmark, v.CISControl, Reset,
+		output.DarkGray, output.DarkGray, output.Reset,
+		output.DarkGray, v.Title,
+		benchmark, v.CISControl, output.Reset,
 	)
 }
 
@@ -129,22 +73,22 @@ func printSummary(violations, skipped []engine.Violation) {
 	if total == 0 {
 		msg := "No violations found"
 		if skippedCount > 0 {
-			msg += fmt.Sprintf("  %s%d skipped%s", DarkGray, skippedCount, Reset)
+			msg += fmt.Sprintf("  %s%d skipped%s", output.DarkGray, skippedCount, output.Reset)
 		}
-		fmt.Printf("%s %s%s%s\n", EmojiCheck, BoldGreen, msg, Reset)
+		fmt.Printf("%s %s%s%s\n", output.ThumbsUp, output.BoldGreen, msg, output.Reset)
 		return
 	}
 
 	fmt.Printf("%s %s%d violation(s) across %d file(s)%s\n",
-		EmojiSkull, BoldWhite, total, len(files), Reset)
+		output.Error, output.BoldWhite, total, len(files), output.Reset)
 	if highCount > 0 {
-		fmt.Printf("     • %s%d high%s\n", BoldRed, highCount, Reset)
+		fmt.Printf("     • %s%d high%s\n", output.BoldRed, highCount, output.Reset)
 	}
 	if mediumCount > 0 {
-		fmt.Printf("     • %s%d medium%s\n", BoldYellow, mediumCount, Reset)
+		fmt.Printf("     • %s%d medium%s\n", output.BoldYellow, mediumCount, output.Reset)
 	}
 	if skippedCount > 0 {
-		fmt.Printf("     • %s%d skipped%s\n", DarkGray, skippedCount, Reset)
+		fmt.Printf("     • %s%d skipped%s\n", output.DarkGray, skippedCount, output.Reset)
 	}
 }
 
@@ -152,11 +96,11 @@ func printViolation(v engine.Violation) {
 	col := severityColor(v.Severity)
 	boldCol := severityBoldColor(v.Severity)
 
-	border := func(s string) string { return fmt.Sprintf("%s%s%s", col, s, Reset) }
+	border := func(s string) string { return fmt.Sprintf("%s%s%s", col, s, output.Reset) }
 
 	// Budget for the file path: terminal width minus the fixed prefix
 	// ("│  📄 " ≈ 7 visible chars) and any suffix text.
-	tw := termWidth()
+	tw := output.TermWidth()
 
 	var fileRef string
 	switch {
@@ -164,39 +108,39 @@ func printViolation(v engine.Violation) {
 		lineStr := fmt.Sprintf(":%d", v.Line)
 		maxPath := tw - 7 - len(lineStr)
 		p := truncatePath(v.File, maxPath)
-		fileRef = fmt.Sprintf("%s%s:%d%s", Gray, p, v.Line, Reset)
+		fileRef = fmt.Sprintf("%s%s:%d%s", output.Gray, p, v.Line, output.Reset)
 	case v.File == "":
-		fileRef = fmt.Sprintf("%s(project-level check)%s", DarkGray, Reset)
+		fileRef = fmt.Sprintf("%s(project-level check)%s", output.DarkGray, output.Reset)
 	default:
 		suffix := "  (resource absent from file)"
 		maxPath := tw - 7 - len(suffix)
 		p := truncatePath(v.File, maxPath)
-		fileRef = fmt.Sprintf("%s%s  %s(resource absent from file)%s", Gray, p, DarkGray, Reset)
+		fileRef = fmt.Sprintf("%s%s  %s(resource absent from file)%s", output.Gray, p, output.DarkGray, output.Reset)
 	}
 
-	badge := fmt.Sprintf("%s[%s]%s", boldCol, strings.ToUpper(v.Severity), Reset)
-	title := fmt.Sprintf("%s%s%s", BoldWhite, v.Title, Reset)
+	badge := fmt.Sprintf("%s[%s]%s", boldCol, strings.ToUpper(v.Severity), output.Reset)
+	title := fmt.Sprintf("%s%s%s", output.BoldWhite, v.Title, output.Reset)
 
 	fmt.Printf("%s %s %s\n", border("╭─"), badge, title)
-	fmt.Printf("%s  %s %s\n", border("│"), EmojiFile, fileRef)
+	fmt.Printf("%s  %s %s\n", border("│"), output.File, fileRef)
 	benchmark := "GCP CIS"
 	if strings.HasPrefix(v.RuleID, "gke/") {
 		benchmark = "GKE CIS"
 	}
-	cisLine := fmt.Sprintf("%s%s %s%s", boldCol, benchmark, v.CISControl, Reset)
+	cisLine := fmt.Sprintf("%s%s %s%s", boldCol, benchmark, v.CISControl, output.Reset)
 	if v.ProfileLevel != "" {
-		cisLine += fmt.Sprintf("  %s%s%s", DarkGray, v.ProfileLevel, Reset)
+		cisLine += fmt.Sprintf("  %s%s%s", output.DarkGray, v.ProfileLevel, output.Reset)
 	}
 	fmt.Printf("%s  %s %s%s%s · %s\n",
-		border("│"), EmojiTag,
-		Gray, cisSectionName(v.RuleID, v.CISControl), Reset,
+		border("│"), output.Tag,
+		output.Gray, cisSectionName(v.RuleID, v.CISControl), output.Reset,
 		cisLine,
 	)
 
 	if v.Description != "" {
 		fmt.Printf("%s\n", border("│"))
 		for _, line := range wrapText(v.Description, descWrapWidth) {
-			fmt.Printf("%s  %s%s%s\n", border("│"), Dim, line, Reset)
+			fmt.Printf("%s  %s%s%s\n", border("│"), output.Dim, line, output.Reset)
 		}
 	}
 
@@ -295,32 +239,23 @@ func gkeSectionName(control string) string {
 func severityColor(severity string) string {
 	switch severity {
 	case "High":
-		return Red
+		return output.Red
 	case "Medium":
-		return Yellow
+		return output.Yellow
 	default:
-		return Cyan
+		return output.Cyan
 	}
 }
 
 func severityBoldColor(severity string) string {
 	switch severity {
 	case "High":
-		return BoldRed
+		return output.BoldRed
 	case "Medium":
-		return BoldYellow
+		return output.BoldYellow
 	default:
-		return BoldCyan
+		return output.BoldCyan
 	}
-}
-
-// termWidth returns the terminal width, defaulting to 80 if detection fails.
-func termWidth() int {
-	w, _, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil || w <= 0 {
-		return 80
-	}
-	return w
 }
 
 // truncatePath shortens a file path to fit within maxLen visible characters
@@ -330,16 +265,14 @@ func truncatePath(path string, maxLen int) string {
 	if len(path) <= maxLen || maxLen < 10 {
 		return path
 	}
-	// Keep the filename (last component) plus some leading context.
 	lastSlash := strings.LastIndex(path, "/")
 	tail := path
 	if lastSlash >= 0 {
 		tail = path[lastSlash:]
 	}
-	// If the tail alone is too long, just hard-truncate.
 	if len(tail)+4 >= maxLen {
 		return path[:maxLen-1] + "…"
 	}
-	headLen := maxLen - len(tail) - 1 // 1 visible char for …
+	headLen := maxLen - len(tail) - 1
 	return path[:headLen] + "…" + tail
 }
