@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 
-	"pre-commit-hooks/internal/output"
 	"pre-commit-hooks/internal/testutil"
 	tofu_fmt "pre-commit-hooks/internal/tofufmt"
 )
@@ -76,27 +74,6 @@ func TestRunTofuFmtCLI_BadDir(t *testing.T) {
 	err := RunTofuFmtCLI([]string{}, func() (string, error) { return "", fmt.Errorf("fail") }, tofu_fmt.RunTofuFmt, tofu_fmt.FormatFiles)
 	if err == nil {
 		t.Error("Expected error when failing to get working directory")
-	}
-}
-
-func TestPrintStatus(t *testing.T) {
-	cases := []struct {
-		emoji string
-		msg   string
-		color string
-		want  string
-	}{
-		{output.ThumbsUp, "All good", output.Green, output.ThumbsUp + " " + output.Green + "All good" + output.Reset + "\n"},
-		{output.Warning, "Warning!", output.Yellow, output.Warning + " " + output.Yellow + "Warning!" + output.Reset + "\n"},
-		{output.Error, "Error!", output.Red, output.Error + " " + output.Red + "Error!" + output.Reset + "\n"},
-	}
-	for _, c := range cases {
-		buf := &bytes.Buffer{}
-		fmt.Fprintf(buf, "%s\n", output.EmojiColorText(c.emoji, c.msg, c.color))
-		got := buf.String()
-		if got != c.want {
-			t.Errorf("printStatus(%q, %q): got %q, want %q", c.emoji, c.msg, got, c.want)
-		}
 	}
 }
 

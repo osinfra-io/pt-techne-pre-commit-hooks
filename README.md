@@ -41,11 +41,9 @@ Formats your OpenTofu configuration files to a canonical format and style.
 
 ```yaml
 - repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
- rev: <release-or-commit-sha>
- hooks:
-  - id: tofu-fmt
-   # Optional: pass additional args to tofu fmt
-   # args: ["-diff"]
+  rev: <release-or-commit-sha>
+  hooks:
+    - id: tofu-fmt
 ```
 
 ### Example: `tofu-validate`
@@ -54,11 +52,11 @@ Validates your OpenTofu configuration files for syntax and internal consistency.
 
 ```yaml
 - repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
- rev: <release-or-commit-sha>
- hooks:
-  - id: tofu-validate
-   # Optional: pass additional args to tofu validate
-   # args: ["-no-color"]
+  rev: <release-or-commit-sha>
+  hooks:
+    - id: tofu-validate
+      # Optional: pass additional args to tofu validate
+      # args: ["-no-color"]
 ```
 
 ### Example: `tofu-test`
@@ -67,16 +65,17 @@ Runs OpenTofu automated tests defined in `.tftest.hcl` files.
 
 ```yaml
 - repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
- rev: <release-or-commit-sha>
- hooks:
-  - id: tofu-test
-   # Optional: pass additional args to tofu test
-   # args: ["-verbose"]
-   # args: ["-filter=TestFoo"]   # equals-form flag
-   # args: ["-filter", "TestFoo"] # split-form flag (both tokens required)
+  rev: <release-or-commit-sha>
+  hooks:
+    - id: tofu-test
+      # verbose: true                # show hook output on success
+      # Optional: pass additional args to tofu test
+      # args: ["-verbose"]            # show per-assertion output
+      # args: ["-filter=TestFoo"]     # equals-form flag
+      # args: ["-filter", "TestFoo"]  # split-form flag (both tokens required)
 ```
 
-Both equals-form (`-filter=TestFoo`) and split-form (`-filter TestFoo`) flags are supported. When using split-form flags, include both the flag and its value as separate list entries.
+Both equals-form (`-filter=TestFoo`) and split-form (`-filter TestFoo`) flags are supported. When using split-form flags, include both the flag and its value as separate list entries. `-verbose` controls the level of detail `tofu test` itself emits.
 
 ### Example: `tofu-scan`
 
@@ -84,10 +83,15 @@ Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies us
 
 ```yaml
 - repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
- rev: <release-or-commit-sha>
- hooks:
-  - id: tofu-scan
+  rev: <release-or-commit-sha>
+  hooks:
+    - id: tofu-scan
+      # verbose: true     # show hook output on success
+      # Optional: pass additional args to tofu scan
+      # args: ["--warn-only"]
 ```
+
+`--warn-only` allows commits to pass even when violations are found. Violations are still printed so they remain visible.
 
 #### Skipping violations
 

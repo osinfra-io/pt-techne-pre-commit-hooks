@@ -27,7 +27,6 @@ func main() {
 		findDirsWithTfFiles,
 		runCmdInDir,
 		tofuvalidate.RunTofuValidate,
-		printStatus,
 		os.Exit,
 	)
 	if err != nil {
@@ -43,7 +42,6 @@ func RunTofuValidateCLI(
 	findDirs func(string) []string,
 	runCmd func(string, []string) (string, error),
 	runValidate func(string, []string) (string, error),
-	printStatus func(string, string),
 	exit func(int),
 ) error {
 	if !checkInstalled() {
@@ -83,20 +81,14 @@ func RunTofuValidateCLI(
 		} else {
 			fullPath = baseDir + "/" + relPath
 		}
-		printStatus(output.Running, fmt.Sprintf("Running tofu init in: %s...", fullPath))
 		initCmd := []string{"init", "-input=false", "--backend=false"}
 		cmdArgs := append(initCmd, extraArgs...)
 		out, err := runCmd(dir, cmdArgs)
-		// Always check for warnings in init output
-		if hasWarning(out) {
-			warningMessages = append(warningMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
-		}
 		if err != nil {
 			errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 			continue
 		}
 
-		printStatus(output.Running, fmt.Sprintf("Running tofu validate in: %s...", fullPath))
 		out, err = runValidate(dir, extraArgs)
 		// Always check for warnings in validate output
 		if hasWarning(out) {
@@ -119,14 +111,10 @@ func RunTofuValidateCLI(
 	}
 
 	if len(warningMessages) > 0 {
-		printStatus(output.ThumbsUp, "OpenTofu validate completed with warnings.")
-		fmt.Println()
 		exit(0)
 		return nil
 	}
 
-	printStatus(output.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
-	fmt.Println()
 	return nil
 }
 
@@ -175,11 +163,6 @@ func walkDirs(dir string, dirs *[]string) error {
 	return errors.Join(errs...)
 }
 
-// printStatus prints a colored emoji status message
-func printStatus(emoji, msg string) {
-	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
-}
-
 // hasWarning checks if output contains a warning message
 // Uses pattern matching to avoid false positives from filenames or unrelated text
 func hasWarning(output string) bool {
@@ -188,9 +171,9 @@ func hasWarning(output string) bool {
 		trimmed := strings.TrimSpace(line)
 		lower := strings.ToLower(trimmed)
 		// Check for common warning patterns at start of line
-		if strings.HasPrefix(lower, "warning:") || 
-		   strings.HasPrefix(lower, "│ warning:") ||
-		   strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning") {
+		if strings.HasPrefix(lower, "warning:") ||
+			strings.HasPrefix(lower, "│ warning:") ||
+			strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning") {
 			return true
 		}
 	}

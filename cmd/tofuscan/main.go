@@ -15,7 +15,6 @@ import (
 const (
 	exitSuccess = 0 // no violations
 	exitFailure = 1 // violations found
-	exitUsage   = 2 // invalid arguments
 	exitError   = 3 // runtime error (I/O, policy compilation, evaluation)
 )
 
@@ -24,34 +23,79 @@ var version = "0.1.0"
 func main() {
 	args := os.Args[1:]
 
-	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "tofuscan %s\nUsage: tofuscan <path...>\n", version)
-		os.Exit(exitUsage)
+	warnOnly := false
+	paths := []string{}
+
+	for _, arg := range args {
+		switch arg {
+		case "--warn-only":
+			warnOnly = true
+		default:
+			if len(arg) > 2 && arg[:2] == "--" {
+				fmt.Fprintf(os.Stderr, "unknown flag: %s\n", arg)
+				os.Exit(exitError)
+			}
+			paths = append(paths, arg)
+		}
 	}
 
-	files, err := walker.FindTofuFiles(args)
+	if len(paths) == 0 {
+		paths = []string{"."}
+	}
+
+	err := RunTofuScanCLI(
+		paths,
+		warnOnly,
+		walker.FindTofuFiles,
+		func(files []string) ([]engine.Violation, error) {
+			return engine.Run(context.Background(), files, policies.FS)
+		},
+		engine.ParseSkipDirectives,
+		output.Print,
+		os.Exit,
+	)
+	if err != nil {
+		os.Exit(exitError)
+	}
+}
+
+// RunTofuScanCLI runs the tofu scan CLI logic. Returns error if any step fails.
+func RunTofuScanCLI(
+	paths []string,
+	warnOnly bool,
+	findFiles func([]string) ([]string, error),
+	runEngine func([]string) ([]engine.Violation, error),
+	parseSkips func([]string) *engine.SkipDirectives,
+	printOutput func([]engine.Violation, []engine.Violation),
+	exit func(int),
+) error {
+	files, err := findFiles(paths)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error finding files: %v\n", err)
-		os.Exit(exitError)
+		exit(exitError)
+		return err
 	}
 
 	if len(files) == 0 {
 		fmt.Println("No .tofu files found")
-		return
+		exit(exitSuccess)
+		return nil
 	}
 
-	allViolations, err := engine.Run(context.Background(), files, policies.FS)
+	allViolations, err := runEngine(files)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error evaluating policies: %v\n", err)
-		os.Exit(exitError)
+		exit(exitError)
+		return err
 	}
 
-	skips := engine.ParseSkipDirectives(files)
+	skips := parseSkips(files)
 	violations, skipped := skips.Filter(allViolations)
 
-	output.Print(violations, skipped)
+	printOutput(violations, skipped)
 
-	if len(violations) > 0 {
-		os.Exit(exitFailure)
+	if len(violations) > 0 && !warnOnly {
+		exit(exitFailure)
 	}
+	return nil
 }

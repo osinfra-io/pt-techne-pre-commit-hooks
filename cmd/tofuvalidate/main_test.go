@@ -50,21 +50,6 @@ func Test_findDirsWithTfFiles_and_walkDirs(t *testing.T) {
 	}
 }
 
-func Test_printStatus(t *testing.T) {
-	old := os.Stdout
-	defer func() { os.Stdout = old }()
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-	printStatus("👍", "Test message")
-	w.Close()
-	buf := make([]byte, 1024)
-	n, _ := r.Read(buf)
-	output := string(buf[:n])
-	if !strings.Contains(output, "Test message") {
-		t.Error("Expected output to contain status message")
-	}
-}
-
 func Test_walkDirs_ErrorsAndHidden(t *testing.T) {
 	var dirs []string
 	err := walkDirs("/nonexistent/path", &dirs)
@@ -155,10 +140,8 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 			runValidate := func(dir string, args []string) (string, error) {
 				return tc.args.runValidateOut, tc.args.runValidateErr
 			}
-			statusMsgs := []string{}
-			printStatus := func(emoji, msg string) { statusMsgs = append(statusMsgs, emoji+":"+msg) }
 			exit := func(code int) { exited = code }
-			err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, printStatus, exit)
+			err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, exit)
 			if tc.wantErr && err == nil {
 				t.Errorf("Expected error for case %q, got nil", tc.name)
 			}
@@ -182,24 +165,13 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 		runValidate := func(dir string, args []string) (string, error) {
 			return "validate ok", nil
 		}
-		var statusMsgs []string
-		printStatus := func(emoji, msg string) { statusMsgs = append(statusMsgs, emoji+":"+msg) }
 		exit := func(code int) { exited = code }
-		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, printStatus, exit)
+		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, exit)
 		if err != nil {
 			t.Errorf("Did not expect error for relPath rewriting branch, got: %v", err)
 		}
 		if exited != 0 {
 			t.Errorf("Expected exit code 0 for relPath rewriting branch, got %d", exited)
-		}
-		foundRewrite := false
-		for _, msg := range statusMsgs {
-			if strings.Contains(msg, "subdir") {
-				foundRewrite = true
-			}
-		}
-		if !foundRewrite {
-			t.Error("Expected relPath rewriting logic to be exercised and subdir to appear in status message")
 		}
 	})
 
@@ -220,10 +192,8 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 			}
 			return "validate ok", nil
 		}
-		statusMsgs := []string{}
-		printStatus := func(emoji, msg string) { statusMsgs = append(statusMsgs, emoji+":"+msg) }
 		exit := func(code int) { exited = code }
-		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, printStatus, exit)
+		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, exit)
 		if err == nil {
 			t.Error("Expected error for multi-error summary branch, got nil")
 		}
@@ -300,54 +270,54 @@ func TestInvalidOpenTofuConfig(t *testing.T) {
 }
 
 func TestHasWarning(t *testing.T) {
-tests := []struct {
-name   string
-output string
-want   bool
-}{
-{
-name:   "warning at start of line",
-output: "Warning: deprecated feature\nother text",
-want:   true,
-},
-{
-name:   "box-drawing warning format",
-output: "│ Warning: something is wrong\n│ more details",
-want:   true,
-},
-{
-name:   "warning in filename should not match",
-output: "processing file warning.tf\neverything is fine",
-want:   false,
-},
-{
-name:   "warning in middle of line should not match",
-output: "this is a warning about something",
-want:   false,
-},
-{
-name:   "no warning",
-output: "success\nvalidation passed",
-want:   false,
-},
-{
-name:   "case insensitive warning",
-output: "WARNING: This is a problem",
-want:   true,
-},
-{
-name:   "warning with leading whitespace",
-output: "  Warning: indented warning",
-want:   true,
-},
-}
+	tests := []struct {
+		name   string
+		output string
+		want   bool
+	}{
+		{
+			name:   "warning at start of line",
+			output: "Warning: deprecated feature\nother text",
+			want:   true,
+		},
+		{
+			name:   "box-drawing warning format",
+			output: "│ Warning: something is wrong\n│ more details",
+			want:   true,
+		},
+		{
+			name:   "warning in filename should not match",
+			output: "processing file warning.tf\neverything is fine",
+			want:   false,
+		},
+		{
+			name:   "warning in middle of line should not match",
+			output: "this is a warning about something",
+			want:   false,
+		},
+		{
+			name:   "no warning",
+			output: "success\nvalidation passed",
+			want:   false,
+		},
+		{
+			name:   "case insensitive warning",
+			output: "WARNING: This is a problem",
+			want:   true,
+		},
+		{
+			name:   "warning with leading whitespace",
+			output: "  Warning: indented warning",
+			want:   true,
+		},
+	}
 
-for _, tt := range tests {
-t.Run(tt.name, func(t *testing.T) {
-got := hasWarning(tt.output)
-if got != tt.want {
-t.Errorf("hasWarning() = %v, want %v for output:\n%s", got, tt.want, tt.output)
-}
-})
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := hasWarning(tt.output)
+			if got != tt.want {
+				t.Errorf("hasWarning() = %v, want %v for output:\n%s", got, tt.want, tt.output)
+			}
+		})
+	}
 }

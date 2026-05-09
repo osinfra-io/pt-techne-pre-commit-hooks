@@ -39,8 +39,6 @@ func RunTofuFmtCLI(
 		return err
 	}
 	baseDir := filepath.Base(wd)
-	printStatus(output.Running, fmt.Sprintf("Running tofu fmt recursively in: %s", baseDir))
-
 	outputStr, err := runTofuFmt(wd, extraArgs)
 	fmt.Println()
 	if err != nil {
@@ -50,12 +48,20 @@ func RunTofuFmtCLI(
 		c.Blank()
 		for _, line := range strings.Split(outputStr, "\n") {
 			if strings.TrimSpace(line) != "" {
-				c.Line(fmt.Sprintf("%s%s%s", output.Dim, line, output.Reset))
+				var color string
+				switch {
+				case strings.HasPrefix(line, "+"):
+					color = output.Green
+				case strings.HasPrefix(line, "-"):
+					color = output.Yellow
+				default:
+					color = output.Dim
+				}
+				c.Line(fmt.Sprintf("%s%s%s", color, line, output.Reset))
 			}
 		}
 		c.Close()
 		fmt.Println()
-		printStatus(output.Running, "Formatting files with tofu fmt...")
 		fmtErr := formatFiles(wd, extraArgs)
 		fmt.Println()
 		if fmtErr != nil {
@@ -67,16 +73,6 @@ func RunTofuFmtCLI(
 			ec.Close()
 			return fmtErr
 		}
-		printStatus(output.ThumbsUp, "Files formatted successfully with tofu fmt.")
-		fmt.Println()
-	} else {
-		printStatus(output.ThumbsUp, "All OpenTofu files are formatted.")
-		fmt.Println()
 	}
 	return nil
-}
-
-// printStatus prints a colored emoji status message
-func printStatus(emoji, msg string) {
-	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
 }
