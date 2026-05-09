@@ -45,8 +45,7 @@ func printSkippedViolation(v engine.Violation) {
 	if strings.HasPrefix(v.RuleID, "gke/") {
 		benchmark = "GKE CIS"
 	}
-	fmt.Printf("%s── %s[SKIPPED]%s %s%s · %s %s%s\n",
-		output.DarkGray, output.DarkGray, output.Reset,
+	fmt.Printf("%s── [SKIPPED] %s · %s %s%s\n",
 		output.DarkGray, v.Title,
 		benchmark, v.CISControl, output.Reset,
 	)
@@ -98,8 +97,6 @@ func printViolation(v engine.Violation) {
 
 	border := func(s string) string { return fmt.Sprintf("%s%s%s", col, s, output.Reset) }
 
-	// Budget for the file path: terminal width minus the fixed prefix
-	// ("│  📄 " ≈ 7 visible chars) and any suffix text.
 	tw := output.TermWidth()
 
 	var fileRef string

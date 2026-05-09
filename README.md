@@ -89,6 +89,20 @@ Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies us
   - id: tofu-scan
 ```
 
+#### Skipping violations
+
+To suppress a specific violation, add a skip comment **inside** the resource block:
+
+```hcl
+resource "google_compute_firewall" "allow_ssh" {
+  # tofu-scan skip: CIS 3.6 - Required for bastion host access
+  name    = "allow-ssh-bastion"
+  network = "default"
+}
+```
+
+The format is `# tofu-scan skip: CIS <control> [- <reason>]`. Skip comments placed outside a resource block are ignored. Skipped violations appear in the output summary so they remain visible.
+
 Replace `<release-or-commit-sha>` with the desired version or commit hash.
 
 For more details, see the `.pre-commit-hooks.yaml` in this repository.

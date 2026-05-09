@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	github.com/open-policy-agent/conftest v0.68.2
 	github.com/open-policy-agent/opa v1.16.1
-	golang.org/x/term v0.43.0
+	golang.org/x/term v0.42.0
 )
 
 require (
