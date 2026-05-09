@@ -88,10 +88,10 @@ Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies us
     - id: tofu-scan
       # verbose: true     # show hook output on success
       # Optional: pass additional args to tofu scan
-      # args: ["--soft-fail"]
+      # args: ["--warn-only"]
 ```
 
-`--soft-fail` allows commits to pass even when violations are found. Violations are still printed so they remain visible.
+`--warn-only` allows commits to pass even when violations are found. Violations are still printed so they remain visible.
 
 #### Skipping violations
 

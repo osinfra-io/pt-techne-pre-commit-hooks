@@ -2,10 +2,10 @@
 # https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # Go binaries
-tofufmt
-tofuscan
-tofutest
-tofuvalidate
+/tofufmt
+/tofuscan
+/tofutest
+/tofuvalidate
 
 # Infracost
 .infracost
