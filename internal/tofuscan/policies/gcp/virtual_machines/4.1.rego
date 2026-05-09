@@ -26,7 +26,25 @@ deny contains violation if {
 	some name, resources in input.resource.google_compute_instance
 	some resource in resources
 	some sa in resource.service_account
-	endswith(sa.email, "-compute@developer.gserviceaccount.com")
+	email := lower(object.get(sa, "email", ""))
+	email == ""
+	violation := {
+		"resource": name,
+		"rule_id": "gcp/cis/4.1",
+		"cis_control": "4.1",
+		"profile_level": "Level 1",
+		"severity": "Medium",
+		"title": "Ensure That Instances Are Not Configured To Use the Default Service Account",
+		"description": _desc_4_1,
+	}
+}
+
+deny contains violation if {
+	some name, resources in input.resource.google_compute_instance
+	some resource in resources
+	some sa in resource.service_account
+	email := lower(object.get(sa, "email", ""))
+	endswith(email, "-compute@developer.gserviceaccount.com")
 	violation := {
 		"resource": name,
 		"rule_id": "gcp/cis/4.1",
