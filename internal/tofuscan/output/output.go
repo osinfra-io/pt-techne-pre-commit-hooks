@@ -138,13 +138,13 @@ func printSummary(violations, skipped []engine.Violation) {
 	fmt.Printf("%s %s%d violation(s) across %d file(s)%s\n",
 		EmojiSkull, BoldWhite, total, len(files), Reset)
 	if highCount > 0 {
-		fmt.Printf("   %s%d high%s\n", BoldRed, highCount, Reset)
+		fmt.Printf("     • %s%d high%s\n", BoldRed, highCount, Reset)
 	}
 	if mediumCount > 0 {
-		fmt.Printf("   %s%d medium%s\n", BoldYellow, mediumCount, Reset)
+		fmt.Printf("     • %s%d medium%s\n", BoldYellow, mediumCount, Reset)
 	}
 	if skippedCount > 0 {
-		fmt.Printf("   %s%d skipped%s\n", DarkGray, skippedCount, Reset)
+		fmt.Printf("     • %s%d skipped%s\n", DarkGray, skippedCount, Reset)
 	}
 }
 
