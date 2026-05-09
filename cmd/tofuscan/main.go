@@ -15,7 +15,6 @@ import (
 const (
 	exitSuccess = 0 // no violations
 	exitFailure = 1 // violations found
-	exitUsage   = 2 // invalid arguments
 	exitError   = 3 // runtime error (I/O, policy compilation, evaluation)
 )
 
@@ -24,12 +23,22 @@ var version = "0.1.0"
 func main() {
 	args := os.Args[1:]
 
-	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "tofuscan %s\nUsage: tofuscan <path...>\n", version)
-		os.Exit(exitUsage)
+	softFail := false
+	paths := []string{}
+
+	for _, arg := range args {
+		if arg == "--soft-fail" {
+			softFail = true
+		} else {
+			paths = append(paths, arg)
+		}
 	}
 
-	files, err := walker.FindTofuFiles(args)
+	if len(paths) == 0 {
+		paths = []string{"."}
+	}
+
+	files, err := walker.FindTofuFiles(paths)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error finding files: %v\n", err)
 		os.Exit(exitError)
@@ -51,7 +60,7 @@ func main() {
 
 	output.Print(violations, skipped)
 
-	if len(violations) > 0 {
+	if len(violations) > 0 && !softFail {
 		os.Exit(exitFailure)
 	}
 }

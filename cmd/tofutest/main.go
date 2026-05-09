@@ -60,7 +60,6 @@ func RunTofuTestCLI(
 		return nil
 	}
 
-	printStatus(output.Running, "Running tofu test...")
 	testOutput, err := runTest(rootDir, extraArgs)
 
 	if err != nil {
@@ -81,7 +80,15 @@ func RunTofuTestCLI(
 		return fmt.Errorf("test failed: %w", err)
 	}
 
-	printStatus(output.ThumbsUp, "OpenTofu test completed successfully.")
+	c := output.NewCard(output.Green)
+	c.Open(output.Badge("PASS", output.BoldGreen), output.Title("OpenTofu test"))
+	c.Blank()
+	for _, line := range strings.Split(testOutput, "\n") {
+		if strings.TrimSpace(line) != "" {
+			c.Line(fmt.Sprintf("%s%s%s", output.Dim, line, output.Reset))
+		}
+	}
+	c.Close()
 	fmt.Println()
 	return nil
 }

@@ -2,7 +2,7 @@
   description: The tofu fmt command is used to rewrite OpenTofu configuration files to a canonical format and style.
   entry: tofufmt
   exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
-  files: (\.tf|\.tofu|\.tfvars)$
+  files: (\.tf|\.tofu|\.tfvars|\.tftest\.hcl)$
   language: golang
   name: tofu fmt
   require_serial: true
@@ -30,7 +30,6 @@
 - id: tofu-scan
   description: Check OpenTofu files against CIS Google Cloud Foundations Benchmark policies
   entry: tofuscan
-  args: ['.']
   exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
   files: \.tofu$
   pass_filenames: false
