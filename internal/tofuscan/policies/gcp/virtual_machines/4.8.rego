@@ -25,6 +25,6 @@ deny contains violation if {
 }
 
 _shielded_vm_ok(cfg) if {
-	object.get(cfg, "enable_vtpm", false) == true
-	object.get(cfg, "enable_integrity_monitoring", false) == true
+	cfg.enable_vtpm == true
+	cfg.enable_integrity_monitoring == true
 }
