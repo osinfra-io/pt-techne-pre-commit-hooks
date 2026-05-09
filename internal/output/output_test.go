@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+func init() { EnableColor() }
+
 func TestEmojiColorText(t *testing.T) {
 	cases := []struct {
 		name  string

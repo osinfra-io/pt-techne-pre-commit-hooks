@@ -63,10 +63,18 @@ func RunTofuTestCLI(
 	printStatus(output.Running, "Running tofu test...")
 	testOutput, err := runTest(rootDir, extraArgs)
 
-	// Print the output
-	printIndentedOutput(testOutput, true)
-
 	if err != nil {
+		fmt.Println()
+		c := output.NewCard(output.Red)
+		c.Open(output.Badge("FAIL", output.BoldRed), output.Title("OpenTofu test"))
+		c.Blank()
+		for _, line := range strings.Split(testOutput, "\n") {
+			if strings.TrimSpace(line) != "" {
+				c.Line(fmt.Sprintf("%s%s%s", output.Dim, line, output.Reset))
+			}
+		}
+		c.Close()
+		fmt.Println()
 		printStatus(output.Error, "OpenTofu test failed.")
 		fmt.Println()
 		exit(1)
@@ -76,26 +84,6 @@ func RunTofuTestCLI(
 	printStatus(output.ThumbsUp, "OpenTofu test completed successfully.")
 	fmt.Println()
 	return nil
-}
-
-// printIndentedOutput prints each line of output indented for better readability
-func printIndentedOutput(output string, addNewline bool) {
-	lines := strings.Split(output, "\n")
-	lastNonEmpty := -1
-	for idx := range lines {
-		if strings.TrimSpace(lines[idx]) != "" {
-			lastNonEmpty = idx
-		}
-	}
-	for _, line := range lines {
-		if strings.TrimSpace(line) != "" {
-			fmt.Printf("    %s\n", line)
-		}
-	}
-	// Only add newline if not already present at the end
-	if addNewline && lastNonEmpty != len(lines)-1 {
-		fmt.Println()
-	}
 }
 
 // printStatus prints a colored emoji status message

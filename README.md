@@ -23,6 +23,12 @@ Runs `tofu validate` to check your configuration for syntax errors and internal 
 
 Runs `tofu test` to execute automated tests defined in `.tftest.hcl` files. This helps validate your infrastructure code with comprehensive test coverage, ensuring your configurations behave as expected. Tests are executed in the root directory only. The hook will skip execution if no test files are found.
 
+### tofu-scan
+
+#### Checks OpenTofu files against CIS benchmarks
+
+Runs `tofuscan` to check your OpenTofu (`.tofu`) files against CIS benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v3.0.0 (24 policies) and CIS Google Kubernetes Engine (GKE) Benchmark v1.6.1 (20 policies). It will not scan files in `.terraform/` directories.
+
 ---
 
 ## Usage
@@ -71,6 +77,31 @@ Runs OpenTofu automated tests defined in `.tftest.hcl` files.
 ```
 
 Both equals-form (`-filter=TestFoo`) and split-form (`-filter TestFoo`) flags are supported. When using split-form flags, include both the flag and its value as separate list entries.
+
+### Example: `tofu-scan`
+
+Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v3.0.0 and CIS Google Kubernetes Engine (GKE) Benchmark v1.6.1.
+
+```yaml
+- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+ rev: <release-or-commit-sha>
+ hooks:
+  - id: tofu-scan
+```
+
+#### Skipping violations
+
+To suppress a specific violation, add a skip comment **inside** the resource block:
+
+```hcl
+resource "google_compute_firewall" "allow_ssh" {
+  # tofu-scan skip: CIS 3.6 - Required for bastion host access
+  name    = "allow-ssh-bastion"
+  network = "default"
+}
+```
+
+The format is `# tofu-scan skip: CIS <control> [- <reason>]`. Skip comments placed outside a resource block are ignored. Skipped violations appear in the output summary so they remain visible.
 
 Replace `<release-or-commit-sha>` with the desired version or commit hash.
 

@@ -1,6 +1,7 @@
 package output
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -21,11 +22,17 @@ func TestPrintWarningSummary(t *testing.T) {
 	w.Close()
 	outBytes, _ := io.ReadAll(r)
 	output := string(outBytes)
-	if !strings.Contains(output, "Warning Summary:") {
-		t.Errorf("Expected warning summary header, got: %s", output)
+	if !strings.Contains(output, "WARNING") {
+		t.Errorf("Expected WARNING badge, got: %s", output)
 	}
-	if !strings.Contains(output, "OpenTofu init warning in: dir1") || !strings.Contains(output, "OpenTofu validate warning in: dir2") {
-		t.Errorf("Expected warning details for both messages, got: %s", output)
+	if !strings.Contains(output, "╭─") || !strings.Contains(output, "╰─") {
+		t.Error("Expected card border characters in output")
+	}
+	if !strings.Contains(output, "OpenTofu init") || !strings.Contains(output, "OpenTofu validate") {
+		t.Errorf("Expected step names in card titles, got: %s", output)
+	}
+	if !strings.Contains(output, "dir1") || !strings.Contains(output, "dir2") {
+		t.Errorf("Expected directory paths in output, got: %s", output)
 	}
 }
 
@@ -38,14 +45,58 @@ func TestPrintErrorSummary(t *testing.T) {
 	os.Stdout = w
 	defer func() { os.Stdout = oldStdout }()
 
-	PrintErrorSummary(msgs, func(out string, _ bool) { os.Stdout.Write([]byte(out)) })
+	PrintErrorSummary(msgs)
 	w.Close()
 	outBytes, _ := io.ReadAll(r)
 	output := string(outBytes)
-	if !strings.Contains(output, "Error Summary:") {
-		t.Errorf("Expected error summary header, got: %s", output)
+	if !strings.Contains(output, "ERROR") {
+		t.Errorf("Expected ERROR badge, got: %s", output)
 	}
-	if !strings.Contains(output, "OpenTofu validate failed in: dir3") {
-		t.Errorf("Expected error details, got: %s", output)
+	if !strings.Contains(output, "╭─") || !strings.Contains(output, "╰─") {
+		t.Error("Expected card border characters in output")
+	}
+	if !strings.Contains(output, "validate failed") {
+		t.Errorf("Expected 'validate failed' in card title, got: %s", output)
+	}
+	if !strings.Contains(output, "dir3") {
+		t.Errorf("Expected directory path in output, got: %s", output)
+	}
+}
+
+func TestGroupMessages_Dedup(t *testing.T) {
+	// Simulate the same error seen from 3 directories with different path styles.
+	errBlock := func(path string) string {
+		return fmt.Sprintf("╷\n│ Error: Unsupported block type\n│\n│   on %s line 18, in resource \"google_container_cluster\" \"this\":\n│   18:   lifZecycle {\n│\n│ Blocks of type \"lifZecycle\" are not expected here.\n╵", path)
+	}
+	msgs := []TofuMessage{
+		{Step: "validate", RelPath: "project/regional", Output: errBlock("main.tofu")},
+		{Step: "validate", RelPath: "project/tests/fixtures/a", Output: errBlock("../../../../regional/main.tofu")},
+		{Step: "validate", RelPath: "project/tests/fixtures/b", Output: errBlock("../../../../regional/main.tofu")},
+		// Root dir often contains the same error block twice.
+		{Step: "validate", RelPath: "project", Output: errBlock("regional/main.tofu") + "\n" + errBlock("regional/main.tofu")},
+	}
+
+	groups := groupMessages(msgs)
+
+	if len(groups) != 1 {
+		t.Errorf("Expected 1 group after dedup, got %d", len(groups))
+		for i, g := range groups {
+			t.Logf("  group %d: paths=%v", i, g.paths)
+		}
+	}
+	if len(groups) > 0 && len(groups[0].paths) != 4 {
+		t.Errorf("Expected 4 paths in group, got %d: %v", len(groups[0].paths), groups[0].paths)
+	}
+}
+
+func TestGroupMessages_DifferentSteps(t *testing.T) {
+	msgs := []TofuMessage{
+		{Step: "init", RelPath: "dir1", Output: "same output"},
+		{Step: "validate", RelPath: "dir1", Output: "same output"},
+	}
+
+	groups := groupMessages(msgs)
+	if len(groups) != 2 {
+		t.Errorf("Expected 2 groups for different steps, got %d", len(groups))
 	}
 }

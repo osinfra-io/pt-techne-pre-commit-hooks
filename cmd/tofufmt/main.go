@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"pre-commit-hooks/internal/output"
 	tofufmt "pre-commit-hooks/internal/tofufmt"
@@ -43,14 +44,27 @@ func RunTofuFmtCLI(
 	outputStr, err := runTofuFmt(wd, extraArgs)
 	fmt.Println()
 	if err != nil {
-		fmt.Println(output.EmojiColorText(output.Warning, "Found unformatted OpenTofu files:", output.Yellow))
-		fmt.Println(outputStr)
+		c := output.NewCard(output.Yellow)
+		c.Open(output.Badge("WARNING", output.BoldYellow), output.Title("Unformatted OpenTofu files"))
+		c.Line(fmt.Sprintf("%s %s", output.File, output.Colorize(baseDir, output.Gray)))
+		c.Blank()
+		for _, line := range strings.Split(outputStr, "\n") {
+			if strings.TrimSpace(line) != "" {
+				c.Line(fmt.Sprintf("%s%s%s", output.Dim, line, output.Reset))
+			}
+		}
+		c.Close()
+		fmt.Println()
 		printStatus(output.Running, "Formatting files with tofu fmt...")
 		fmtErr := formatFiles(wd, extraArgs)
 		fmt.Println()
 		if fmtErr != nil {
-			fmt.Println(output.EmojiColorText(output.Error, "Error running tofu fmt:", output.Red))
-			fmt.Println(fmtErr)
+			ec := output.NewCard(output.Red)
+			ec.Open(output.Badge("ERROR", output.BoldRed), output.Title("tofu fmt failed"))
+			ec.Line(fmt.Sprintf("%s %s", output.File, output.Colorize(baseDir, output.Gray)))
+			ec.Blank()
+			ec.Line(fmt.Sprintf("%s%s%s", output.Dim, fmtErr.Error(), output.Reset))
+			ec.Close()
 			return fmtErr
 		}
 		printStatus(output.ThumbsUp, "Files formatted successfully with tofu fmt.")
