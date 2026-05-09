@@ -49,7 +49,7 @@ func main() {
 	skips := engine.ParseSkipDirectives(files)
 	violations, skipped := skips.Filter(allViolations)
 
-	output.Print(violations, len(skipped))
+	output.Print(violations, skipped)
 
 	if len(violations) > 0 {
 		os.Exit(exitFailure)

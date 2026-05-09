@@ -66,25 +66,14 @@ const (
 
 const descWrapWidth = 76
 
-// Print writes violations to stdout. skippedCount is included in the summary
-// line so users know how many violations were suppressed by skip comments.
-func Print(violations []engine.Violation, skippedCount int) {
-	if len(violations) == 0 {
-		msg := "No violations found"
-		if skippedCount > 0 {
-			msg += fmt.Sprintf(" (%d skipped)", skippedCount)
-		}
-		fmt.Printf("%s %s%s%s\n", EmojiCheck, BoldGreen, msg, Reset)
+// Print writes violations and skipped violations to stdout.
+func Print(violations []engine.Violation, skipped []engine.Violation) {
+	if len(violations) == 0 && len(skipped) == 0 {
+		fmt.Printf("%s %s%s%s\n", EmojiCheck, BoldGreen, "No violations found", Reset)
 		return
 	}
 
-	files := make(map[string]bool)
-	for _, v := range violations {
-		if v.File != "" {
-			files[v.File] = true
-		}
-	}
-
+	// Print active violations.
 	for i, v := range violations {
 		printViolation(v)
 		if i < len(violations)-1 {
@@ -92,14 +81,75 @@ func Print(violations []engine.Violation, skippedCount int) {
 		}
 	}
 
-	fmt.Println()
-	count := len(violations)
-	fileCount := len(files)
-	summary := fmt.Sprintf("%d violation(s) found across %d file(s)", count, fileCount)
-	if skippedCount > 0 {
-		summary += fmt.Sprintf(" (%d skipped)", skippedCount)
+	// Print skipped violations in light gray.
+	if len(skipped) > 0 {
+		if len(violations) > 0 {
+			fmt.Println()
+		}
+		for _, v := range skipped {
+			printSkippedViolation(v)
+		}
 	}
-	fmt.Printf("%s %s%s%s\n", EmojiSkull, BoldRed, summary, Reset)
+
+	// Summary line with severity breakdown.
+	fmt.Println()
+	printSummary(violations, skipped)
+}
+
+func printSkippedViolation(v engine.Violation) {
+	benchmark := "GCP CIS"
+	if strings.HasPrefix(v.RuleID, "gke/") {
+		benchmark = "GKE CIS"
+	}
+	fmt.Printf("%s── %s[SKIPPED]%s %s%s · %s %s%s\n",
+		DarkGray, DarkGray, Reset,
+		DarkGray, v.Title,
+		benchmark, v.CISControl, Reset,
+	)
+}
+
+func printSummary(violations, skipped []engine.Violation) {
+	var highCount, mediumCount int
+	files := make(map[string]bool)
+	for _, v := range violations {
+		switch v.Severity {
+		case "High":
+			highCount++
+		case "Medium":
+			mediumCount++
+		}
+		if v.File != "" {
+			files[v.File] = true
+		}
+	}
+
+	total := len(violations)
+	skippedCount := len(skipped)
+
+	if total == 0 {
+		msg := "No violations found"
+		if skippedCount > 0 {
+			msg += fmt.Sprintf("  %s%d skipped%s", DarkGray, skippedCount, Reset)
+		}
+		fmt.Printf("%s %s%s%s\n", EmojiCheck, BoldGreen, msg, Reset)
+		return
+	}
+
+	// e.g. "💀 12 violation(s) across 3 file(s)  🔴 8 high  🟡 4 medium  ⏭ 2 skipped"
+	summary := fmt.Sprintf("%s %s%d violation(s) across %d file(s)%s",
+		EmojiSkull, BoldRed, total, len(files), Reset)
+
+	if highCount > 0 {
+		summary += fmt.Sprintf("  %s🔴 %d high%s", BoldRed, highCount, Reset)
+	}
+	if mediumCount > 0 {
+		summary += fmt.Sprintf("  %s🟡 %d medium%s", BoldYellow, mediumCount, Reset)
+	}
+	if skippedCount > 0 {
+		summary += fmt.Sprintf("  %s⏭ %d skipped%s", DarkGray, skippedCount, Reset)
+	}
+
+	fmt.Println(summary)
 }
 
 func printViolation(v engine.Violation) {
