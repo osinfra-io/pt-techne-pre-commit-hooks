@@ -135,21 +135,17 @@ func printSummary(violations, skipped []engine.Violation) {
 		return
 	}
 
-	// e.g. "💀 12 violation(s) across 3 file(s)  🔴 8 high  🟡 4 medium  ⏭ 2 skipped"
-	summary := fmt.Sprintf("%s %s%d violation(s) across %d file(s)%s",
-		EmojiSkull, BoldRed, total, len(files), Reset)
-
+	fmt.Printf("%s %s%d violation(s) across %d file(s)%s\n",
+		EmojiSkull, BoldWhite, total, len(files), Reset)
 	if highCount > 0 {
-		summary += fmt.Sprintf("  %s🔴 %d high%s", BoldRed, highCount, Reset)
+		fmt.Printf("   %s%d high%s\n", BoldRed, highCount, Reset)
 	}
 	if mediumCount > 0 {
-		summary += fmt.Sprintf("  %s🟡 %d medium%s", BoldYellow, mediumCount, Reset)
+		fmt.Printf("   %s%d medium%s\n", BoldYellow, mediumCount, Reset)
 	}
 	if skippedCount > 0 {
-		summary += fmt.Sprintf("  %s⏭ %d skipped%s", DarkGray, skippedCount, Reset)
+		fmt.Printf("   %s%d skipped%s\n", DarkGray, skippedCount, Reset)
 	}
-
-	fmt.Println(summary)
 }
 
 func printViolation(v engine.Violation) {
