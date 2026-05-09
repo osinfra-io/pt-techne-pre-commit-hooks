@@ -40,13 +40,16 @@ func main() {
 		return
 	}
 
-	violations, err := engine.Run(context.Background(), files, policies.FS)
+	allViolations, err := engine.Run(context.Background(), files, policies.FS)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error evaluating policies: %v\n", err)
 		os.Exit(exitError)
 	}
 
-	output.Print(violations)
+	skips := engine.ParseSkipDirectives(files)
+	violations, skipped := skips.Filter(allViolations)
+
+	output.Print(violations, len(skipped))
 
 	if len(violations) > 0 {
 		os.Exit(exitFailure)

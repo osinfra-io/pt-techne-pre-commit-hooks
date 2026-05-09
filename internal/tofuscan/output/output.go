@@ -66,10 +66,15 @@ const (
 
 const descWrapWidth = 76
 
-// Print writes violations to stdout.
-func Print(violations []engine.Violation) {
+// Print writes violations to stdout. skippedCount is included in the summary
+// line so users know how many violations were suppressed by skip comments.
+func Print(violations []engine.Violation, skippedCount int) {
 	if len(violations) == 0 {
-		fmt.Printf("%s %s%sNo violations found%s\n", EmojiCheck, BoldGreen, "", Reset)
+		msg := "No violations found"
+		if skippedCount > 0 {
+			msg += fmt.Sprintf(" (%d skipped)", skippedCount)
+		}
+		fmt.Printf("%s %s%s%s\n", EmojiCheck, BoldGreen, msg, Reset)
 		return
 	}
 
@@ -91,6 +96,9 @@ func Print(violations []engine.Violation) {
 	count := len(violations)
 	fileCount := len(files)
 	summary := fmt.Sprintf("%d violation(s) found across %d file(s)", count, fileCount)
+	if skippedCount > 0 {
+		summary += fmt.Sprintf(" (%d skipped)", skippedCount)
+	}
 	fmt.Printf("%s %s%s%s\n", EmojiSkull, BoldRed, summary, Reset)
 }
 
