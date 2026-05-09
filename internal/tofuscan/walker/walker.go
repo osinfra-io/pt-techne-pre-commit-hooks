@@ -11,6 +11,14 @@ import (
 // skipping hidden directories (names starting with ".").
 func FindTofuFiles(paths []string) ([]string, error) {
 	var files []string
+	seen := make(map[string]struct{})
+	add := func(p string) {
+		if _, ok := seen[p]; ok {
+			return
+		}
+		seen[p] = struct{}{}
+		files = append(files, p)
+	}
 	for _, root := range paths {
 		info, err := os.Stat(root)
 		if err != nil {
@@ -18,7 +26,7 @@ func FindTofuFiles(paths []string) ([]string, error) {
 		}
 		if !info.IsDir() {
 			if filepath.Ext(root) == ".tofu" {
-				files = append(files, root)
+				add(root)
 			}
 			continue
 		}
@@ -30,7 +38,7 @@ func FindTofuFiles(paths []string) ([]string, error) {
 				return fs.SkipDir
 			}
 			if !d.IsDir() && filepath.Ext(path) == ".tofu" {
-				files = append(files, path)
+				add(path)
 			}
 			return nil
 		})

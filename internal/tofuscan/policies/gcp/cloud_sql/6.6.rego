@@ -14,7 +14,7 @@ deny contains violation if {
 	some settings in settings_arr
 	ip_config_arr := object.get(settings, "ip_configuration", [{}])
 	some ip_config in ip_config_arr
-	ip_config.ipv4_enabled == true
+	object.get(ip_config, "ipv4_enabled", true) == true
 	violation := {
 		"resource": name,
 		"rule_id": "gcp/cis/6.6",

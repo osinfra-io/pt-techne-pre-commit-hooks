@@ -24,7 +24,7 @@ resource "google_compute_firewall" "allow_rdp_internal" {
   source_ranges = ["10.0.0.0/8"]
 }
 
-# GCP CIS 4.1/4.2 — no service_account block (no default SA used)
+# GCP CIS 4.1 — dedicated service account (not default)
 # GCP CIS 4.3 — block-project-ssh-keys = "true" in metadata
 # GCP CIS 4.5 — serial-port-enable absent in metadata
 # GCP CIS 4.6 — can_ip_forward = false
@@ -58,6 +58,11 @@ resource "google_compute_instance" "vm" {
 
   confidential_instance_config {
     enable_confidential_compute = true
+  }
+
+  service_account {
+    email  = "my-sa@my-project.iam.gserviceaccount.com"
+    scopes = ["https://www.googleapis.com/auth/compute.readonly"]
   }
 }
 

@@ -15,6 +15,7 @@ deny contains violation if {
 	ip_config_arr := object.get(settings, "ip_configuration", [{}])
 	some ip_config in ip_config_arr
 	object.get(ip_config, "ssl_mode", "ALLOW_UNENCRYPTED_AND_ENCRYPTED") == "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
+	object.get(ip_config, "require_ssl", false) != true
 	violation := {
 		"resource": name,
 		"rule_id": "gcp/cis/6.4",

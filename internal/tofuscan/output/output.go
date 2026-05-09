@@ -78,8 +78,13 @@ func printSummary(violations, skipped []engine.Violation) {
 		return
 	}
 
-	fmt.Printf("%s %s%d violation(s) across %d file(s)%s\n",
-		output.Error, output.BoldWhite, total, len(files), output.Reset)
+	if len(files) > 0 {
+		fmt.Printf("%s %s%d violation(s) across %d file(s)%s\n",
+			output.Error, output.BoldWhite, total, len(files), output.Reset)
+	} else {
+		fmt.Printf("%s %s%d violation(s)%s\n",
+			output.Error, output.BoldWhite, total, output.Reset)
+	}
 	if highCount > 0 {
 		fmt.Printf("     • %s%d high%s\n", output.BoldRed, highCount, output.Reset)
 	}

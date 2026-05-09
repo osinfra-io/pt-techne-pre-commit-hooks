@@ -11,7 +11,8 @@ deny contains violation if {
 	some name, resources in input.resource.google_container_node_pool
 	some resource in resources
 	some nc in object.get(resource, "node_config", [{}])
-	object.get(nc, "service_account", "default") == "default"
+	sa := lower(object.get(nc, "service_account", "default"))
+	_is_default_gke_sa(sa)
 	violation := {
 		"resource": name,
 		"rule_id": "gke/cis/5.2.1",
@@ -22,3 +23,7 @@ deny contains violation if {
 		"description": _desc_5_2_1,
 	}
 }
+
+_is_default_gke_sa(sa) if sa == "default"
+
+_is_default_gke_sa(sa) if endswith(sa, "-compute@developer.gserviceaccount.com")

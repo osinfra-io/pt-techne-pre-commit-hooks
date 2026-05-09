@@ -85,7 +85,7 @@ const (
 	Running  = "🔧"
 	ThumbsUp = "👍"
 	File     = "📄"
-	Tag      = "🏷 "
+	Tag      = "🏷"
 )
 
 // Colorize wraps text with the given color and a Reset suffix.
