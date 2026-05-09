@@ -21,11 +21,17 @@ func TestPrintWarningSummary(t *testing.T) {
 	w.Close()
 	outBytes, _ := io.ReadAll(r)
 	output := string(outBytes)
-	if !strings.Contains(output, "Warning Summary:") {
-		t.Errorf("Expected warning summary header, got: %s", output)
+	if !strings.Contains(output, "WARNING") {
+		t.Errorf("Expected WARNING badge, got: %s", output)
 	}
-	if !strings.Contains(output, "OpenTofu init warning in: dir1") || !strings.Contains(output, "OpenTofu validate warning in: dir2") {
-		t.Errorf("Expected warning details for both messages, got: %s", output)
+	if !strings.Contains(output, "╭─") || !strings.Contains(output, "╰─") {
+		t.Error("Expected card border characters in output")
+	}
+	if !strings.Contains(output, "OpenTofu init") || !strings.Contains(output, "OpenTofu validate") {
+		t.Errorf("Expected step names in card titles, got: %s", output)
+	}
+	if !strings.Contains(output, "dir1") || !strings.Contains(output, "dir2") {
+		t.Errorf("Expected directory paths in output, got: %s", output)
 	}
 }
 
@@ -38,14 +44,20 @@ func TestPrintErrorSummary(t *testing.T) {
 	os.Stdout = w
 	defer func() { os.Stdout = oldStdout }()
 
-	PrintErrorSummary(msgs, func(out string, _ bool) { os.Stdout.Write([]byte(out)) })
+	PrintErrorSummary(msgs)
 	w.Close()
 	outBytes, _ := io.ReadAll(r)
 	output := string(outBytes)
-	if !strings.Contains(output, "Error Summary:") {
-		t.Errorf("Expected error summary header, got: %s", output)
+	if !strings.Contains(output, "ERROR") {
+		t.Errorf("Expected ERROR badge, got: %s", output)
 	}
-	if !strings.Contains(output, "OpenTofu validate failed in: dir3") {
-		t.Errorf("Expected error details, got: %s", output)
+	if !strings.Contains(output, "╭─") || !strings.Contains(output, "╰─") {
+		t.Error("Expected card border characters in output")
+	}
+	if !strings.Contains(output, "validate failed") {
+		t.Errorf("Expected 'validate failed' in card title, got: %s", output)
+	}
+	if !strings.Contains(output, "dir3") {
+		t.Errorf("Expected directory path in output, got: %s", output)
 	}
 }

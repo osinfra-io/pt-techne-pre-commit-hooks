@@ -115,7 +115,7 @@ func RunTofuValidateCLI(
 	}
 
 	if len(errorMessages) > 0 {
-		output.PrintErrorSummary(errorMessages, printIndentedOutput)
+		output.PrintErrorSummary(errorMessages)
 		exit(1)
 		return fmt.Errorf("validation failed")
 	}

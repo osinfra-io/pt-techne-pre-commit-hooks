@@ -95,8 +95,7 @@ func printViolation(v engine.Violation) {
 	col := severityColor(v.Severity)
 	boldCol := severityBoldColor(v.Severity)
 
-	border := func(s string) string { return fmt.Sprintf("%s%s%s", col, s, output.Reset) }
-
+	c := output.NewCard(col)
 	tw := output.TermWidth()
 
 	var fileRef string
@@ -115,11 +114,11 @@ func printViolation(v engine.Violation) {
 		fileRef = fmt.Sprintf("%s%s  %s(resource absent from file)%s", output.Gray, p, output.DarkGray, output.Reset)
 	}
 
-	badge := fmt.Sprintf("%s[%s]%s", boldCol, strings.ToUpper(v.Severity), output.Reset)
-	title := fmt.Sprintf("%s%s%s", output.BoldWhite, v.Title, output.Reset)
+	badge := output.Badge(strings.ToUpper(v.Severity), boldCol)
+	title := output.Title(v.Title)
 
-	fmt.Printf("%s %s %s\n", border("╭─"), badge, title)
-	fmt.Printf("%s  %s %s\n", border("│"), output.File, fileRef)
+	c.Open(badge, title)
+	c.Line(fmt.Sprintf("%s %s", output.File, fileRef))
 	benchmark := "GCP CIS"
 	if strings.HasPrefix(v.RuleID, "gke/") {
 		benchmark = "GKE CIS"
@@ -128,42 +127,20 @@ func printViolation(v engine.Violation) {
 	if v.ProfileLevel != "" {
 		cisLine += fmt.Sprintf("  %s%s%s", output.DarkGray, v.ProfileLevel, output.Reset)
 	}
-	fmt.Printf("%s  %s %s%s%s · %s\n",
-		border("│"), output.Tag,
+	c.Line(fmt.Sprintf("%s %s%s%s · %s",
+		output.Tag,
 		output.Gray, cisSectionName(v.RuleID, v.CISControl), output.Reset,
 		cisLine,
-	)
+	))
 
 	if v.Description != "" {
-		fmt.Printf("%s\n", border("│"))
-		for _, line := range wrapText(v.Description, descWrapWidth) {
-			fmt.Printf("%s  %s%s%s\n", border("│"), output.Dim, line, output.Reset)
+		c.Blank()
+		for _, line := range output.WrapText(v.Description, descWrapWidth) {
+			c.Line(fmt.Sprintf("%s%s%s", output.Dim, line, output.Reset))
 		}
 	}
 
-	fmt.Printf("%s\n", border("╰─"))
-}
-
-// wrapText wraps text at word boundaries for the given width.
-func wrapText(text string, width int) []string {
-	words := strings.Fields(text)
-	var lines []string
-	var current strings.Builder
-
-	for _, word := range words {
-		if current.Len() > 0 && current.Len()+1+len(word) > width {
-			lines = append(lines, current.String())
-			current.Reset()
-		}
-		if current.Len() > 0 {
-			current.WriteByte(' ')
-		}
-		current.WriteString(word)
-	}
-	if current.Len() > 0 {
-		lines = append(lines, current.String())
-	}
-	return lines
+	c.Close()
 }
 
 // cisSectionName maps a CIS control to its benchmark section name.
