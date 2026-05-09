@@ -61,3 +61,45 @@ func TestPrintErrorSummary(t *testing.T) {
 		t.Errorf("Expected directory path in output, got: %s", output)
 	}
 }
+
+func TestGroupMessages_Dedup(t *testing.T) {
+	msgs := []TofuMessage{
+		{Step: "validate", RelPath: "project/regional", Output: "Error on main.tofu line 18"},
+		{Step: "validate", RelPath: "project/tests/fixtures/a", Output: "Error on ../../../../regional/main.tofu line 18"},
+		{Step: "validate", RelPath: "project/tests/fixtures/b", Output: "Error on ../../../../regional/main.tofu line 18"},
+	}
+
+	groups := groupMessages(msgs)
+
+	// The first message differs (main.tofu vs regional/main.tofu), but
+	// messages 2 and 3 normalize to the same output and should be grouped.
+	if len(groups) > 2 {
+		t.Errorf("Expected at most 2 groups after dedup, got %d", len(groups))
+	}
+
+	// Find the group with multiple paths.
+	var multiPath *errorGroup
+	for _, g := range groups {
+		if len(g.paths) > 1 {
+			multiPath = g
+		}
+	}
+	if multiPath == nil {
+		t.Fatal("Expected at least one group with multiple paths")
+	}
+	if len(multiPath.paths) != 2 {
+		t.Errorf("Expected 2 paths in deduped group, got %d", len(multiPath.paths))
+	}
+}
+
+func TestGroupMessages_DifferentSteps(t *testing.T) {
+	msgs := []TofuMessage{
+		{Step: "init", RelPath: "dir1", Output: "same output"},
+		{Step: "validate", RelPath: "dir1", Output: "same output"},
+	}
+
+	groups := groupMessages(msgs)
+	if len(groups) != 2 {
+		t.Errorf("Expected 2 groups for different steps, got %d", len(groups))
+	}
+}

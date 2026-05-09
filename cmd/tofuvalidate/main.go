@@ -87,7 +87,6 @@ func RunTofuValidateCLI(
 		initCmd := []string{"init", "-input=false", "--backend=false"}
 		cmdArgs := append(initCmd, extraArgs...)
 		out, err := runCmd(dir, cmdArgs)
-		printIndentedOutput(out, true)
 		// Always check for warnings in init output
 		if hasWarning(out) {
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
@@ -99,7 +98,6 @@ func RunTofuValidateCLI(
 
 		printStatus(output.Running, fmt.Sprintf("Running tofu validate in: %s...", fullPath))
 		out, err = runValidate(dir, extraArgs)
-		printIndentedOutput(out, true)
 		// Always check for warnings in validate output
 		if hasWarning(out) {
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
@@ -175,26 +173,6 @@ func walkDirs(dir string, dirs *[]string) error {
 		*dirs = append(*dirs, dir)
 	}
 	return errors.Join(errs...)
-}
-
-// printIndentedOutput prints each line of output indented for better readability
-func printIndentedOutput(output string, addNewline bool) {
-	lines := strings.Split(output, "\n")
-	lastNonEmpty := -1
-	for idx := range lines {
-		if strings.TrimSpace(lines[idx]) != "" {
-			lastNonEmpty = idx
-		}
-	}
-	for _, line := range lines {
-		if strings.TrimSpace(line) != "" {
-			fmt.Printf("    %s\n", line)
-		}
-	}
-	// Only add newline if not already present at the end
-	if addNewline && lastNonEmpty != len(lines)-1 {
-		fmt.Println()
-	}
 }
 
 // printStatus prints a colored emoji status message
