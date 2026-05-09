@@ -19,14 +19,15 @@ type errorGroup struct {
 	raw   string
 }
 
-// groupMessages deduplicates messages by normalizing relative path prefixes
-// in the output so that "../../../regional/main.tofu" matches "regional/main.tofu".
+// groupMessages deduplicates messages by extracting a fingerprint from the
+// error/warning text, ignoring file paths and source-line references that
+// differ across directories pointing at the same underlying issue.
 func groupMessages(msgs []TofuMessage) []*errorGroup {
 	var groups []*errorGroup
 	seen := map[string]*errorGroup{}
 
 	for _, msg := range msgs {
-		key := msg.Step + "\x00" + strings.ReplaceAll(msg.Output, "../", "")
+		key := msg.Step + "\x00" + errorFingerprint(msg.Output)
 		if g, ok := seen[key]; ok {
 			g.paths = append(g.paths, msg.RelPath)
 		} else {
@@ -36,6 +37,79 @@ func groupMessages(msgs []TofuMessage) []*errorGroup {
 		}
 	}
 	return groups
+}
+
+// errorFingerprint extracts a canonical key from tofu output by splitting
+// into diagnostic blocks (╷…╵), keeping only error/description lines, and
+// deduplicating identical blocks within the same output.
+func errorFingerprint(output string) string {
+	blocks := splitDiagnosticBlocks(output)
+	var unique []string
+	seen := map[string]bool{}
+	for _, block := range blocks {
+		key := normalizeBlock(block)
+		if key != "" && !seen[key] {
+			seen[key] = true
+			unique = append(unique, key)
+		}
+	}
+	if len(unique) == 0 {
+		// Fallback for output without ╷…╵ framing.
+		return strings.ReplaceAll(output, "../", "")
+	}
+	return strings.Join(unique, "\n")
+}
+
+// splitDiagnosticBlocks splits tofu output into the individual diagnostic
+// blocks delimited by ╷ and ╵.
+func splitDiagnosticBlocks(output string) []string {
+	var blocks []string
+	var current []string
+	inBlock := false
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "╷" {
+			inBlock = true
+			current = nil
+			continue
+		}
+		if trimmed == "╵" {
+			if inBlock {
+				blocks = append(blocks, strings.Join(current, "\n"))
+			}
+			inBlock = false
+			continue
+		}
+		if inBlock {
+			current = append(current, line)
+		}
+	}
+	return blocks
+}
+
+// normalizeBlock extracts just the error type and description from a
+// diagnostic block, stripping file references and source lines so that
+// the same error from different directories produces the same key.
+func normalizeBlock(block string) string {
+	var parts []string
+	for _, line := range strings.Split(block, "\n") {
+		trimmed := strings.TrimSpace(line)
+		trimmed = strings.TrimLeft(trimmed, "│")
+		trimmed = strings.TrimSpace(trimmed)
+		if trimmed == "" {
+			continue
+		}
+		// Skip file reference lines: "on main.tofu line 18, ..."
+		if strings.HasPrefix(trimmed, "on ") {
+			continue
+		}
+		// Skip source code lines: "18:   lifZecycle {"
+		if len(trimmed) > 0 && trimmed[0] >= '0' && trimmed[0] <= '9' {
+			continue
+		}
+		parts = append(parts, trimmed)
+	}
+	return strings.Join(parts, "\n")
 }
 
 // PrintWarningSummary prints warning messages as styled cards,

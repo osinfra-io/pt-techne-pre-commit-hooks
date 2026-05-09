@@ -1,6 +1,7 @@
 package output
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -63,32 +64,28 @@ func TestPrintErrorSummary(t *testing.T) {
 }
 
 func TestGroupMessages_Dedup(t *testing.T) {
+	// Simulate the same error seen from 3 directories with different path styles.
+	errBlock := func(path string) string {
+		return fmt.Sprintf("╷\n│ Error: Unsupported block type\n│\n│   on %s line 18, in resource \"google_container_cluster\" \"this\":\n│   18:   lifZecycle {\n│\n│ Blocks of type \"lifZecycle\" are not expected here.\n╵", path)
+	}
 	msgs := []TofuMessage{
-		{Step: "validate", RelPath: "project/regional", Output: "Error on main.tofu line 18"},
-		{Step: "validate", RelPath: "project/tests/fixtures/a", Output: "Error on ../../../../regional/main.tofu line 18"},
-		{Step: "validate", RelPath: "project/tests/fixtures/b", Output: "Error on ../../../../regional/main.tofu line 18"},
+		{Step: "validate", RelPath: "project/regional", Output: errBlock("main.tofu")},
+		{Step: "validate", RelPath: "project/tests/fixtures/a", Output: errBlock("../../../../regional/main.tofu")},
+		{Step: "validate", RelPath: "project/tests/fixtures/b", Output: errBlock("../../../../regional/main.tofu")},
+		// Root dir often contains the same error block twice.
+		{Step: "validate", RelPath: "project", Output: errBlock("regional/main.tofu") + "\n" + errBlock("regional/main.tofu")},
 	}
 
 	groups := groupMessages(msgs)
 
-	// The first message differs (main.tofu vs regional/main.tofu), but
-	// messages 2 and 3 normalize to the same output and should be grouped.
-	if len(groups) > 2 {
-		t.Errorf("Expected at most 2 groups after dedup, got %d", len(groups))
-	}
-
-	// Find the group with multiple paths.
-	var multiPath *errorGroup
-	for _, g := range groups {
-		if len(g.paths) > 1 {
-			multiPath = g
+	if len(groups) != 1 {
+		t.Errorf("Expected 1 group after dedup, got %d", len(groups))
+		for i, g := range groups {
+			t.Logf("  group %d: paths=%v", i, g.paths)
 		}
 	}
-	if multiPath == nil {
-		t.Fatal("Expected at least one group with multiple paths")
-	}
-	if len(multiPath.paths) != 2 {
-		t.Errorf("Expected 2 paths in deduped group, got %d", len(multiPath.paths))
+	if len(groups) > 0 && len(groups[0].paths) != 4 {
+		t.Errorf("Expected 4 paths in group, got %d: %v", len(groups[0].paths), groups[0].paths)
 	}
 }
 
