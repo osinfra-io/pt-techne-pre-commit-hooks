@@ -173,3 +173,63 @@ func TestParseFileSkipsNestedBraces(t *testing.T) {
 		t.Error("expected skip for CIS 5.6.4 on 'primary'")
 	}
 }
+
+func TestParseFileSkipsBracesInComments(t *testing.T) {
+	content := `resource "google_container_cluster" "primary" {
+  # This comment has { extra braces }
+  # tofu-scan skip: CIS 5.6.4 - Should apply to primary
+  name = "test"
+}
+
+resource "google_storage_bucket" "bucket" {
+  # tofu-scan skip: CIS 3.3 - Should apply to bucket
+  name = "my-bucket"
+}
+`
+	tmp := t.TempDir()
+	f := filepath.Join(tmp, "test.tofu")
+	if err := os.WriteFile(f, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	resourceLevel := parseFileSkips(f)
+
+	primarySkips := resourceLevel["primary"]
+	if primarySkips == nil || len(primarySkips) != 1 {
+		t.Fatalf("expected 1 skip for 'primary', got %v", primarySkips)
+	}
+	if _, ok := primarySkips["5.6.4"]; !ok {
+		t.Error("expected skip for CIS 5.6.4 on 'primary'")
+	}
+
+	bucketSkips := resourceLevel["bucket"]
+	if bucketSkips == nil || len(bucketSkips) != 1 {
+		t.Fatalf("expected 1 skip for 'bucket', got %v", bucketSkips)
+	}
+	if _, ok := bucketSkips["3.3"]; !ok {
+		t.Error("expected skip for CIS 3.3 on 'bucket'")
+	}
+}
+
+func TestCountBraces(t *testing.T) {
+	cases := []struct {
+		line string
+		want int
+	}{
+		{`resource "a" "b" {`, 1},
+		{`}`, -1},
+		{`  metadata = {}`, 0},
+		{`  # comment with { braces }`, 0},
+		{`  // comment with { braces }`, 0},
+		{`  name = "value with { braces }"`, 0},
+		{`  name = "escaped \" still { in string"`, 0},
+		{`  block { # comment with }`, 1},
+		{`  name = "}"`, 0},
+	}
+	for _, tc := range cases {
+		got := countBraces(tc.line)
+		if got != tc.want {
+			t.Errorf("countBraces(%q) = %d, want %d", tc.line, got, tc.want)
+		}
+	}
+}

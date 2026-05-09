@@ -101,14 +101,14 @@ func parseFileSkips(file string) map[string]map[string]string {
 			if len(parts) >= 3 {
 				name := strings.Trim(parts[2], `"{}`)
 				currentResource = name
-				braceDepth += strings.Count(trimmed, "{") - strings.Count(trimmed, "}")
+				braceDepth += countBraces(trimmed)
 				continue
 			}
 		}
 
 		// Track brace depth for resource blocks.
 		if currentResource != "" {
-			braceDepth += strings.Count(trimmed, "{") - strings.Count(trimmed, "}")
+			braceDepth += countBraces(trimmed)
 			if braceDepth <= 0 {
 				currentResource = ""
 				braceDepth = 0
@@ -117,6 +117,39 @@ func parseFileSkips(file string) map[string]map[string]string {
 	}
 
 	return resourceLevel
+}
+
+// countBraces returns the net brace count ({minus}) for a line, ignoring
+// braces inside comments and quoted strings.
+func countBraces(line string) int {
+	n := 0
+	inString := false
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		if inString {
+			if ch == '\\' {
+				i++ // skip escaped character
+			} else if ch == '"' {
+				inString = false
+			}
+			continue
+		}
+		switch ch {
+		case '"':
+			inString = true
+		case '#':
+			return n // rest of line is a comment
+		case '/':
+			if i+1 < len(line) && line[i+1] == '/' {
+				return n // rest of line is a comment
+			}
+		case '{':
+			n++
+		case '}':
+			n--
+		}
+	}
+	return n
 }
 
 // parseSkipComment extracts a CIS control and optional reason from a skip
