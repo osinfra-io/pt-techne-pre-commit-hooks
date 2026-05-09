@@ -26,3 +26,13 @@
   always_run: true
   language: golang
   name: tofu test
+
+- id: tofu-scan
+  description: Check OpenTofu files against CIS Google Cloud Foundations Benchmark policies
+  entry: tofuscan
+  args: ['.']
+  exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
+  files: \.tofu$
+  pass_filenames: false
+  language: golang
+  name: tofu scan
