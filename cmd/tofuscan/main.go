@@ -27,9 +27,14 @@ func main() {
 	paths := []string{}
 
 	for _, arg := range args {
-		if arg == "--warn-only" {
+		switch arg {
+		case "--warn-only":
 			warnOnly = true
-		} else {
+		default:
+			if len(arg) > 2 && arg[:2] == "--" {
+				fmt.Fprintf(os.Stderr, "unknown flag: %s\n", arg)
+				os.Exit(exitError)
+			}
 			paths = append(paths, arg)
 		}
 	}
