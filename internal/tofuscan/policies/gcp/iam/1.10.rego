@@ -31,7 +31,7 @@ deny contains violation if {
 	period := object.get(resource, "rotation_period", "")
 
 	# Parse strict seconds format like "7776000s"
-	regex.match("^[0-9]+s$", period)
+	regex.match(`^[0-9]+s$`, period)
 	seconds_str := trim_suffix(period, "s")
 	seconds := to_number(seconds_str)
 	seconds > _max_rotation_seconds
@@ -51,7 +51,7 @@ deny contains violation if {
 	some resource in resources
 	period := object.get(resource, "rotation_period", "")
 	period != ""
-	not regex.match("^[0-9]+s$", period)
+	not regex.match(`^[0-9]+s$`, period)
 	violation := {
 		"resource": name,
 		"rule_id": "gcp/cis/1.10",

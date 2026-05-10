@@ -194,7 +194,7 @@ resource "google_container_cluster" "bad_cluster" {
     enable_private_nodes    = false
   }
 
-# GKE CIS 5.6.3 — master_authorized_networks_config present but no cidr_blocks
+  # GKE CIS 5.6.3 — master_authorized_networks_config present but no cidr_blocks
   master_authorized_networks_config {
   }
 
@@ -210,7 +210,7 @@ resource "google_container_cluster" "bad_cluster" {
 
 # GKE CIS 5.2.1 — service_account = "default" (should use dedicated SA)
 # GKE CIS 5.4.1 — workload_metadata_config.mode = EXPOSE (not GKE_METADATA)
-# GKE CIS 5.5.1 — image_type = UBUNTU (not COS_CONTAINERD)
+# GKE CIS 5.5.1 — image_type = UBUNTU_CONTAINERD (not COS_CONTAINERD)
 # GKE CIS 5.5.2 — management.auto_repair = false
 # GKE CIS 5.5.3 — management.auto_upgrade = false
 # GKE CIS 5.5.6 — shielded_instance_config.enable_integrity_monitoring = false
@@ -225,7 +225,7 @@ resource "google_container_node_pool" "bad_pool" {
   }
 
   node_config {
-    image_type      = "UBUNTU"
+    image_type      = "UBUNTU_CONTAINERD"
     service_account = "default"
 
     shielded_instance_config {

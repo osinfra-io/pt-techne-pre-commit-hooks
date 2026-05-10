@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/output"
-	tofutest "pre-commit-hooks/internal/tofutest"
+	"pre-commit-hooks/internal/tofutest"
 )
 
 func main() {
@@ -17,7 +17,6 @@ func main() {
 		tofutest.HasTestFiles,
 		tofutest.RunTofuTest,
 		printStatus,
-		os.Exit,
 	)
 	if err != nil {
 		os.Exit(1)
@@ -32,31 +31,26 @@ func RunTofuTestCLI(
 	hasTestFiles func(string) (bool, error),
 	runTest func(string, []string) (string, error),
 	printStatus func(string, string),
-	exit func(int),
 ) error {
 	if !checkInstalled() {
 		fmt.Println("OpenTofu is not installed or not in PATH.")
-		exit(1)
 		return fmt.Errorf("OpenTofu not installed")
 	}
 
 	rootDir, err := getwd()
 	if err != nil {
 		fmt.Println("Could not get working directory.")
-		exit(1)
 		return err
 	}
 
 	hasTests, err := hasTestFiles(rootDir)
 	if err != nil {
 		fmt.Printf("Error checking for test files: %v\n", err)
-		exit(1)
 		return err
 	}
 
 	if !hasTests {
 		printStatus(output.Running, "No OpenTofu test files (.tftest.hcl) found, skipping tests.")
-		exit(0)
 		return nil
 	}
 
@@ -76,7 +70,6 @@ func RunTofuTestCLI(
 		fmt.Println()
 		printStatus(output.Error, "OpenTofu test failed.")
 		fmt.Println()
-		exit(1)
 		return fmt.Errorf("test failed: %w", err)
 	}
 

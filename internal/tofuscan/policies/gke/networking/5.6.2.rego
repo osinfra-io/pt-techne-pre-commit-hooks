@@ -10,7 +10,7 @@ _desc_5_6_2 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_container_cluster
 	some resource in resources
-	object.get(resource, "networking_mode", "ROUTES") != "VPC_NATIVE"
+	not _is_vpc_native(resource)
 	violation := {
 		"resource": name,
 		"rule_id": "gke/cis/5.6.2",
@@ -21,3 +21,7 @@ deny contains violation if {
 		"description": _desc_5_6_2,
 	}
 }
+
+_is_vpc_native(resource) if resource.networking_mode == "VPC_NATIVE"
+
+_is_vpc_native(resource) if count(object.get(resource, "ip_allocation_policy", [])) > 0

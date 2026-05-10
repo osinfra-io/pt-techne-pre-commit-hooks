@@ -11,7 +11,15 @@ deny contains violation if {
 	some name, resources in input.resource.google_container_node_pool
 	some resource in resources
 	some nc in object.get(resource, "node_config", [{}])
-	upper(object.get(nc, "image_type", "")) != "COS_CONTAINERD"
+	image_type_val := object.get(nc, "image_type", "COS_CONTAINERD")
+
+	# Valid values per GCP: COS_CONTAINERD (recommended), UBUNTU_CONTAINERD, COS (deprecated),
+	# UBUNTU (deprecated). When absent, GKE defaults to COS_CONTAINERD.
+	# Skip validation if: empty, null, or an unresolved HCL reference (cannot evaluate statically).
+	image_type_val != ""
+	image_type_val != null
+	not startswith(image_type_val, "${")
+	upper(image_type_val) != "COS_CONTAINERD"
 	violation := {
 		"resource": name,
 		"rule_id": "gke/cis/5.5.1",

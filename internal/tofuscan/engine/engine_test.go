@@ -3,22 +3,25 @@ package engine
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"sort"
 	"testing"
+
+	"github.com/open-policy-agent/conftest/parser"
 
 	"pre-commit-hooks/internal/tofuscan/policies"
 )
 
 func TestFailFixtureViolations(t *testing.T) {
 	files := []string{"../../../test/tofuscan/fixtures/fail/main.tofu"}
-	violations, err := Run(context.Background(), files, policies.FS)
+	result, err := Run(context.Background(), files, policies.FS)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	// Collect all rule_ids from violations.
 	var got []string
-	for _, v := range violations {
+	for _, v := range result.Violations {
 		got = append(got, v.RuleID)
 	}
 	sort.Strings(got)
@@ -97,14 +100,18 @@ func TestFailFixtureViolations(t *testing.T) {
 }
 
 func TestPassFixtureNoViolations(t *testing.T) {
-	files := []string{"../../../test/tofuscan/fixtures/pass/main.tofu"}
-	violations, err := Run(context.Background(), files, policies.FS)
+	fixtureDir := "../../../test/tofuscan/fixtures/pass"
+	files, err := filepath.Glob(fixtureDir + "/*.tofu")
+	if err != nil || len(files) == 0 {
+		t.Fatalf("could not find fixture files: %v", err)
+	}
+	result, err := Run(context.Background(), files, policies.FS)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(violations) != 0 {
-		for _, v := range violations {
+	if len(result.Violations) != 0 {
+		for _, v := range result.Violations {
 			t.Errorf("unexpected violation: %s (%s) in resource %q", v.RuleID, v.Title, v.Resource)
 		}
 	}
@@ -112,12 +119,12 @@ func TestPassFixtureNoViolations(t *testing.T) {
 
 func TestViolationFields(t *testing.T) {
 	files := []string{"../../../test/tofuscan/fixtures/fail/main.tofu"}
-	violations, err := Run(context.Background(), files, policies.FS)
+	result, err := Run(context.Background(), files, policies.FS)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	for _, v := range violations {
+	for _, v := range result.Violations {
 		if v.File == "" && v.Resource != "global" {
 			t.Error("violation has empty File")
 		}
@@ -218,7 +225,7 @@ func TestGlobalViolationFiresOnceAcrossFiles(t *testing.T) {
 	}
 
 	var count int
-	for _, v := range violations {
+	for _, v := range violations.Violations {
 		if v.RuleID == "gcp/cis/2.2" {
 			count++
 		}
@@ -240,9 +247,110 @@ func TestGlobalViolationSuppressedWhenSinkExists(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	for _, v := range violations {
+	for _, v := range violations.Violations {
 		if v.RuleID == "gcp/cis/2.2" {
 			t.Error("gcp/cis/2.2 should not fire when a log sink exists in any scanned file")
 		}
+	}
+}
+
+func TestNormalizeConfigResolvesVariableAndLocalReferences(t *testing.T) {
+	content := `variable "release_channel" {
+  default = "REGULAR"
+}
+
+locals {
+  networking_mode = "VPC_NATIVE"
+}
+
+resource "google_container_cluster" "primary" {
+  networking_mode = local.networking_mode
+
+  release_channel {
+    channel = var.release_channel
+  }
+}
+`
+
+	tmp := t.TempDir()
+	file := tmp + "/main.tofu"
+	if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	configs, err := parser.ParseConfigurationsAs([]string{file}, "hcl2")
+	if err != nil {
+		t.Fatalf("unexpected parse error: %v", err)
+	}
+
+	dirSymbols := buildDirSymbolTables([]string{file})
+	normalized := normalizeConfig(file, configs[file], dirSymbols)
+	resource := normalized.(map[string]interface{})["resource"].(map[string]interface{})
+	clusters := resource["google_container_cluster"].(map[string]interface{})
+	cluster := clusters["primary"].([]interface{})[0].(map[string]interface{})
+
+	if got := cluster["networking_mode"]; got != "VPC_NATIVE" {
+		t.Fatalf("networking_mode: got %#v, want %q", got, "VPC_NATIVE")
+	}
+
+	releaseChannel := cluster["release_channel"].([]interface{})[0].(map[string]interface{})
+	if got := releaseChannel["channel"]; got != "REGULAR" {
+		t.Fatalf("release_channel.channel: got %#v, want %q", got, "REGULAR")
+	}
+}
+
+func TestNormalizeConfigResolvesReferencesAcrossFiles(t *testing.T) {
+	tmp := t.TempDir()
+
+	variables := `variable "release_channel" {
+  default = "REGULAR"
+}
+`
+	locals := `locals {
+  networking_mode = "VPC_NATIVE"
+}
+`
+	main := `resource "google_container_cluster" "primary" {
+  networking_mode = local.networking_mode
+
+  release_channel {
+    channel = var.release_channel
+  }
+}
+`
+
+	variablesFile := tmp + "/variables.tofu"
+	localsFile := tmp + "/locals.tofu"
+	mainFile := tmp + "/main.tofu"
+
+	for path, content := range map[string]string{
+		variablesFile: variables,
+		localsFile:    locals,
+		mainFile:      main,
+	} {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	files := []string{variablesFile, localsFile, mainFile}
+	configs, err := parser.ParseConfigurationsAs(files, "hcl2")
+	if err != nil {
+		t.Fatalf("unexpected parse error: %v", err)
+	}
+
+	dirSymbols := buildDirSymbolTables(files)
+	normalized := normalizeConfig(mainFile, configs[mainFile], dirSymbols)
+	resource := normalized.(map[string]interface{})["resource"].(map[string]interface{})
+	clusters := resource["google_container_cluster"].(map[string]interface{})
+	cluster := clusters["primary"].([]interface{})[0].(map[string]interface{})
+
+	if got := cluster["networking_mode"]; got != "VPC_NATIVE" {
+		t.Fatalf("networking_mode across files: got %#v, want %q", got, "VPC_NATIVE")
+	}
+
+	releaseChannel := cluster["release_channel"].([]interface{})[0].(map[string]interface{})
+	if got := releaseChannel["channel"]; got != "REGULAR" {
+		t.Fatalf("release_channel.channel across files: got %#v, want %q", got, "REGULAR")
 	}
 }

@@ -51,8 +51,7 @@ func Test_findDirsWithTfFiles_and_walkDirs(t *testing.T) {
 }
 
 func Test_walkDirs_ErrorsAndHidden(t *testing.T) {
-	var dirs []string
-	err := walkDirs("/nonexistent/path", &dirs)
+	_, err := walkDirs("/nonexistent/path")
 	if err == nil {
 		t.Error("Expected error for non-existent directory")
 	}
@@ -70,8 +69,7 @@ func Test_walkDirs_ErrorsAndHidden(t *testing.T) {
 	os.WriteFile(filepath.Join(tempDir, ".hidden", "main.tf"), []byte("terraform {}"), 0644)
 	os.WriteFile(filepath.Join(tempDir, ".terraform", "main.tf"), []byte("terraform {}"), 0644)
 
-	var foundDirs []string
-	err = walkDirs(tempDir, &foundDirs)
+	foundDirs, err := walkDirs(tempDir)
 	if err != nil {
 		t.Fatalf("walkDirs failed: %v", err)
 	}
@@ -111,21 +109,19 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 		runValidateOut string
 	}
 	cases := []struct {
-		name     string
-		args     mockArgs
-		wantErr  bool
-		wantExit int
+		name    string
+		args    mockArgs
+		wantErr bool
 	}{
-		{"not installed", mockArgs{checkInstalled: false}, true, 1},
-		{"getwd error", mockArgs{checkInstalled: true, getwdErr: fmt.Errorf("fail")}, true, 1},
-		{"no tf dirs", mockArgs{checkInstalled: true, dirs: []string{}}, false, 0},
-		{"init error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runCmdErr: fmt.Errorf("fail"), runCmdOut: "init fail"}, true, 1},
-		{"validate error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runValidateErr: fmt.Errorf("fail"), runValidateOut: "validate fail"}, true, 1},
-		{"all ok", mockArgs{checkInstalled: true, dirs: []string{"/mock"}}, false, 0},
+		{"not installed", mockArgs{checkInstalled: false}, true},
+		{"getwd error", mockArgs{checkInstalled: true, getwdErr: fmt.Errorf("fail")}, true},
+		{"no tf dirs", mockArgs{checkInstalled: true, dirs: []string{}}, false},
+		{"init error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runCmdErr: fmt.Errorf("fail"), runCmdOut: "init fail"}, true},
+		{"validate error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runValidateErr: fmt.Errorf("fail"), runValidateOut: "validate fail"}, true},
+		{"all ok", mockArgs{checkInstalled: true, dirs: []string{"/mock"}}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			exited := 0
 			checkInstalled := func() bool { return tc.args.checkInstalled }
 			getwd := func() (string, error) {
 				if tc.args.getwdErr != nil {
@@ -140,22 +136,17 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 			runValidate := func(dir string, args []string) (string, error) {
 				return tc.args.runValidateOut, tc.args.runValidateErr
 			}
-			exit := func(code int) { exited = code }
-			err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, exit)
+			err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate)
 			if tc.wantErr && err == nil {
 				t.Errorf("Expected error for case %q, got nil", tc.name)
 			}
 			if !tc.wantErr && err != nil {
 				t.Errorf("Did not expect error for case %q, got: %v", tc.name, err)
 			}
-			if exited != tc.wantExit {
-				t.Errorf("Expected exit code %d for case %q, got %d", tc.wantExit, tc.name, exited)
-			}
 		})
 	}
 
 	t.Run("relPath rewriting branch", func(t *testing.T) {
-		exited := 0
 		checkInstalled := func() bool { return true }
 		getwd := func() (string, error) { return "/mockroot", nil }
 		findDirs := func(root string) []string { return []string{"/mockroot/subdir"} }
@@ -165,18 +156,13 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 		runValidate := func(dir string, args []string) (string, error) {
 			return "validate ok", nil
 		}
-		exit := func(code int) { exited = code }
-		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, exit)
+		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate)
 		if err != nil {
 			t.Errorf("Did not expect error for relPath rewriting branch, got: %v", err)
-		}
-		if exited != 0 {
-			t.Errorf("Expected exit code 0 for relPath rewriting branch, got %d", exited)
 		}
 	})
 
 	t.Run("multi-error summary branch", func(t *testing.T) {
-		exited := 0
 		checkInstalled := func() bool { return true }
 		getwd := func() (string, error) { return "/mockroot", nil }
 		findDirs := func(root string) []string { return []string{"/mock1", "/mock2"} }
@@ -192,23 +178,11 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 			}
 			return "validate ok", nil
 		}
-		exit := func(code int) { exited = code }
-		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate, exit)
+		err := RunTofuValidateCLI([]string{}, checkInstalled, getwd, findDirs, runCmd, runValidate)
 		if err == nil {
 			t.Error("Expected error for multi-error summary branch, got nil")
 		}
-		if exited != 1 {
-			t.Errorf("Expected exit code 1 for multi-error summary branch, got %d", exited)
-		}
 	})
-}
-
-// TestCheckOpenTofuInstalled tests the shared CheckOpenTofuInstalled function
-func TestCheckOpenTofuInstalled(t *testing.T) {
-	testutil.SkipIfTofuNotInstalled(t)
-	if !testutil.CheckOpenTofuInstalled() {
-		t.Error("CheckOpenTofuInstalled should return true when tofu is installed")
-	}
 }
 
 // TestValidOpenTofuConfig tests that a valid config passes validation

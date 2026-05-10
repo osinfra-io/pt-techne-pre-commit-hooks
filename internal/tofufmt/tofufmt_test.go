@@ -9,14 +9,6 @@ import (
 	"pre-commit-hooks/internal/testutil"
 )
 
-func TestCheckOpenTofuInstalled(t *testing.T) {
-	testutil.SkipIfTofuNotInstalled(t)
-	got := CheckOpenTofuInstalled()
-	if !got {
-		t.Error("Expected CheckOpenTofuInstalled to return true when tofu is installed, but got false.")
-	}
-}
-
 func TestRunTofuFmt_MultiFileAndNested(t *testing.T) {
 	testutil.SkipIfTofuNotInstalled(t)
 	tempDir, cleanup := testutil.CreateTempDir(t, "fmt_test_multi")

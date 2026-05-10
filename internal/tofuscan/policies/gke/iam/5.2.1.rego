@@ -24,6 +24,6 @@ deny contains violation if {
 	}
 }
 
-_is_default_gke_sa(sa) if sa == "default"
+_is_default_gke_sa("default")
 
 _is_default_gke_sa(sa) if endswith(sa, "-compute@developer.gserviceaccount.com")

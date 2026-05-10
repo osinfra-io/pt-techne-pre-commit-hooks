@@ -10,9 +10,7 @@ _desc_3_3 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_dns_managed_zone
 	some resource in resources
-	dnssec_arr := object.get(resource, "dnssec_config", [{}])
-	some dnssec in dnssec_arr
-	object.get(dnssec, "state", "off") != "on"
+	not dnssec_enabled(resource)
 	violation := {
 		"resource": name,
 		"rule_id": "gcp/cis/3.3",
@@ -22,4 +20,17 @@ deny contains violation if {
 		"title": "Ensure That DNSSEC Is Enabled for Cloud DNS",
 		"description": _desc_3_3,
 	}
+}
+
+dnssec_enabled(resource) if {
+	dnssec_arr := object.get(resource, "dnssec_config", [])
+	some dnssec in dnssec_arr
+	lower(object.get(dnssec, "state", "off")) == "on"
+}
+
+# Dynamic blocks are emitted under the synthetic "dynamic" key by the parser.
+# If dnssec_config is present there, treat this as configured and avoid false positives.
+dnssec_enabled(resource) if {
+	dynamic := object.get(resource, "dynamic", {})
+	count(object.get(dynamic, "dnssec_config", [])) > 0
 }
