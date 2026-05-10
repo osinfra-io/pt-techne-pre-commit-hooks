@@ -16,15 +16,16 @@ var CheckOpenTofuInstalled = testutil.CheckOpenTofuInstalled
 // Returns true if any test files are found, false otherwise.
 func HasTestFiles(rootDir string) (bool, error) {
 	found := false
+	cleanRoot := filepath.Clean(rootDir)
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// Skip hidden directories and .terraform
+		// Skip hidden directories and .terraform, but not the root itself
 		if info.IsDir() {
 			name := info.Name()
-			if strings.HasPrefix(name, ".") || name == ".terraform" {
+			if filepath.Clean(path) != cleanRoot && strings.HasPrefix(name, ".") {
 				return filepath.SkipDir
 			}
 			return nil

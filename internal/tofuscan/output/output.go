@@ -459,12 +459,16 @@ func computePassedRulesCount(violations, skipped []engine.Violation, resourceTyp
 	failingOrSkippedRules := make(map[string]struct{})
 	for _, v := range violations {
 		if v.RuleID != "" {
-			failingOrSkippedRules[v.RuleID] = struct{}{}
+			if _, matching := matchingRules[v.RuleID]; matching {
+				failingOrSkippedRules[v.RuleID] = struct{}{}
+			}
 		}
 	}
 	for _, v := range skipped {
 		if v.RuleID != "" {
-			failingOrSkippedRules[v.RuleID] = struct{}{}
+			if _, matching := matchingRules[v.RuleID]; matching {
+				failingOrSkippedRules[v.RuleID] = struct{}{}
+			}
 		}
 	}
 
