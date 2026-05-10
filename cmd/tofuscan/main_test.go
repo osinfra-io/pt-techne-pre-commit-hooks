@@ -8,20 +8,20 @@ import (
 )
 
 func TestRunTofuScanCLI(t *testing.T) {
-	noViolations := []engine.Violation{}
-	oneViolation := []engine.Violation{{RuleID: "CIS-1.1", File: "main.tofu"}}
+	noViolations := &engine.RunResult{Violations: []engine.Violation{}}
+	oneViolation := &engine.RunResult{Violations: []engine.Violation{{RuleID: "CIS-1.1", File: "main.tofu"}}}
 	noSkips := engine.ParseSkipDirectives([]string{})
 
 	cases := []struct {
-		name       string
-		paths      []string
-		warnOnly   bool
-		files      []string
-		findErr    error
-		violations []engine.Violation
-		engineErr  error
-		wantExit   int
-		wantErr    bool
+		name      string
+		paths     []string
+		warnOnly  bool
+		files     []string
+		findErr   error
+		result    *engine.RunResult
+		engineErr error
+		wantExit  int
+		wantErr   bool
 	}{
 		{
 			name:     "no files found",
@@ -45,26 +45,26 @@ func TestRunTofuScanCLI(t *testing.T) {
 			wantErr:   true,
 		},
 		{
-			name:       "no violations",
-			paths:      []string{"."},
-			files:      []string{"main.tofu"},
-			violations: noViolations,
-			wantExit:   exitSuccess,
+			name:     "no violations",
+			paths:    []string{"."},
+			files:    []string{"main.tofu"},
+			result:   noViolations,
+			wantExit: exitSuccess,
 		},
 		{
-			name:       "violations, warn-only false",
-			paths:      []string{"."},
-			files:      []string{"main.tofu"},
-			violations: oneViolation,
-			wantExit:   exitFailure,
+			name:     "violations, warn-only false",
+			paths:    []string{"."},
+			files:    []string{"main.tofu"},
+			result:   oneViolation,
+			wantExit: exitFailure,
 		},
 		{
-			name:       "violations, warn-only true",
-			paths:      []string{"."},
-			warnOnly:   true,
-			files:      []string{"main.tofu"},
-			violations: oneViolation,
-			wantExit:   exitSuccess,
+			name:     "violations, warn-only true",
+			paths:    []string{"."},
+			warnOnly: true,
+			files:    []string{"main.tofu"},
+			result:   oneViolation,
+			wantExit: exitSuccess,
 		},
 	}
 
@@ -76,10 +76,11 @@ func TestRunTofuScanCLI(t *testing.T) {
 			findFiles := func(paths []string) ([]string, error) {
 				return tc.files, tc.findErr
 			}
-			runEngine := func(files []string) ([]engine.Violation, error) {
-				return tc.violations, tc.engineErr
+			runEngine := func(files []string) (*engine.RunResult, error) {
+				return tc.result, tc.engineErr
 			}
-			printOutput := func(violations []engine.Violation, skipped []engine.Violation) {}
+			printOutput := func(violations []engine.Violation, skipped []engine.Violation, resourceTypes map[string]struct{}) {
+			}
 
 			err := RunTofuScanCLI(
 				tc.paths,

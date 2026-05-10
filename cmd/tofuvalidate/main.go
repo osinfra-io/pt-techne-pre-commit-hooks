@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/output"
-	tofuvalidate "pre-commit-hooks/internal/tofuvalidate"
+	"pre-commit-hooks/internal/tofuvalidate"
 )
 
 func main() {
@@ -27,7 +27,6 @@ func main() {
 		findDirsWithTfFiles,
 		runCmdInDir,
 		tofuvalidate.RunTofuValidate,
-		os.Exit,
 	)
 	if err != nil {
 		os.Exit(1)
@@ -42,25 +41,21 @@ func RunTofuValidateCLI(
 	findDirs func(string) []string,
 	runCmd func(string, []string) (string, error),
 	runValidate func(string, []string) (string, error),
-	exit func(int),
 ) error {
 	if !checkInstalled() {
 		fmt.Println("OpenTofu is not installed or not in PATH.")
-		exit(1)
 		return fmt.Errorf("OpenTofu not installed")
 	}
 
 	rootDir, err := getwd()
 	if err != nil {
 		fmt.Println("Could not get working directory.")
-		exit(1)
 		return err
 	}
 
 	dirsWithTf := findDirs(rootDir)
 	if len(dirsWithTf) == 0 {
 		fmt.Println("No directories with Terraform files found.")
-		exit(0)
 		return nil
 	}
 
@@ -106,13 +101,7 @@ func RunTofuValidateCLI(
 
 	if len(errorMessages) > 0 {
 		output.PrintErrorSummary(errorMessages)
-		exit(1)
 		return fmt.Errorf("validation failed")
-	}
-
-	if len(warningMessages) > 0 {
-		exit(0)
-		return nil
 	}
 
 	return nil
@@ -128,39 +117,41 @@ func runCmdInDir(dir string, args []string) (string, error) {
 
 // findDirsWithTfFiles recursively finds directories containing .tf files
 func findDirsWithTfFiles(root string) []string {
-	var dirs []string
-	if err := walkDirs(root, &dirs); err != nil {
+	dirs, err := walkDirs(root)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Error scanning directories: %v\n", err)
 	}
 	return dirs
 }
 
-func walkDirs(dir string, dirs *[]string) error {
+func walkDirs(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	var dirs []string
 	var errs []error
 	hasTfOrTofu := false
 	for _, entry := range entries {
 		name := entry.Name()
-		// Skip hidden/system folders
 		if entry.IsDir() {
-			if strings.HasPrefix(name, ".") || name == ".terraform" {
+			if strings.HasPrefix(name, ".") {
 				continue
 			}
 			path := filepath.Join(dir, name)
-			if err := walkDirs(path, dirs); err != nil {
+			subDirs, err := walkDirs(path)
+			if err != nil {
 				errs = append(errs, err)
 			}
+			dirs = append(dirs, subDirs...)
 		} else if strings.HasSuffix(name, ".tf") || strings.HasSuffix(name, ".tofu") {
 			hasTfOrTofu = true
 		}
 	}
 	if hasTfOrTofu {
-		*dirs = append(*dirs, dir)
+		dirs = append(dirs, dir)
 	}
-	return errors.Join(errs...)
+	return dirs, errors.Join(errs...)
 }
 
 // hasWarning checks if output contains a warning message
@@ -170,10 +161,9 @@ func hasWarning(output string) bool {
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		lower := strings.ToLower(trimmed)
-		// Check for common warning patterns at start of line
 		if strings.HasPrefix(lower, "warning:") ||
 			strings.HasPrefix(lower, "│ warning:") ||
-			strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning") {
+			(strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning")) {
 			return true
 		}
 	}

@@ -187,12 +187,12 @@ resource "google_container_cluster" "good_cluster" {
   logging_service    = "logging.googleapis.com/kubernetes"
   monitoring_service = "monitoring.googleapis.com/kubernetes"
 
-  networking_mode = "VPC_NATIVE"
+  networking_mode = local.networking_mode
 
   ip_allocation_policy {}
 
   release_channel {
-    channel = "REGULAR"
+    channel = var.release_channel
   }
 
   database_encryption {
@@ -229,7 +229,7 @@ resource "google_container_cluster" "good_cluster" {
 
 # GKE CIS 5.2.1 — dedicated service account (not "default")
 # GKE CIS 5.4.1 — workload_metadata_config.mode = GKE_METADATA
-# GKE CIS 5.5.1 — image_type = COS_CONTAINERD
+# GKE CIS 5.5.1 — image_type absent (GKE defaults to COS_CONTAINERD)
 # GKE CIS 5.5.2 — management.auto_repair = true
 # GKE CIS 5.5.3 — management.auto_upgrade = true
 # GKE CIS 5.5.6 — shielded_instance_config.enable_integrity_monitoring = true
@@ -244,7 +244,6 @@ resource "google_container_node_pool" "good_pool" {
   }
 
   node_config {
-    image_type      = "COS_CONTAINERD"
     service_account = "my-gke-sa@my-project.iam.gserviceaccount.com"
 
     shielded_instance_config {

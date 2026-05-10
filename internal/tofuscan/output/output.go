@@ -2,42 +2,85 @@ package output
 
 import (
 	"fmt"
+	"io/fs"
+	"regexp"
+	"sort"
 	"strings"
+	"sync"
 
 	"pre-commit-hooks/internal/output"
 	"pre-commit-hooks/internal/tofuscan/engine"
+	"pre-commit-hooks/internal/tofuscan/policies"
 )
 
 const descWrapWidth = 76
 
-// Print writes violations and skipped violations to stdout.
-func Print(violations []engine.Violation, skipped []engine.Violation) {
-	if len(violations) == 0 && len(skipped) == 0 {
-		fmt.Printf("%s %s%s%s\n", output.ThumbsUp, output.BoldGreen, "No violations found", output.Reset)
-		return
-	}
+// RuleMetadata holds static metadata about a policy rule, parsed from .rego files.
+type RuleMetadata struct {
+	RuleID       string
+	CISControl   string
+	ProfileLevel string
+	Severity     string
+	Title        string
+	Description  string
+}
 
-	// Print active violations.
-	for i, v := range violations {
-		printViolation(v)
-		if i < len(violations)-1 {
+var (
+	ruleMetadataOnce sync.Once
+	ruleResourceMap  map[string]map[string]struct{} // rule_id → resource types
+	ruleMetadataMap  map[string]*RuleMetadata       // rule_id → metadata
+
+	ruleIDPattern       = regexp.MustCompile(`"rule_id"\s*:\s*"([^"]+)"`)
+	resourcePattern     = regexp.MustCompile(`input\.resource\.(\w+)`)
+	cisControlPattern   = regexp.MustCompile(`"cis_control"\s*:\s*"([^"]+)"`)
+	profileLevelPattern = regexp.MustCompile(`"profile_level"\s*:\s*"([^"]+)"`)
+	severityPattern     = regexp.MustCompile(`"severity"\s*:\s*"([^"]+)"`)
+	titlePattern        = regexp.MustCompile(`"title"\s*:\s*"([^"]+)"`)
+	titleConcatPattern  = regexp.MustCompile(`(?s)_title_\w+\s*:=\s*concat\("",\s*\[(.*?)\]\)`)
+	descConcatPattern   = regexp.MustCompile(`(?s)_desc_\w+\s*:=\s*concat\("",\s*\[(.*?)\]\)`)
+	concatPartPattern   = regexp.MustCompile(`"([^"]+)"`)
+)
+
+// Print writes violations, skipped violations, and passing rules to stdout.
+func Print(violations []engine.Violation, skipped []engine.Violation, resourceTypes map[string]struct{}) {
+	printed := false
+
+	// Print passing rule cards first.
+	passingRules := computePassingRules(violations, skipped, resourceTypes)
+	for _, meta := range passingRules {
+		if printed {
 			fmt.Println()
 		}
+		printPassingCard(meta)
+		printed = true
+	}
+
+	// Print failing violation cards sorted by severity ascending (low → medium → high).
+	sorted := sortBySeverity(violations)
+	for _, v := range sorted {
+		if printed {
+			fmt.Println()
+		}
+		printViolation(v)
+		printed = true
 	}
 
 	// Print skipped violations in light gray.
 	if len(skipped) > 0 {
-		if len(violations) > 0 {
+		if printed {
 			fmt.Println()
 		}
 		for _, v := range skipped {
 			printSkippedViolation(v)
 		}
+		printed = true
 	}
 
-	// Summary line with severity breakdown.
-	fmt.Println()
-	printSummary(violations, skipped)
+	// Summary line.
+	if printed {
+		fmt.Println()
+	}
+	printSummary(violations, skipped, resourceTypes)
 }
 
 func printSkippedViolation(v engine.Violation) {
@@ -51,7 +94,7 @@ func printSkippedViolation(v engine.Violation) {
 	)
 }
 
-func printSummary(violations, skipped []engine.Violation) {
+func printSummary(violations, skipped []engine.Violation, resourceTypes map[string]struct{}) {
 	var highCount, mediumCount int
 	files := make(map[string]bool)
 	for _, v := range violations {
@@ -68,23 +111,27 @@ func printSummary(violations, skipped []engine.Violation) {
 
 	total := len(violations)
 	skippedCount := len(skipped)
+	passedCount, hasPassedCount := computePassedRulesCount(violations, skipped, resourceTypes)
 
-	if total == 0 {
-		msg := "No violations found"
-		if skippedCount > 0 {
-			msg += fmt.Sprintf("  %s%d skipped%s", output.DarkGray, skippedCount, output.Reset)
+	checked := total + passedCount
+	if !hasPassedCount {
+		checked = 0
+	}
+
+	// Ratio line: 🛡️ 19/22 rules passed  ·  1 file scanned
+	emoji := summaryEmoji(passedCount, checked)
+	if hasPassedCount && checked > 0 {
+		line := fmt.Sprintf("%s %s%d/%d rules passed%s", emoji, output.BoldWhite, passedCount, checked, output.Reset)
+		if len(files) > 0 {
+			line += fmt.Sprintf("  ·  %s%d file(s) scanned%s", output.DarkGray, len(files), output.Reset)
 		}
-		fmt.Printf("%s %s%s%s\n", output.ThumbsUp, output.BoldGreen, msg, output.Reset)
+		fmt.Println(line)
+	} else if total == 0 {
+		fmt.Printf("%s %s%s%s\n", output.ThumbsUp, output.BoldGreen, "No violations found", output.Reset)
 		return
 	}
 
-	if len(files) > 0 {
-		fmt.Printf("%s %s%d violation(s) across %d file(s)%s\n",
-			output.Error, output.BoldWhite, total, len(files), output.Reset)
-	} else {
-		fmt.Printf("%s %s%d violation(s)%s\n",
-			output.Error, output.BoldWhite, total, output.Reset)
-	}
+	// Failure breakdown on separate lines.
 	if highCount > 0 {
 		fmt.Printf("     • %s%d high%s\n", output.BoldRed, highCount, output.Reset)
 	}
@@ -93,6 +140,21 @@ func printSummary(violations, skipped []engine.Violation) {
 	}
 	if skippedCount > 0 {
 		fmt.Printf("     • %s%d skipped%s\n", output.DarkGray, skippedCount, output.Reset)
+	}
+}
+
+func summaryEmoji(passed, total int) string {
+	if total == 0 {
+		return output.ThumbsUp
+	}
+	pct := float64(passed) / float64(total) * 100
+	switch {
+	case pct >= 85:
+		return "🛡️"
+	case pct >= 50:
+		return output.Warning
+	default:
+		return output.Error
 	}
 }
 
@@ -119,24 +181,12 @@ func printViolation(v engine.Violation) {
 		fileRef = fmt.Sprintf("%s%s  %s(resource absent from file)%s", output.Gray, p, output.DarkGray, output.Reset)
 	}
 
-	badge := output.Badge(strings.ToUpper(v.Severity), boldCol)
+	badge := output.Badge("FAIL", boldCol)
 	title := output.Title(v.Title)
 
 	c.Open(badge, title)
 	c.Line(fmt.Sprintf("%s %s", output.File, fileRef))
-	benchmark := "GCP CIS"
-	if strings.HasPrefix(v.RuleID, "gke/") {
-		benchmark = "GKE CIS"
-	}
-	cisLine := fmt.Sprintf("%s%s %s%s", boldCol, benchmark, v.CISControl, output.Reset)
-	if v.ProfileLevel != "" {
-		cisLine += fmt.Sprintf("  %s%s%s", output.DarkGray, v.ProfileLevel, output.Reset)
-	}
-	c.Line(fmt.Sprintf("%s %s%s%s · %s",
-		output.Tag,
-		output.Gray, cisSectionName(v.RuleID, v.CISControl), output.Reset,
-		cisLine,
-	))
+	printCISLine(c, v.RuleID, v.CISControl, v.ProfileLevel, v.Severity)
 
 	if v.Description != "" {
 		c.Blank()
@@ -146,6 +196,41 @@ func printViolation(v engine.Violation) {
 	}
 
 	c.Close()
+}
+
+func printPassingCard(meta *RuleMetadata) {
+	c := output.NewCard(output.Green)
+	badge := output.Badge("PASS", output.BoldGreen)
+	title := output.Title(meta.Title)
+
+	c.Open(badge, title)
+	printCISLine(c, meta.RuleID, meta.CISControl, meta.ProfileLevel, meta.Severity)
+
+	if meta.Description != "" {
+		c.Blank()
+		for _, line := range output.WrapText(meta.Description, descWrapWidth) {
+			c.Line(fmt.Sprintf("%s%s%s", output.Dim, line, output.Reset))
+		}
+	}
+
+	c.Close()
+}
+
+func printCISLine(c *output.Card, ruleID, cisControl, profileLevel, severity string) {
+	benchmark := "GCP CIS"
+	if strings.HasPrefix(ruleID, "gke/") {
+		benchmark = "GKE CIS"
+	}
+	cisCol := severityBoldColor(severity)
+	cisLine := fmt.Sprintf("%s%s %s%s", cisCol, benchmark, cisControl, output.Reset)
+	if profileLevel != "" {
+		cisLine += fmt.Sprintf("  %s%s%s", output.DarkGray, profileLevel, output.Reset)
+	}
+	c.Line(fmt.Sprintf("%s %s%s%s · %s",
+		output.Tag,
+		output.Gray, cisSectionName(ruleID, cisControl), output.Reset,
+		cisLine,
+	))
 }
 
 // cisSectionName maps a CIS control to its benchmark section name.
@@ -237,6 +322,43 @@ func severityBoldColor(severity string) string {
 	}
 }
 
+func severityOrder(severity string) int {
+	switch severity {
+	case "Low":
+		return 0
+	case "Medium":
+		return 1
+	case "High":
+		return 2
+	default:
+		return -1
+	}
+}
+
+func profileLevelOrder(level string) int {
+	switch level {
+	case "Level 1":
+		return 1
+	case "Level 2":
+		return 2
+	default:
+		return 0
+	}
+}
+
+func sortBySeverity(violations []engine.Violation) []engine.Violation {
+	sorted := make([]engine.Violation, len(violations))
+	copy(sorted, violations)
+	sort.SliceStable(sorted, func(i, j int) bool {
+		si, sj := severityOrder(sorted[i].Severity), severityOrder(sorted[j].Severity)
+		if si != sj {
+			return si < sj
+		}
+		return profileLevelOrder(sorted[i].ProfileLevel) < profileLevelOrder(sorted[j].ProfileLevel)
+	})
+	return sorted
+}
+
 // truncatePath shortens a file path to fit within maxLen visible characters
 // by replacing the middle of the path with "…", preserving the leading
 // directory context and filename.
@@ -254,4 +376,200 @@ func truncatePath(path string, maxLen int) string {
 	}
 	headLen := maxLen - len(tail) - 1
 	return path[:headLen] + "…" + tail
+}
+
+// computePassingRules returns metadata for rules that matched scanned
+// resource types but produced no violations and were not skipped.
+func computePassingRules(violations, skipped []engine.Violation, resourceTypes map[string]struct{}) []*RuleMetadata {
+	if len(resourceTypes) == 0 {
+		return nil
+	}
+
+	initRuleMetadata()
+	if len(ruleResourceMap) == 0 {
+		return nil
+	}
+
+	failingOrSkippedRules := make(map[string]struct{})
+	for _, v := range violations {
+		if v.RuleID != "" {
+			failingOrSkippedRules[v.RuleID] = struct{}{}
+		}
+	}
+	for _, v := range skipped {
+		if v.RuleID != "" {
+			failingOrSkippedRules[v.RuleID] = struct{}{}
+		}
+	}
+
+	var passing []*RuleMetadata
+	for ruleID, ruleTypes := range ruleResourceMap {
+		if _, failed := failingOrSkippedRules[ruleID]; failed {
+			continue
+		}
+		for rt := range ruleTypes {
+			if _, present := resourceTypes[rt]; present {
+				if meta, ok := ruleMetadataMap[ruleID]; ok {
+					passing = append(passing, meta)
+				}
+				break
+			}
+		}
+	}
+
+	sort.Slice(passing, func(i, j int) bool {
+		si, sj := severityOrder(passing[i].Severity), severityOrder(passing[j].Severity)
+		if si != sj {
+			return si < sj
+		}
+		li, lj := profileLevelOrder(passing[i].ProfileLevel), profileLevelOrder(passing[j].ProfileLevel)
+		if li != lj {
+			return li < lj
+		}
+		return passing[i].RuleID < passing[j].RuleID
+	})
+	return passing
+}
+
+func computePassedRulesCount(violations, skipped []engine.Violation, resourceTypes map[string]struct{}) (int, bool) {
+	if len(resourceTypes) == 0 {
+		return 0, false
+	}
+
+	initRuleMetadata()
+	if len(ruleResourceMap) == 0 {
+		return 0, false
+	}
+
+	// Count rules whose target resource types are present in the scanned code.
+	matchingRules := make(map[string]struct{})
+	for ruleID, ruleTypes := range ruleResourceMap {
+		for rt := range ruleTypes {
+			if _, present := resourceTypes[rt]; present {
+				matchingRules[ruleID] = struct{}{}
+				break
+			}
+		}
+	}
+
+	if len(matchingRules) == 0 {
+		return 0, false
+	}
+
+	failingOrSkippedRules := make(map[string]struct{})
+	for _, v := range violations {
+		if v.RuleID != "" {
+			failingOrSkippedRules[v.RuleID] = struct{}{}
+		}
+	}
+	for _, v := range skipped {
+		if v.RuleID != "" {
+			failingOrSkippedRules[v.RuleID] = struct{}{}
+		}
+	}
+
+	passed := len(matchingRules) - len(failingOrSkippedRules)
+	if passed < 0 {
+		passed = 0
+	}
+	return passed, true
+}
+
+// getRuleResourceMap returns a mapping of rule_id → set of resource types
+// referenced in the embedded policy files.
+func getRuleResourceMap() map[string]map[string]struct{} {
+	initRuleMetadata()
+	return ruleResourceMap
+}
+
+func initRuleMetadata() {
+	ruleMetadataOnce.Do(func() {
+		ruleResourceMap = make(map[string]map[string]struct{})
+		ruleMetadataMap = make(map[string]*RuleMetadata)
+
+		_ = fs.WalkDir(policies.FS, ".", func(path string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(path, ".rego") || strings.HasSuffix(path, "_test.rego") {
+				return nil
+			}
+
+			content, readErr := fs.ReadFile(policies.FS, path)
+			if readErr != nil {
+				return nil
+			}
+
+			text := string(content)
+
+			ruleIDs := make(map[string]struct{})
+			for _, match := range ruleIDPattern.FindAllStringSubmatch(text, -1) {
+				if len(match) > 1 && match[1] != "" {
+					ruleIDs[match[1]] = struct{}{}
+				}
+			}
+
+			resTypes := make(map[string]struct{})
+			for _, match := range resourcePattern.FindAllStringSubmatch(text, -1) {
+				if len(match) > 1 && match[1] != "" {
+					resTypes[match[1]] = struct{}{}
+				}
+			}
+
+			for ruleID := range ruleIDs {
+				if _, exists := ruleResourceMap[ruleID]; !exists {
+					ruleResourceMap[ruleID] = make(map[string]struct{})
+				}
+				for rt := range resTypes {
+					ruleResourceMap[ruleID][rt] = struct{}{}
+				}
+
+				if _, exists := ruleMetadataMap[ruleID]; !exists {
+					ruleMetadataMap[ruleID] = &RuleMetadata{
+						RuleID:       ruleID,
+						CISControl:   firstMatch(cisControlPattern, text),
+						ProfileLevel: firstMatch(profileLevelPattern, text),
+						Severity:     firstMatch(severityPattern, text),
+						Title:        extractTitle(text),
+						Description:  extractConcat(descConcatPattern, text),
+					}
+				}
+			}
+			return nil
+		})
+	})
+}
+
+func firstMatch(re *regexp.Regexp, text string) string {
+	m := re.FindStringSubmatch(text)
+	if len(m) > 1 {
+		return m[1]
+	}
+	return ""
+}
+
+// extractTitle returns the title from a .rego file, handling both inline
+// string literals ("title": "...") and concat variable references
+// (_title_X := concat("", [...])).
+func extractTitle(text string) string {
+	if t := firstMatch(titlePattern, text); t != "" {
+		return t
+	}
+	return extractConcat(titleConcatPattern, text)
+}
+
+// extractConcat extracts a string built via concat("", [...]) in a .rego file.
+func extractConcat(pattern *regexp.Regexp, text string) string {
+	m := pattern.FindStringSubmatch(text)
+	if len(m) < 2 {
+		return ""
+	}
+	parts := concatPartPattern.FindAllStringSubmatch(m[1], -1)
+	var sb strings.Builder
+	for _, p := range parts {
+		if len(p) > 1 {
+			sb.WriteString(p[1])
+		}
+	}
+	return sb.String()
 }

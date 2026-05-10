@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"pre-commit-hooks/internal/testutil"
-	tofu_fmt "pre-commit-hooks/internal/tofufmt"
 )
 
 func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
@@ -32,6 +31,7 @@ func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			checkInstalled := func() bool { return tc.args.checkInstalled }
 			getwd := func() (string, error) {
 				if tc.args.getwdErr != nil {
 					return "", tc.args.getwdErr
@@ -44,11 +44,7 @@ func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
 			format := func(dir string, args []string) error {
 				return tc.args.formatErr
 			}
-			// Patch tofu_fmt.CheckOpenTofuInstalled for this test
-			origCheck := tofu_fmt.CheckOpenTofuInstalled
-			tofu_fmt.CheckOpenTofuInstalled = func() bool { return tc.args.checkInstalled }
-			defer func() { tofu_fmt.CheckOpenTofuInstalled = origCheck }()
-			err := RunTofuFmtCLI([]string{}, getwd, runFmt, format)
+			err := RunTofuFmtCLI([]string{}, checkInstalled, getwd, runFmt, format)
 			if tc.wantErr && err == nil {
 				t.Errorf("Expected error for case %q, got nil", tc.name)
 			}
@@ -56,24 +52,6 @@ func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
 				t.Errorf("Did not expect error for case %q, got: %v", tc.name, err)
 			}
 		})
-	}
-}
-
-func TestRunTofuFmtCLI_NotInstalled(t *testing.T) {
-	origCheck := tofu_fmt.CheckOpenTofuInstalled
-	tofu_fmt.CheckOpenTofuInstalled = func() bool { return false }
-	defer func() { tofu_fmt.CheckOpenTofuInstalled = origCheck }()
-	err := RunTofuFmtCLI([]string{}, os.Getwd, tofu_fmt.RunTofuFmt, tofu_fmt.FormatFiles)
-	if err == nil {
-		t.Error("Expected error when OpenTofu is not installed")
-	}
-}
-
-func TestRunTofuFmtCLI_BadDir(t *testing.T) {
-	// Simulate error getting working directory
-	err := RunTofuFmtCLI([]string{}, func() (string, error) { return "", fmt.Errorf("fail") }, tofu_fmt.RunTofuFmt, tofu_fmt.FormatFiles)
-	if err == nil {
-		t.Error("Expected error when failing to get working directory")
 	}
 }
 
@@ -85,18 +63,6 @@ func TestMain_ErrorHandling(t *testing.T) {
 	if testutil.CheckOpenTofuInstalled() {
 		t.Error("Expected CheckOpenTofuInstalled to be false when PATH is empty")
 	}
-}
-
-// TestCheckOpenTofuInstalled tests the shared CheckOpenTofuInstalled function
-func TestCheckOpenTofuInstalled(t *testing.T) {
-	if _, err := exec.LookPath("tofu"); err == nil {
-		if !testutil.CheckOpenTofuInstalled() {
-			t.Error("CheckOpenTofuInstalled should return true when tofu is installed")
-		}
-	} else {
-		t.Skip("Skipping positive test as tofu is not installed")
-	}
-	t.Log("Note: Unable to directly test the case where tofu is not installed")
 }
 
 func TestTofuFmt(t *testing.T) {

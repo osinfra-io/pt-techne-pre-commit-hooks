@@ -9,22 +9,6 @@ import (
 	"pre-commit-hooks/internal/testutil"
 )
 
-func TestCheckOpenTofuInstalled(t *testing.T) {
-	got := CheckOpenTofuInstalled()
-	// Try to look up the tofu binary directly to determine the expected result
-	_, err := exec.LookPath("tofu")
-	expected := err == nil
-	if got != expected {
-		t.Errorf("CheckOpenTofuInstalled() = %v, want %v (tofu binary presence: %v)", got, expected, err)
-	}
-	// Optionally log for debug
-	if got {
-		t.Log("CheckOpenTofuInstalled returned true: tofu is installed or mocked as installed.")
-	} else {
-		t.Log("CheckOpenTofuInstalled returned false: tofu is not installed or is mocked as not installed.")
-	}
-}
-
 func TestRunTofuValidate_ValidConfig(t *testing.T) {
 	testutil.SkipIfTofuNotInstalled(t)
 	tempDir, cleanup := testutil.CreateTempDir(t, "validate_test_valid")

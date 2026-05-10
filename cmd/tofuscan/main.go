@@ -47,7 +47,7 @@ func main() {
 		paths,
 		warnOnly,
 		walker.FindTofuFiles,
-		func(files []string) ([]engine.Violation, error) {
+		func(files []string) (*engine.RunResult, error) {
 			return engine.Run(context.Background(), files, policies.FS)
 		},
 		engine.ParseSkipDirectives,
@@ -64,9 +64,9 @@ func RunTofuScanCLI(
 	paths []string,
 	warnOnly bool,
 	findFiles func([]string) ([]string, error),
-	runEngine func([]string) ([]engine.Violation, error),
+	runEngine func([]string) (*engine.RunResult, error),
 	parseSkips func([]string) *engine.SkipDirectives,
-	printOutput func([]engine.Violation, []engine.Violation),
+	printOutput func([]engine.Violation, []engine.Violation, map[string]struct{}),
 	exit func(int),
 ) error {
 	files, err := findFiles(paths)
@@ -82,7 +82,7 @@ func RunTofuScanCLI(
 		return nil
 	}
 
-	allViolations, err := runEngine(files)
+	result, err := runEngine(files)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error evaluating policies: %v\n", err)
 		exit(exitError)
@@ -90,9 +90,9 @@ func RunTofuScanCLI(
 	}
 
 	skips := parseSkips(files)
-	violations, skipped := skips.Filter(allViolations)
+	violations, skipped := skips.Filter(result.Violations)
 
-	printOutput(violations, skipped)
+	printOutput(violations, skipped, result.ResourceTypes)
 
 	if len(violations) > 0 && !warnOnly {
 		exit(exitFailure)
