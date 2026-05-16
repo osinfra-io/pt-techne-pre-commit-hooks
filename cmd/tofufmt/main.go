@@ -10,6 +10,16 @@ import (
 	"pre-commit-hooks/internal/tofufmt"
 )
 
+// truncateLine truncates s to maxWidth runes, appending "…" if truncated.
+// Lines at or below maxWidth (or when maxWidth <= 1) are returned unchanged.
+func truncateLine(s string, maxWidth int) string {
+	runes := []rune(s)
+	if maxWidth <= 1 || len(runes) <= maxWidth {
+		return s
+	}
+	return string(runes[:maxWidth-1]) + "…"
+}
+
 func main() {
 	err := RunTofuFmtCLI(
 		os.Args[1:],
@@ -48,6 +58,8 @@ func RunTofuFmtCLI(
 		c.Open(output.Badge("WARNING", output.BoldYellow), output.Title("Unformatted OpenTofu files"))
 		c.Line(fmt.Sprintf("%s %s", output.File, output.Colorize(baseDir, output.Gray)))
 		c.Blank()
+		// "│  " prefix is 3 visible chars; subtract to get usable content width.
+		contentWidth := output.TermWidth() - 3
 		for _, line := range strings.Split(outputStr, "\n") {
 			if strings.TrimSpace(line) != "" {
 				var color string
@@ -59,7 +71,7 @@ func RunTofuFmtCLI(
 				default:
 					color = output.Dim
 				}
-				c.Line(fmt.Sprintf("%s%s%s", color, line, output.Reset))
+				c.Line(fmt.Sprintf("%s%s%s", color, truncateLine(line, contentWidth), output.Reset))
 			}
 		}
 		c.Close()
