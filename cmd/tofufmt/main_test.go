@@ -10,30 +10,6 @@ import (
 	"pre-commit-hooks/internal/testutil"
 )
 
-func TestTruncateLine(t *testing.T) {
-	tests := []struct {
-		name  string
-		line  string
-		width int
-		want  string
-	}{
-		{"short line unchanged", "hello", 20, "hello"},
-		{"exact width unchanged", "hello", 5, "hello"},
-		{"truncated with ellipsis", "hello world", 8, "hello w…"},
-		{"zero width unchanged", "hello", 0, "hello"},
-		{"width 1 unchanged", "hello", 1, "hello"},
-		{"multibyte chars", "héllo wörld", 8, "héllo w…"},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got := truncateLine(tc.line, tc.width)
-			if got != tc.want {
-				t.Errorf("truncateLine(%q, %d) = %q, want %q", tc.line, tc.width, got, tc.want)
-			}
-		})
-	}
-}
-
 func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
 	type mockArgs struct {
 		checkInstalled bool

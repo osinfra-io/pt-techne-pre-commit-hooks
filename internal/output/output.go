@@ -99,19 +99,10 @@ func EmojiColorText(emoji, text, color string) string {
 }
 
 // TermWidth returns the terminal width, defaulting to 80 if detection fails.
-// It tries stdout, then stderr, then /dev/tty — because pre-commit pipes
-// stdout, making it a non-TTY fd, so we need a fallback to the controlling terminal.
 func TermWidth() int {
-	for _, fd := range []int{int(os.Stdout.Fd()), int(os.Stderr.Fd())} {
-		if w, _, err := term.GetSize(fd); err == nil && w > 0 {
-			return w
-		}
+	w, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || w <= 0 {
+		return 80
 	}
-	if tty, err := os.Open("/dev/tty"); err == nil {
-		defer tty.Close()
-		if w, _, err := term.GetSize(int(tty.Fd())); err == nil && w > 0 {
-			return w
-		}
-	}
-	return 80
+	return w
 }
