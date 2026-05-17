@@ -128,6 +128,14 @@ resource "google_storage_bucket_iam_binding" "bad_binding" {
 # GCP CIS 6.5 — authorized_networks contains 0.0.0.0/0
 # GCP CIS 6.6 — ipv4_enabled = true (public IP)
 # GCP CIS 6.7 — backup_configuration block absent
+# GCP CIS 6.2.1 — log_error_verbosity = VERBOSE
+# GCP CIS 6.2.2 — log_connections absent
+# GCP CIS 6.2.3 — log_disconnections absent
+# GCP CIS 6.2.4 — log_statement = none
+# GCP CIS 6.2.5 — log_min_messages = DEBUG5
+# GCP CIS 6.2.6 — log_min_error_statement = WARNING
+# GCP CIS 6.2.7 — log_min_duration_statement = 0 (logs all statements; disclose query literals)
+# GCP CIS 6.2.8 — cloudsql.enable_pgaudit absent
 resource "google_sql_database_instance" "bad_sql" {
   name             = "bad-sql"
   database_version = "POSTGRES_14"
@@ -142,6 +150,31 @@ resource "google_sql_database_instance" "bad_sql" {
       authorized_networks {
         value = "0.0.0.0/0"
       }
+    }
+
+    database_flags {
+      name  = "log_error_verbosity"
+      value = "VERBOSE"
+    }
+
+    database_flags {
+      name  = "log_statement"
+      value = "none"
+    }
+
+    database_flags {
+      name  = "log_min_messages"
+      value = "DEBUG5"
+    }
+
+    database_flags {
+      name  = "log_min_error_statement"
+      value = "WARNING"
+    }
+
+    database_flags {
+      name  = "log_min_duration_statement"
+      value = "0"
     }
   }
 }
@@ -237,4 +270,85 @@ resource "google_container_node_pool" "bad_pool" {
       mode = "EXPOSE"
     }
   }
+}
+
+# GCP CIS 1.6 — serviceAccountUser role granted at project level
+resource "google_project_iam_member" "bad_sa_user" {
+  project = "my-project"
+  role    = "roles/iam.serviceAccountUser"
+  member  = "user:someone@example.com"
+}
+
+# GCP CIS 1.9 — KMS cryptokey IAM grants access to allUsers
+resource "google_kms_crypto_key_iam_member" "bad_kms_iam" {
+  crypto_key_id = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/my-key"
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = "allUsers"
+}
+
+# GCP CIS 3.1 — default VPC network present in project
+resource "google_compute_network" "default" {
+  name = "default"
+}
+
+# GCP CIS 3.9 — SSL policy uses COMPATIBLE profile (allows weak cipher suites)
+resource "google_compute_ssl_policy" "bad_ssl_policy" {
+  name    = "bad-ssl-policy"
+  profile = "COMPATIBLE"
+}
+
+# GCP CIS 4.7 — disk has no customer-supplied encryption key
+resource "google_compute_disk" "bad_disk" {
+  name = "bad-disk"
+  type = "pd-ssd"
+  zone = "us-central1-a"
+}
+
+# GCP CIS 6.1.2 — MySQL skip_show_database flag absent
+# GCP CIS 6.1.3 — MySQL local_infile flag absent (defaults to on)
+resource "google_sql_database_instance" "bad_mysql" {
+  name             = "bad-mysql"
+  database_version = "MYSQL_8_0"
+
+  settings {
+    tier = "db-f1-micro"
+
+    ip_configuration {
+      ssl_mode     = "ENCRYPTED_ONLY"
+      ipv4_enabled = false
+    }
+
+    backup_configuration {
+      enabled = true
+    }
+  }
+}
+
+# GCP CIS 6.3.1 — SQL Server external scripts enabled flag absent (defaults to on)
+# GCP CIS 6.3.2 — SQL Server cross db ownership chaining flag absent (defaults to on)
+# GCP CIS 6.3.5 — SQL Server remote access flag absent (defaults to on)
+# GCP CIS 6.3.6 — SQL Server trace flag 3625 absent (error messages not masked)
+# GCP CIS 6.3.7 — SQL Server contained database authentication flag absent (defaults to on)
+resource "google_sql_database_instance" "bad_sqlserver" {
+  name             = "bad-sqlserver"
+  database_version = "SQLSERVER_2017_STANDARD"
+
+  settings {
+    tier = "db-custom-1-3840"
+
+    ip_configuration {
+      ssl_mode     = "ENCRYPTED_ONLY"
+      ipv4_enabled = false
+    }
+
+    backup_configuration {
+      enabled = true
+    }
+  }
+}
+
+# GCP CIS 7.2 — BigQuery table has no customer-managed encryption key
+resource "google_bigquery_table" "bad_bigquery_table" {
+  dataset_id = "bad_dataset"
+  table_id   = "bad_table"
 }

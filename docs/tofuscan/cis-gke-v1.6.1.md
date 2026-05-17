@@ -160,42 +160,42 @@ authentication, and cluster-level settings.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.2.1 | Ensure GKE clusters are not running using the Compute Engine default service account | Automated | | The Compute Engine default service account has the Editor role on the project. GKE nodes should use a dedicated, least-privilege service account. |
+| 5.2.1 | Ensure GKE clusters are not running using the Compute Engine default service account | Automated | ✅ | The Compute Engine default service account has the Editor role on the project. GKE nodes should use a dedicated, least-privilege service account. |
 | 5.2.2 | Prefer using dedicated GCP Service Accounts and Workload Identity | Manual | | Workload Identity allows Kubernetes service accounts to act as GCP service accounts, eliminating the need to manage service account key files for pod-level GCP API access. |
 
 ### 5.3 Cloud KMS
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.3.1 | Ensure Kubernetes Secrets are encrypted using keys managed in Cloud KMS | Automated | | By default, Kubernetes secrets are encrypted at rest using GCP-managed keys. Using application-layer encryption with Cloud KMS keys gives customers control over key rotation and revocation. |
+| 5.3.1 | Ensure Kubernetes Secrets are encrypted using keys managed in Cloud KMS | Automated | ✅ | By default, Kubernetes secrets are encrypted at rest using GCP-managed keys. Using application-layer encryption with Cloud KMS keys gives customers control over key rotation and revocation. |
 
 ### 5.4 Node Metadata
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.4.1 | Ensure the GKE Metadata Server is Enabled | Automated | | The GKE Metadata Server blocks pod access to sensitive instance metadata (including legacy service account credentials) and is required for Workload Identity to function. |
+| 5.4.1 | Ensure the GKE Metadata Server is Enabled | Automated | ✅ | The GKE Metadata Server blocks pod access to sensitive instance metadata (including legacy service account credentials) and is required for Workload Identity to function. |
 
 ### 5.5 Node Configuration and Maintenance
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.5.1 | Ensure Container-Optimized OS (cos_containerd) is used for GKE node images | Automated | | Container-Optimized OS is a managed, hardened OS built for running containers. It has a minimal attack surface, read-only root filesystem, and automatic updates. |
-| 5.5.2 | Ensure Node Auto-Repair is enabled for GKE nodes | Automated | | Node Auto-Repair monitors node health and automatically recreates unhealthy nodes, reducing the risk of workloads running on degraded or compromised nodes. |
-| 5.5.3 | Ensure Node Auto-Upgrade is enabled for GKE nodes | Automated | | Auto-Upgrade keeps nodes running the latest Kubernetes version and OS patches, ensuring known vulnerabilities are addressed promptly. |
-| 5.5.4 | When creating New Clusters - Automate GKE version management using Release Channels | Automated | | Enrolling clusters in a Release Channel (Rapid, Regular, or Stable) automates Kubernetes version upgrades within a tested, supported cadence. |
-| 5.5.5 | Ensure Shielded GKE Nodes are Enabled | Automated | | Shielded GKE Nodes use Secure Boot, vTPM-enabled Measured Boot, and Integrity Monitoring to verify node integrity and detect boot-level compromise. |
-| 5.5.6 | Ensure Integrity Monitoring for Shielded GKE Nodes is Enabled | Automated | | Integrity Monitoring uses vTPM measurements to detect changes to the node's boot sequence, alerting on deviations that may indicate tampering. |
-| 5.5.7 | Ensure Secure Boot for Shielded GKE Nodes is Enabled | Automated | | Secure Boot verifies that only signed OS components are loaded during node startup, preventing boot-level rootkits and unsigned kernel modules. |
+| 5.5.1 | Ensure Container-Optimized OS (cos_containerd) is used for GKE node images | Automated | ✅ | Container-Optimized OS is a managed, hardened OS built for running containers. It has a minimal attack surface, read-only root filesystem, and automatic updates. |
+| 5.5.2 | Ensure Node Auto-Repair is enabled for GKE nodes | Automated | ✅ | Node Auto-Repair monitors node health and automatically recreates unhealthy nodes, reducing the risk of workloads running on degraded or compromised nodes. |
+| 5.5.3 | Ensure Node Auto-Upgrade is enabled for GKE nodes | Automated | ✅ | Auto-Upgrade keeps nodes running the latest Kubernetes version and OS patches, ensuring known vulnerabilities are addressed promptly. |
+| 5.5.4 | When creating New Clusters - Automate GKE version management using Release Channels | Automated | ✅ | Enrolling clusters in a Release Channel (Rapid, Regular, or Stable) automates Kubernetes version upgrades within a tested, supported cadence. |
+| 5.5.5 | Ensure Shielded GKE Nodes are Enabled | Automated | ✅ | Shielded GKE Nodes use Secure Boot, vTPM-enabled Measured Boot, and Integrity Monitoring to verify node integrity and detect boot-level compromise. |
+| 5.5.6 | Ensure Integrity Monitoring for Shielded GKE Nodes is Enabled | Automated | ✅ | Integrity Monitoring uses vTPM measurements to detect changes to the node's boot sequence, alerting on deviations that may indicate tampering. |
+| 5.5.7 | Ensure Secure Boot for Shielded GKE Nodes is Enabled | Automated | ✅ | Secure Boot verifies that only signed OS components are loaded during node startup, preventing boot-level rootkits and unsigned kernel modules. |
 
 ### 5.6 Cluster Networking
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.6.1 | Enable VPC Flow Logs and Intranode Visibility | Automated | | Intranode visibility enables VPC Flow Logs to capture pod-to-pod traffic within a single node, providing complete network visibility for forensics and anomaly detection. |
-| 5.6.2 | Ensure use of VPC-native clusters | Automated | | VPC-native clusters use Alias IPs for pod addresses, enabling pod-level VPC firewall rules and routing without requiring NAT or custom iptables rules. |
-| 5.6.3 | Ensure Control Plane Authorized Networks is Enabled | Automated | | Authorized Networks restricts access to the GKE control plane API server to a specified allowlist of CIDR ranges, preventing unauthorized remote access. |
-| 5.6.4 | Ensure clusters are created with Private Endpoint Enabled and Public Access Disabled | Automated | | Enabling a private endpoint and disabling public access ensures the GKE API server is only reachable from within the VPC, eliminating internet exposure. |
-| 5.6.5 | Ensure clusters are created with Private Nodes | Automated | | Private Nodes have no public IP addresses, so they cannot be directly reached from the internet. Outbound internet access is provided via Cloud NAT. |
+| 5.6.1 | Enable VPC Flow Logs and Intranode Visibility | Automated | ✅ | Intranode visibility enables VPC Flow Logs to capture pod-to-pod traffic within a single node, providing complete network visibility for forensics and anomaly detection. |
+| 5.6.2 | Ensure use of VPC-native clusters | Automated | ✅ | VPC-native clusters use Alias IPs for pod addresses, enabling pod-level VPC firewall rules and routing without requiring NAT or custom iptables rules. |
+| 5.6.3 | Ensure Control Plane Authorized Networks is Enabled | Automated | ✅ | Authorized Networks restricts access to the GKE control plane API server to a specified allowlist of CIDR ranges, preventing unauthorized remote access. |
+| 5.6.4 | Ensure clusters are created with Private Endpoint Enabled and Public Access Disabled | Automated | ✅ | Enabling a private endpoint and disabling public access ensures the GKE API server is only reachable from within the VPC, eliminating internet exposure. |
+| 5.6.5 | Ensure clusters are created with Private Nodes | Automated | ✅ | Private Nodes have no public IP addresses, so they cannot be directly reached from the internet. Outbound internet access is provided via Cloud NAT. |
 | 5.6.6 | Consider firewalling GKE worker nodes | Manual | | VPC firewall rules should restrict traffic to GKE worker nodes to only what is required for cluster operation, reducing the attack surface of node-level services. |
 | 5.6.7 | Ensure use of Google-managed SSL Certificates | Automated | | Google-managed SSL certificates for GKE Ingress are automatically provisioned and renewed, eliminating the risk of certificate expiry and manual key management errors. |
 
@@ -203,16 +203,16 @@ authentication, and cluster-level settings.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.7.1 | Ensure Logging and Cloud Monitoring is Enabled | Automated | | GKE should export system and workload logs to Cloud Logging and metrics to Cloud Monitoring for centralized observability, alerting, and audit trail retention. |
+| 5.7.1 | Ensure Logging and Cloud Monitoring is Enabled | Automated | ✅ | GKE should export system and workload logs to Cloud Logging and metrics to Cloud Monitoring for centralized observability, alerting, and audit trail retention. |
 | 5.7.2 | Enable Linux auditd logging | Manual | | Enabling `auditd` on GKE nodes captures system call activity including file access, process execution, and privilege escalation, providing host-level audit trails. |
 
 ### 5.8 Authentication and Authorization
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.8.1 | Ensure authentication using Client Certificates is Disabled | Automated | | Client certificate authentication cannot be revoked and should be disabled in favor of OIDC or Google Groups-based authentication. |
+| 5.8.1 | Ensure authentication using Client Certificates is Disabled | Automated | ✅ | Client certificate authentication cannot be revoked and should be disabled in favor of OIDC or Google Groups-based authentication. |
 | 5.8.2 | Manage Kubernetes RBAC users with Google Groups for GKE | Manual | | Binding GKE RBAC roles to Google Groups rather than individual identities simplifies access management and automatically revokes access when users leave the organization. |
-| 5.8.3 | Ensure Legacy Authorization (ABAC) is Disabled | Automated | | Attribute-Based Access Control (ABAC) has been superseded by RBAC and is no longer actively maintained. Enabling ABAC bypasses RBAC and grants overly broad access. |
+| 5.8.3 | Ensure Legacy Authorization (ABAC) is Disabled | Automated | ✅ | Attribute-Based Access Control (ABAC) has been superseded by RBAC and is no longer actively maintained. Enabling ABAC bypasses RBAC and grants overly broad access. |
 
 ### 5.9 Storage
 
@@ -225,10 +225,10 @@ authentication, and cluster-level settings.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.10.1 | Ensure Kubernetes Web UI is Disabled | Automated | | The Kubernetes Dashboard provides a broad cluster management interface. It should be disabled in GKE as it is an additional attack vector and GCP Console provides equivalent functionality. |
-| 5.10.2 | Ensure that Alpha clusters are not used for production workloads | Automated | | Alpha clusters enable experimental Kubernetes features but receive no SLA, security updates, or support guarantees. They must not be used for production workloads. |
+| 5.10.1 | Ensure Kubernetes Web UI is Disabled | Automated | ✅ | The Kubernetes Dashboard provides a broad cluster management interface. It should be disabled in GKE as it is an additional attack vector and GCP Console provides equivalent functionality. |
+| 5.10.2 | Ensure that Alpha clusters are not used for production workloads | Automated | ✅ | Alpha clusters enable experimental Kubernetes features but receive no SLA, security updates, or support guarantees. They must not be used for production workloads. |
 | 5.10.3 | Consider GKE Sandbox for running untrusted workloads | Automated | | GKE Sandbox uses gVisor to provide an additional layer of isolation between the host kernel and containerized workloads, suitable for running untrusted or multi-tenant code. |
-| 5.10.4 | Ensure use of Binary Authorization | Automated | | Binary Authorization enforces deployment policies that require container images to be attested (signed) by trusted authorities before they can be deployed to GKE. |
+| 5.10.4 | Ensure use of Binary Authorization | Automated | ✅ | Binary Authorization enforces deployment policies that require container images to be attested (signed) by trusted authorities before they can be deployed to GKE. |
 | 5.10.5 | Enable Security Posture | Manual | | GKE Security Posture provides continuous assessment of cluster configuration and workload security, surfacing actionable findings aligned with CIS and other benchmarks. |
 
 ---
@@ -237,4 +237,4 @@ authentication, and cluster-level settings.
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 53 | 40 | 13 | 0 |
+| 53 | 40 | 13 | 21 |
