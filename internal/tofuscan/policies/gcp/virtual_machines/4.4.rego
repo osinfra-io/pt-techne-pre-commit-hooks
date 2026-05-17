@@ -33,8 +33,10 @@ _oslogin_effective(resource) if {
 _oslogin_effective(resource) if {
 	metadata := object.get(resource, "metadata", {})
 	not object.get(metadata, "enable-oslogin", null)
-	some _, pms in input.resource.google_compute_project_metadata
+	instance_project := object.get(resource, "project", "")
+	some _proj_key, pms in input.resource.google_compute_project_metadata
 	some pm in pms
+	object.get(pm, "project", "") == instance_project
 	project_meta := object.get(pm, "metadata", {})
 	lower(object.get(project_meta, "enable-oslogin", "")) == "true"
 }
