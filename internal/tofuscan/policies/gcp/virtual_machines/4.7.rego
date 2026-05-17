@@ -27,3 +27,8 @@ _has_csek(resource) if {
 	some enc in object.get(resource, "disk_encryption_key", [])
 	object.get(enc, "raw_key", "") != ""
 }
+
+_has_csek(resource) if {
+	some enc in object.get(resource, "disk_encryption_key", [])
+	object.get(enc, "rsa_encrypted_key", "") != ""
+}

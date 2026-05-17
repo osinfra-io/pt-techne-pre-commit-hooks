@@ -2,8 +2,8 @@ package regofu
 
 import rego.v1
 
-# none and mod are insufficient — ddl and all are acceptable.
-_insufficient_log_statement := {"none", "mod"}
+# ddl and all are acceptable; none, mod, and absent are insufficient.
+_acceptable_log_statement := {"ddl", "all"}
 
 _desc_6_2_4 := concat("", [
 	"The log_statement flag controls which SQL statements are logged by PostgreSQL. ",
@@ -15,10 +15,7 @@ deny contains violation if {
 	some name, resources in input.resource.google_sql_database_instance
 	some resource in resources
 	startswith(object.get(resource, "database_version", ""), "POSTGRES_")
-	some settings in resource.settings
-	some flag in object.get(settings, "database_flags", [])
-	flag.name == "log_statement"
-	flag.value in _insufficient_log_statement
+	not _has_acceptable_log_statement(resource)
 	violation := {
 		"resource": name,
 		"rule_id": "gcp/cis/6.2.4",
@@ -28,4 +25,11 @@ deny contains violation if {
 		"title": "Ensure Log_statement Database Flag for Cloud SQL PostgreSQL Instance Is Set Appropriately",
 		"description": _desc_6_2_4,
 	}
+}
+
+_has_acceptable_log_statement(resource) if {
+	some settings in resource.settings
+	some flag in object.get(settings, "database_flags", [])
+	flag.name == "log_statement"
+	flag.value in _acceptable_log_statement
 }

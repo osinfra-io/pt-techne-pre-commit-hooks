@@ -149,6 +149,7 @@ resource "google_storage_bucket_iam_member" "good_member" {
 # GCP CIS 6.7 — backup_configuration.enabled = true
 # GCP CIS 6.2.2 — log_connections = on
 # GCP CIS 6.2.3 — log_disconnections = on
+# GCP CIS 6.2.4 — log_statement = ddl
 # GCP CIS 6.2.8 — cloudsql.enable_pgaudit = on
 resource "google_sql_database_instance" "good_sql" {
   name             = "good-sql"
@@ -174,6 +175,11 @@ resource "google_sql_database_instance" "good_sql" {
     database_flags {
       name  = "log_disconnections"
       value = "on"
+    }
+
+    database_flags {
+      name  = "log_statement"
+      value = "ddl"
     }
 
     database_flags {

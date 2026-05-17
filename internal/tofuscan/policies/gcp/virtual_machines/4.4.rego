@@ -11,8 +11,7 @@ _desc_4_4 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_compute_instance
 	some resource in resources
-	metadata := object.get(resource, "metadata", {})
-	object.get(metadata, "enable-oslogin", "false") != "true"
+	not _oslogin_effective(resource)
 	violation := {
 		"resource": name,
 		"rule_id": "gcp/cis/4.4",
@@ -22,4 +21,20 @@ deny contains violation if {
 		"title": "Ensure OS Login Is Enabled for a Project",
 		"description": _desc_4_4,
 	}
+}
+
+# Instance-level metadata takes precedence; "true" or "TRUE" are both valid.
+_oslogin_effective(resource) if {
+	metadata := object.get(resource, "metadata", {})
+	lower(object.get(metadata, "enable-oslogin", "")) == "true"
+}
+
+# Fall back to project-level metadata when the instance does not set the key.
+_oslogin_effective(resource) if {
+	metadata := object.get(resource, "metadata", {})
+	not object.get(metadata, "enable-oslogin", null)
+	some _, pms in input.resource.google_compute_project_metadata
+	some pm in pms
+	project_meta := object.get(pm, "metadata", {})
+	lower(object.get(project_meta, "enable-oslogin", "")) == "true"
 }
