@@ -26,6 +26,7 @@ resource "google_compute_firewall" "allow_rdp_internal" {
 
 # GCP CIS 4.1 — dedicated service account (not default)
 # GCP CIS 4.3 — block-project-ssh-keys = "true" in metadata
+# GCP CIS 4.4 — enable-oslogin = "true" in metadata
 # GCP CIS 4.5 — serial-port-enable absent in metadata
 # GCP CIS 4.6 — can_ip_forward = false
 # GCP CIS 4.8 — shielded_instance_config present with vtpm + integrity monitoring
@@ -49,6 +50,7 @@ resource "google_compute_instance" "vm" {
 
   metadata = {
     block-project-ssh-keys = "true"
+    enable-oslogin         = "true"
   }
 
   shielded_instance_config {
@@ -145,6 +147,9 @@ resource "google_storage_bucket_iam_member" "good_member" {
 # GCP CIS 6.5 — no 0.0.0.0/0 in authorized_networks
 # GCP CIS 6.6 — ipv4_enabled = false (private IP only)
 # GCP CIS 6.7 — backup_configuration.enabled = true
+# GCP CIS 6.2.2 — log_connections = on
+# GCP CIS 6.2.3 — log_disconnections = on
+# GCP CIS 6.2.8 — cloudsql.enable_pgaudit = on
 resource "google_sql_database_instance" "good_sql" {
   name             = "good-sql"
   database_version = "POSTGRES_14"
@@ -160,10 +165,26 @@ resource "google_sql_database_instance" "good_sql" {
     backup_configuration {
       enabled = true
     }
+
+    database_flags {
+      name  = "log_connections"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "log_disconnections"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "cloudsql.enable_pgaudit"
+      value = "on"
+    }
   }
 }
 
 # GCP CIS 7.1 — access granted to a specific user, not allUsers/allAuthenticatedUsers
+# GCP CIS 7.3 — default_encryption_configuration with kms_key_name set
 resource "google_bigquery_dataset" "good_dataset" {
   dataset_id = "good_dataset"
 
@@ -171,18 +192,24 @@ resource "google_bigquery_dataset" "good_dataset" {
     role          = "READER"
     user_by_email = "someone@example.com"
   }
+
+  default_encryption_configuration {
+    kms_key_name = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/my-key"
+  }
 }
 
 # GKE CIS 5.10.2 — enable_kubernetes_alpha absent (defaults to false)
 # GKE CIS 5.10.4 — binary_authorization.evaluation_mode != DISABLED
+# GKE CIS 5.6.1 — enable_intranode_visibility = true
 # Note: 5.10.1 (kubernetes_dashboard) was removed from the Google provider;
 #       the block is no longer valid and the dashboard is permanently disabled in GKE.
 resource "google_container_cluster" "good_cluster" {
   name     = "good-cluster"
   location = "us-central1"
 
-  enable_shielded_nodes = true
-  enable_legacy_abac    = false
+  enable_shielded_nodes       = true
+  enable_legacy_abac          = false
+  enable_intranode_visibility = true
 
   logging_service    = "logging.googleapis.com/kubernetes"
   monitoring_service = "monitoring.googleapis.com/kubernetes"
