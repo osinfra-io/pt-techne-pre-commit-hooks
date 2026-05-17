@@ -10,6 +10,9 @@
 # Infracost
 .infracost
 
+# Go test coverage
+coverage.out
+
 # Other Files
 *.log
 *.bak
