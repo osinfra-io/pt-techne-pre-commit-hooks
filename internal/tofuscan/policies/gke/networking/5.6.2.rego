@@ -1,4 +1,4 @@
-package regofu
+package tofuscan
 
 import rego.v1
 

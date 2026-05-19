@@ -1,6 +1,7 @@
-package regofu
+package tofuscan
 
 import rego.v1
+import data.tofuscan.lib
 
 _desc_6_3_2 := concat("", [
 	"Cross-database ownership chaining allows users to access objects in other databases ",
@@ -11,7 +12,7 @@ _desc_6_3_2 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_sql_database_instance
 	some resource in resources
-	startswith(object.get(resource, "database_version", ""), "SQLSERVER_")
+	lib.is_sqlserver(resource)
 	not _has_sql_flag(resource, "cross db ownership chaining", "off")
 	violation := {
 		"resource": name,

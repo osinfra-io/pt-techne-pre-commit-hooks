@@ -1,8 +1,8 @@
-package regofu
+package tofuscan
 
 import rego.v1
 
-import data.regofu.lib
+import data.tofuscan.lib
 
 _desc_3_7 := concat("", [
 	"Firewall rules must not allow unrestricted inbound RDP (port 3389) from ",

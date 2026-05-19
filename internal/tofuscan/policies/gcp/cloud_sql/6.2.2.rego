@@ -1,6 +1,7 @@
-package regofu
+package tofuscan
 
 import rego.v1
+import data.tofuscan.lib
 
 _desc_6_2_2 := concat("", [
 	"Enabling log_connections causes PostgreSQL to log each successful client connection. ",
@@ -11,7 +12,7 @@ _desc_6_2_2 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_sql_database_instance
 	some resource in resources
-	startswith(object.get(resource, "database_version", ""), "POSTGRES_")
+	lib.is_postgres(resource)
 	not _has_pg_flag_on(resource, "log_connections")
 	violation := {
 		"resource": name,

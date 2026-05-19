@@ -1,6 +1,7 @@
-package regofu
+package tofuscan
 
 import rego.v1
+import data.tofuscan.lib
 
 _desc_6_1_3 := concat("", [
 	"The local_infile flag enables loading data directly from client-side files into the ",
@@ -11,7 +12,7 @@ _desc_6_1_3 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_sql_database_instance
 	some resource in resources
-	startswith(object.get(resource, "database_version", ""), "MYSQL_")
+	lib.is_mysql(resource)
 	not _has_sql_flag(resource, "local_infile", "off")
 	violation := {
 		"resource": name,

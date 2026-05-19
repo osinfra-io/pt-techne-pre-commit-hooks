@@ -67,7 +67,7 @@ func Run(ctx context.Context, files []string, policiesFS fs.FS) (*RunResult, err
 	}
 
 	prepared, err := rego.New(
-		rego.Query("data.regofu.deny"),
+		rego.Query("data.tofuscan.deny"),
 		rego.Compiler(compiler),
 	).PrepareForEval(ctx)
 	if err != nil {
