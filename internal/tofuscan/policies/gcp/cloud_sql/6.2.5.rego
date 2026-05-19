@@ -1,6 +1,7 @@
-package regofu
+package tofuscan
 
 import rego.v1
+import data.tofuscan.lib
 
 # Severity levels less strict than WARNING (more verbose / noisier).
 _too_verbose_6_2_5 := {
@@ -19,7 +20,7 @@ _desc_6_2_5 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_sql_database_instance
 	some resource in resources
-	startswith(object.get(resource, "database_version", ""), "POSTGRES_")
+	lib.is_postgres(resource)
 	some settings in resource.settings
 	some flag in object.get(settings, "database_flags", [])
 	flag.name == "log_min_messages"

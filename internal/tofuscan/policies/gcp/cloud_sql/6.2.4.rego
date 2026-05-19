@@ -1,6 +1,7 @@
-package regofu
+package tofuscan
 
 import rego.v1
+import data.tofuscan.lib
 
 # ddl and all are acceptable; none, mod, and absent are insufficient.
 _acceptable_log_statement := {"ddl", "all"}
@@ -14,7 +15,7 @@ _desc_6_2_4 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_sql_database_instance
 	some resource in resources
-	startswith(object.get(resource, "database_version", ""), "POSTGRES_")
+	lib.is_postgres(resource)
 	not _has_acceptable_log_statement(resource)
 	violation := {
 		"resource": name,

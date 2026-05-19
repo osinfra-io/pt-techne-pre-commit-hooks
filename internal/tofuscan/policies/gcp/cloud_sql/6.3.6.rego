@@ -1,6 +1,7 @@
-package regofu
+package tofuscan
 
 import rego.v1
+import data.tofuscan.lib
 
 _desc_6_3_6 := concat("", [
 	"Trace flag 3625 masks the details of SQL Server error messages shown to non-admin ",
@@ -11,7 +12,7 @@ _desc_6_3_6 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_sql_database_instance
 	some resource in resources
-	startswith(object.get(resource, "database_version", ""), "SQLSERVER_")
+	lib.is_sqlserver(resource)
 	not _has_sql_flag(resource, "3625", "on")
 	violation := {
 		"resource": name,
