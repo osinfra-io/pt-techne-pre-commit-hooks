@@ -2,7 +2,7 @@ package tofuscan
 
 import rego.v1
 
-_desc_2_2 := concat("", [
+_desc_2_3 := concat("", [
 	"A log sink exports copies of all log entries to a durable destination ",
 	"(Cloud Storage, BigQuery, Pub/Sub) enabling long-term retention and SIEM integration.",
 ])
@@ -15,11 +15,11 @@ deny contains violation if {
 	# no iteration needed — checks for resource type existence only
 	violation := {
 		"resource": "global",
-		"rule_id": "gcp/cis/2.2",
-		"cis_control": "2.2",
+		"rule_id": "gcp/cis/2.3",
+		"cis_control": "2.3",
 		"profile_level": "Level 1",
 		"severity": "High",
 		"title": "Ensure That Sinks Are Configured for All Log Entries",
-		"description": _desc_2_2,
+		"description": _desc_2_3,
 	}
 }

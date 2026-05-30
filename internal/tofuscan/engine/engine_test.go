@@ -30,19 +30,19 @@ func TestFailFixtureViolations(t *testing.T) {
 	// gke/cis/5.7.1 fires twice (logging + monitoring are separate deny rules).
 	// gcp/cis/5.1 fires twice (iam_member + iam_binding resources).
 	expected := []string{
-		"gcp/cis/1.10",
-		"gcp/cis/1.5",
+		"gcp/cis/1.11",
 		"gcp/cis/1.6",
 		"gcp/cis/1.7",
-		"gcp/cis/1.9",
-		"gcp/cis/2.2",
+		"gcp/cis/1.8",
+		"gcp/cis/1.10",
+		"gcp/cis/2.3",
 		"gcp/cis/3.1",
 		"gcp/cis/3.3",
 		"gcp/cis/3.4",
 		"gcp/cis/3.6",
 		"gcp/cis/3.7",
-		"gcp/cis/3.8",
-		"gcp/cis/3.9",
+		"gcp/cis/3.10",
+		"gcp/cis/3.11",
 		"gcp/cis/4.1",
 		"gcp/cis/4.11",
 		"gcp/cis/4.2",
@@ -73,13 +73,12 @@ func TestFailFixtureViolations(t *testing.T) {
 		"gcp/cis/6.3.7",
 		"gcp/cis/6.4",
 		"gcp/cis/6.5",
-		"gcp/cis/6.6",
 		"gcp/cis/6.7",
+		"gcp/cis/6.8",
 		"gcp/cis/7.1",
 		"gcp/cis/7.2",
 		"gcp/cis/7.3",
 		"gke/cis/5.10.2",
-		"gke/cis/5.10.4",
 		"gke/cis/5.2.1",
 		"gke/cis/5.3.1",
 		"gke/cis/5.4.1",
@@ -301,7 +300,7 @@ func TestResourceLineIndexNonexistentFile(t *testing.T) {
 
 func TestGlobalViolationFiresOnceAcrossFiles(t *testing.T) {
 	// When scanning multiple files where none defines a log sink,
-	// CIS 2.2 (global existence check) should fire exactly once,
+	// CIS 2.3 (global existence check) should fire exactly once,
 	// not once per file.
 	files := []string{
 		"../../../test/tofuscan/fixtures/fail/main.tofu",
@@ -314,17 +313,17 @@ func TestGlobalViolationFiresOnceAcrossFiles(t *testing.T) {
 
 	var count int
 	for _, v := range violations.Violations {
-		if v.RuleID == "gcp/cis/2.2" {
+		if v.RuleID == "gcp/cis/2.3" {
 			count++
 		}
 	}
 	if count != 1 {
-		t.Errorf("gcp/cis/2.2 should fire exactly once across files, got %d", count)
+		t.Errorf("gcp/cis/2.3 should fire exactly once across files, got %d", count)
 	}
 }
 
 func TestGlobalViolationSuppressedWhenSinkExists(t *testing.T) {
-	// When one file defines a log sink, CIS 2.2 should not fire
+	// When one file defines a log sink, CIS 2.3 should not fire
 	// even if other files don't have one.
 	files := []string{
 		"../../../test/tofuscan/fixtures/fail/main.tofu",
@@ -336,8 +335,8 @@ func TestGlobalViolationSuppressedWhenSinkExists(t *testing.T) {
 	}
 
 	for _, v := range violations.Violations {
-		if v.RuleID == "gcp/cis/2.2" {
-			t.Error("gcp/cis/2.2 should not fire when a log sink exists in any scanned file")
+		if v.RuleID == "gcp/cis/2.3" {
+			t.Error("gcp/cis/2.3 should not fire when a log sink exists in any scanned file")
 		}
 	}
 }

@@ -2,7 +2,7 @@ package tofuscan
 
 import rego.v1
 
-_desc_3_8 := concat("", [
+_desc_3_10 := concat("", [
 	"VPC Flow Logs capture metadata about IP traffic on network interfaces, ",
 	"enabling network forensics, anomaly detection, and security auditing.",
 ])
@@ -13,12 +13,12 @@ deny contains violation if {
 	not log_config_enabled(resource)
 	violation := {
 		"resource": name,
-		"rule_id": "gcp/cis/3.8",
-		"cis_control": "3.8",
+		"rule_id": "gcp/cis/3.10",
+		"cis_control": "3.10",
 		"profile_level": "Level 2",
 		"severity": "Medium",
 		"title": "Ensure that VPC Flow Logs is Enabled for Every Subnet in a VPC Network",
-		"description": _desc_3_8,
+		"description": _desc_3_10,
 	}
 }
 
