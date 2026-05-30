@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_3_2 := concat("", [
 	"Cross-database ownership chaining allows users to access objects in other databases ",

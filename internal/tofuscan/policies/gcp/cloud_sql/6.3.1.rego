@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_3_1 := concat("", [
 	"Disabling external scripts prevents execution of scripts in external languages such ",

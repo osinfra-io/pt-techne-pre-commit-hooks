@@ -19,7 +19,7 @@ func TestPrintWarningSummary(t *testing.T) {
 	defer func() { os.Stdout = oldStdout }()
 
 	PrintWarningSummary(msgs)
-	w.Close()
+	_ = w.Close()
 	outBytes, _ := io.ReadAll(r)
 	output := string(outBytes)
 	if !strings.Contains(output, "WARNING") {
@@ -46,7 +46,7 @@ func TestPrintErrorSummary(t *testing.T) {
 	defer func() { os.Stdout = oldStdout }()
 
 	PrintErrorSummary(msgs)
-	w.Close()
+	_ = w.Close()
 	outBytes, _ := io.ReadAll(r)
 	output := string(outBytes)
 	if !strings.Contains(output, "ERROR") {

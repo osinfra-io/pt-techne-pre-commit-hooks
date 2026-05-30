@@ -20,7 +20,7 @@ func TestCard(t *testing.T) {
 	c.Line(Dim + "description line" + Reset)
 	c.Close()
 
-	w.Close()
+	_ = w.Close()
 	outBytes, _ := io.ReadAll(r)
 	out := string(outBytes)
 

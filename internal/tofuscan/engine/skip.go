@@ -73,7 +73,7 @@ func parseFileSkips(file string) map[string]map[string]string {
 	if err != nil {
 		return resourceLevel
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var (
 		currentResource string
@@ -127,9 +127,10 @@ func countBraces(line string) int {
 	for i := 0; i < len(line); i++ {
 		ch := line[i]
 		if inString {
-			if ch == '\\' {
+			switch ch {
+			case '\\':
 				i++ // skip escaped character
-			} else if ch == '"' {
+			case '"':
 				inString = false
 			}
 			continue

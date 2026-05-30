@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_1_3 := concat("", [
 	"The local_infile flag enables loading data directly from client-side files into the ",

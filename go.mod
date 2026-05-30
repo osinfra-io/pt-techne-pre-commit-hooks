@@ -3,8 +3,10 @@ module pre-commit-hooks
 go 1.26.2
 
 require (
+	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/open-policy-agent/conftest v0.68.2
 	github.com/open-policy-agent/opa v1.16.1
+	github.com/zclconf/go-cty v1.16.2
 	golang.org/x/term v0.42.0
 )
 
@@ -35,7 +37,6 @@ require (
 	github.com/google/go-jsonnet v0.22.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/dsig v1.2.1 // indirect
 	github.com/lestrrat-go/dsig-secp256k1 v1.0.0 // indirect
@@ -75,7 +76,6 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/yashtewari/glob-intersection v0.2.0 // indirect
-	github.com/zclconf/go-cty v1.16.2 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.50.0 // indirect

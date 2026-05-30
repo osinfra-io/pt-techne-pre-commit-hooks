@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_2_3 := concat("", [
 	"Enabling log_disconnections causes PostgreSQL to log session termination details. ",

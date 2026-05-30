@@ -14,8 +14,7 @@ deny contains violation if {
 	some resource in resources
 	some rule in resource.allow
 	lower(object.get(rule, "protocol", "")) == "tcp"
-	some port in object.get(rule, "ports", [])
-	port == "22"
+	lib.port_covered(object.get(rule, "ports", []), 22)
 	some cidr in resource.source_ranges
 	lib.is_public_cidr(cidr)
 	violation := {

@@ -26,12 +26,12 @@ func Test_findDirsWithTfFiles_and_walkDirs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
-	os.Mkdir(filepath.Join(tempDir, "sub1"), 0755)
-	os.Mkdir(filepath.Join(tempDir, "sub2"), 0755)
-	os.WriteFile(filepath.Join(tempDir, "sub1", "main.tf"), []byte("terraform {}"), 0644)
-	os.WriteFile(filepath.Join(tempDir, "sub2", "other.txt"), []byte("not tf"), 0644)
+	_ = os.Mkdir(filepath.Join(tempDir, "sub1"), 0755)
+	_ = os.Mkdir(filepath.Join(tempDir, "sub2"), 0755)
+	_ = os.WriteFile(filepath.Join(tempDir, "sub1", "main.tf"), []byte("terraform {}"), 0644)
+	_ = os.WriteFile(filepath.Join(tempDir, "sub2", "other.txt"), []byte("not tf"), 0644)
 
 	dirs := findDirsWithTfFiles(tempDir)
 	found := false
@@ -60,14 +60,14 @@ func Test_walkDirs_ErrorsAndHidden(t *testing.T) {
 	if err2 != nil {
 		t.Fatalf("Failed to create temp dir: %v", err2)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
-	os.Mkdir(filepath.Join(tempDir, ".hidden"), 0755)
-	os.Mkdir(filepath.Join(tempDir, ".terraform"), 0755)
-	os.Mkdir(filepath.Join(tempDir, "visible"), 0755)
-	os.WriteFile(filepath.Join(tempDir, "visible", "main.tf"), []byte("terraform {}"), 0644)
-	os.WriteFile(filepath.Join(tempDir, ".hidden", "main.tf"), []byte("terraform {}"), 0644)
-	os.WriteFile(filepath.Join(tempDir, ".terraform", "main.tf"), []byte("terraform {}"), 0644)
+	_ = os.Mkdir(filepath.Join(tempDir, ".hidden"), 0755)
+	_ = os.Mkdir(filepath.Join(tempDir, ".terraform"), 0755)
+	_ = os.Mkdir(filepath.Join(tempDir, "visible"), 0755)
+	_ = os.WriteFile(filepath.Join(tempDir, "visible", "main.tf"), []byte("terraform {}"), 0644)
+	_ = os.WriteFile(filepath.Join(tempDir, ".hidden", "main.tf"), []byte("terraform {}"), 0644)
+	_ = os.WriteFile(filepath.Join(tempDir, ".terraform", "main.tf"), []byte("terraform {}"), 0644)
 
 	foundDirs, err := walkDirs(tempDir)
 	if err != nil {

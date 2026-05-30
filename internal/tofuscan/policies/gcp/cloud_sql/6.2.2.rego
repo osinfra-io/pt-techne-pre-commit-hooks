@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_2_2 := concat("", [
 	"Enabling log_connections causes PostgreSQL to log each successful client connection. ",

@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 # ddl and all are acceptable; none, mod, and absent are insufficient.
 _acceptable_log_statement := {"ddl", "all"}

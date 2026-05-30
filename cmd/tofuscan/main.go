@@ -18,8 +18,6 @@ const (
 	exitError   = 3 // runtime error (I/O, policy compilation, evaluation)
 )
 
-var version = "0.1.0"
-
 func main() {
 	args := os.Args[1:]
 

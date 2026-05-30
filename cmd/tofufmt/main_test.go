@@ -82,8 +82,8 @@ func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
 func TestMain_ErrorHandling(t *testing.T) {
 	// Simulate tofu not installed
 	oldPath := os.Getenv("PATH")
-	os.Setenv("PATH", "")
-	defer os.Setenv("PATH", oldPath)
+	_ = os.Setenv("PATH", "")
+	defer func() { _ = os.Setenv("PATH", oldPath) }()
 	if testutil.CheckOpenTofuInstalled() {
 		t.Error("Expected CheckOpenTofuInstalled to be false when PATH is empty")
 	}
@@ -100,7 +100,7 @@ func TestTofuFmt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create formatted and unformatted files
 	formattedContent := `variable "example" {}`
@@ -121,7 +121,7 @@ func TestTofuFmt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get current working directory: %v", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	// Change to temp directory
 	if err := os.Chdir(tempDir); err != nil {

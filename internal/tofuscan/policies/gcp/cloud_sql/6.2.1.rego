@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 # VERBOSE is less strict than DEFAULT; DEFAULT and TERSE are acceptable.
 _verbose_values_6_2_1 := {"VERBOSE", "verbose"}
