@@ -215,4 +215,4 @@ unauthorized access.
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 63 | 52 | 11 | 49 |
+| 63 | 52 | 11 | 47 |

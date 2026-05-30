@@ -212,7 +212,7 @@ func evaluate(ctx context.Context, file string, input interface{}, prepared rego
 //
 // Known limitation: resources are keyed by label only, not by type+label. Two
 // resources of different types sharing a label (commonly "this") collide, and
-// the last one scanned wins. The reported line number may then point at the
+// the first one scanned wins. The reported line number may then point at the
 // wrong resource. Skip directives in skip.go share the same label-only keying.
 func resourceLineIndex(file string) map[string]int {
 	index := make(map[string]int)
