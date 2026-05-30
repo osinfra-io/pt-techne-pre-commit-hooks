@@ -1,7 +1,7 @@
-# CIS Google Kubernetes Engine (GKE) Benchmark v1.6.1
+# CIS Google Kubernetes Engine (GKE) Benchmark v1.8.0
 
 Controls extracted from the [CIS Google Kubernetes Engine (GKE) Benchmark
-v1.6.1](https://www.cisecurity.org/benchmark/kubernetes).
+v1.8.0](https://www.cisecurity.org/benchmark/kubernetes).
 `✅` = tofuscan policy implemented.
 
 ---
@@ -15,8 +15,8 @@ managed service and its GCP-specific features.
 
 The benchmark is produced through a consensus review process involving global
 security practitioners, cluster administrators, and cloud engineers. Controls
-span authentication, worker node hardening, Kubernetes policy enforcement, and
-GKE-specific managed service configuration.
+span worker node hardening, Kubernetes policy enforcement, and GKE-specific
+managed service configuration.
 
 **Intended audience:** cluster administrators, security specialists, auditors,
 and personnel who develop, deploy, assess, or secure solutions built on GKE.
@@ -30,23 +30,10 @@ and personnel who develop, deploy, assess, or secure solutions built on GKE.
 
 ---
 
-## 2 Control Plane Components
-
-This section contains recommendations for cluster-wide areas such as
-authentication and logging. These recommendations apply to all GKE deployments.
-
-### 2.1 Authentication and Authorization
-
-| Control | Title | Type | Covered | Description |
-| --------- | ------- | ------ | --------- | ------------- |
-| 2.1.1 | Client certificate authentication should not be used for users | Automated | | Kubernetes supports client certificates for user authentication, but certificates cannot be revoked. When a user leaves, the certificate remains valid until expiry. Use OIDC or GKE's Google-identity integration instead. |
-
----
-
 ## 3 Worker Nodes
 
 This section consists of security recommendations for the components that run on
-GKE worker nodes, covering configuration file permissions and kubelet hardening.
+GKE worker nodes, covering configuration file permissions and ownership.
 
 ### 3.1 Worker Node Configuration Files
 
@@ -56,28 +43,10 @@ modification of node configuration.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 3.1.1 | Ensure that the proxy kubeconfig file permissions are set to 644 or more restrictive | Automated | | The kube-proxy kubeconfig file contains credentials for connecting to the API server. Permissions should be 644 or more restrictive to prevent unauthorized reads. |
-| 3.1.2 | Ensure that the proxy kubeconfig file ownership is set to root:root | Automated | | The kube-proxy kubeconfig file should be owned by root to prevent non-root processes from modifying it. |
-| 3.1.3 | Ensure that the kubelet configuration file has permissions set to 600 | Automated | | The kubelet configuration file may contain sensitive parameters. Permissions of 600 ensure only the root user can read or modify it. |
+| 3.1.1 | Ensure that the kubeconfig file permissions are set to 644 or more restrictive | Automated | | The kubelet kubeconfig file controls various parameters of the kubelet service. Permissions should be 644 or more restrictive to prevent unauthorized modification. |
+| 3.1.2 | Ensure that the kubelet kubeconfig file ownership is set to root:root | Automated | | The kubelet kubeconfig file should be owned by root to prevent non-root processes from modifying the kubelet configuration. |
+| 3.1.3 | Ensure that the kubelet configuration file has permissions set to 644 | Automated | | The kubelet configuration file may contain sensitive parameters. Permissions of 644 ensure only the root user can modify it. |
 | 3.1.4 | Ensure that the kubelet configuration file ownership is set to root:root | Automated | | Kubelet configuration files should be owned by root to prevent tampering by other users or processes on the node. |
-
-### 3.2 Kubelet Configuration
-
-Controls for securing the kubelet — the primary node agent that manages pod
-lifecycle. Proper kubelet configuration prevents unauthorized access and ensures
-secure communication.
-
-| Control | Title | Type | Covered | Description |
-| --------- | ------- | ------ | --------- | ------------- |
-| 3.2.1 | Ensure that the Anonymous Auth is Not Enabled | Automated | | Disabling anonymous authentication to the kubelet API requires all requests to be authenticated, preventing unauthenticated access to node-level APIs. |
-| 3.2.2 | Ensure that the --authorization-mode argument is not set to AlwaysAllow | Automated | | The kubelet's authorization mode should use Webhook (delegating to the Kubernetes API server) rather than `AlwaysAllow`, which would permit any authenticated request. |
-| 3.2.3 | Ensure that a Client CA File is Configured | Automated | | Configuring a CA file for the kubelet ensures that only clients with certificates signed by the trusted CA can authenticate to the kubelet API. |
-| 3.2.4 | Ensure that the --read-only-port is disabled | Automated | | The kubelet read-only port (10255) exposes pod and node metadata without authentication. It should be disabled to prevent information disclosure. |
-| 3.2.5 | Ensure that the --streaming-connection-idle-timeout argument is not set to 0 | Automated | | Setting a non-zero streaming connection idle timeout ensures that idle `exec`, `attach`, and `port-forward` connections are eventually terminated. |
-| 3.2.6 | Ensure that the --make-iptables-util-chains argument is set to true | Automated | | Enabling this flag ensures the kubelet manages iptables rules for pod network communication, maintaining consistent networking policy enforcement. |
-| 3.2.7 | Ensure that the --eventRecordQPS argument is set to 0 or a level which ensures capture of all events | Automated | | Event recording QPS controls how many events per second the kubelet records. Setting it to 0 disables the rate limit, ensuring all security-relevant events are captured. |
-| 3.2.8 | Ensure that the --rotate-certificates argument is not present or is set to true | Automated | | Certificate rotation ensures the kubelet automatically requests new certificates before expiry, preventing service disruption from expired certificates. |
-| 3.2.9 | Ensure that the RotateKubeletServerCertificate argument is set to true | Automated | | Enabling server certificate rotation causes the kubelet to automatically rotate its serving certificate, reducing the window of exposure from a compromised certificate. |
 
 ---
 
@@ -106,7 +75,7 @@ security, network policies, and secret management.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 4.2.1 | Ensure that the cluster enforces Pod Security Standard Baseline profile or stricter for all namespaces | Automated | | The Pod Security Standard Baseline profile restricts known privilege escalation paths (e.g., host namespaces, hostPath volumes). All namespaces should enforce at least this profile. |
+| 4.2.1 | Ensure that the cluster enforces Pod Security Standard Baseline profile or stricter for all namespaces | Manual | | The Pod Security Standard Baseline profile restricts known privilege escalation paths (e.g., host namespaces, hostPath volumes). All namespaces should enforce at least this profile. |
 
 ### 4.3 Network Policies and CNI
 
@@ -218,7 +187,7 @@ authentication, and cluster-level settings.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.9.1 | Enable Customer-Managed Encryption Keys (CMEK) for GKE Persistent Disks | Automated | | Encrypting GKE Persistent Disk volumes with CMEK gives organizations control over the encryption key lifecycle, enabling independent key revocation. |
+| 5.9.1 | Enable Customer-Managed Encryption Keys (CMEK) for GKE Persistent Disks | Manual | | Encrypting GKE Persistent Disk volumes with CMEK gives organizations control over the encryption key lifecycle, enabling independent key revocation. |
 | 5.9.2 | Enable Customer-Managed Encryption Keys (CMEK) for Boot Disks | Automated | | Encrypting GKE node boot disks with CMEK ensures node OS data is encrypted with customer-controlled keys, not just Google-managed defaults. |
 
 ### 5.10 Other Cluster Configurations
@@ -228,8 +197,7 @@ authentication, and cluster-level settings.
 | 5.10.1 | Ensure Kubernetes Web UI is Disabled | Automated | ✅ | The Kubernetes Dashboard provides a broad cluster management interface. It should be disabled in GKE as it is an additional attack vector and GCP Console provides equivalent functionality. |
 | 5.10.2 | Ensure that Alpha clusters are not used for production workloads | Automated | ✅ | Alpha clusters enable experimental Kubernetes features but receive no SLA, security updates, or support guarantees. They must not be used for production workloads. |
 | 5.10.3 | Consider GKE Sandbox for running untrusted workloads | Automated | | GKE Sandbox uses gVisor to provide an additional layer of isolation between the host kernel and containerized workloads, suitable for running untrusted or multi-tenant code. |
-| 5.10.4 | Ensure use of Binary Authorization | Automated | ✅ | Binary Authorization enforces deployment policies that require container images to be attested (signed) by trusted authorities before they can be deployed to GKE. |
-| 5.10.5 | Enable Security Posture | Manual | | GKE Security Posture provides continuous assessment of cluster configuration and workload security, surfacing actionable findings aligned with CIS and other benchmarks. |
+| 5.10.4 | Enable Security Posture | Manual | | GKE Security Posture provides continuous assessment of cluster configuration and workload security, surfacing actionable findings aligned with CIS and other benchmarks. |
 
 ---
 
@@ -237,4 +205,4 @@ authentication, and cluster-level settings.
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 53 | 40 | 13 | 21 |
+| 58 | 43 | 15 | 20 |

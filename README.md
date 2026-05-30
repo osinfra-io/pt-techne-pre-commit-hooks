@@ -26,7 +26,7 @@ Runs `tofu test` to execute automated tests defined in `.tftest.hcl` files. This
 
 #### Checks OpenTofu files against CIS benchmarks
 
-Runs `tofuscan` to check your OpenTofu (`.tofu`) files against CIS benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v3.0.0 (47 policies) and CIS Google Kubernetes Engine (GKE) Benchmark v1.6.1 (21 policies). It will not scan files in `.terraform/` directories.
+Runs `tofuscan` to check your OpenTofu (`.tofu`) files against CIS benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v5.0.0 (47 policies) and CIS Google Kubernetes Engine (GKE) Benchmark v1.8.0 (20 policies). It will not scan files in `.terraform/` directories.
 
 ---
 
@@ -78,7 +78,7 @@ Both equals-form (`-filter=TestFoo`) and split-form (`-filter TestFoo`) flags ar
 
 ### Example: `tofu-scan`
 
-Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v3.0.0 and CIS Google Kubernetes Engine (GKE) Benchmark v1.6.1.
+Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v5.0.0 and CIS Google Kubernetes Engine (GKE) Benchmark v1.8.0.
 
 ```yaml
 - repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
