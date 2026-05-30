@@ -22,7 +22,7 @@ deny contains violation if {
 		"cis_control": "5.7.1",
 		"profile_level": "Level 1",
 		"severity": "High",
-		"title": "Ensure Stackdriver Logging and Monitoring Is Configured — Logging",
+		"title": "Ensure Logging and Cloud Monitoring Is Enabled — Logging",
 		"description": _desc_5_7_1_logging,
 	}
 }
@@ -37,7 +37,7 @@ deny contains violation if {
 		"cis_control": "5.7.1",
 		"profile_level": "Level 1",
 		"severity": "High",
-		"title": "Ensure Stackdriver Logging and Monitoring Is Configured — Monitoring",
+		"title": "Ensure Logging and Cloud Monitoring Is Enabled — Monitoring",
 		"description": _desc_5_7_1_monitoring,
 	}
 }

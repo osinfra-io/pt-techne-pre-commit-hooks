@@ -40,20 +40,3 @@ deny contains violation if {
 		"description": _desc_1_10,
 	}
 }
-
-deny contains violation if {
-	some name, policies in input.resource.google_kms_crypto_key_iam_policy
-	some policy in policies
-	some binding in policy.bindings
-	some member in binding.members
-	member in _public_members_1_10
-	violation := {
-		"resource": name,
-		"rule_id": "gcp/cis/1.10",
-		"cis_control": "1.10",
-		"profile_level": "Level 1",
-		"severity": "High",
-		"title": "Ensure That Cloud KMS Cryptokeys Are Not Anonymously or Publicly Accessible",
-		"description": _desc_1_10,
-	}
-}
