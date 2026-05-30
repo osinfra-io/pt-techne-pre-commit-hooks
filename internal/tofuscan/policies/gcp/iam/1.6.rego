@@ -24,3 +24,20 @@ deny contains violation if {
 		"description": _desc_1_6,
 	}
 }
+
+deny contains violation if {
+	some name, resources in input.resource.google_project_iam_binding
+	some resource in resources
+	some member in resource.members
+	startswith(member, "serviceAccount:")
+	resource.role in _admin_roles
+	violation := {
+		"resource": name,
+		"rule_id": "gcp/cis/1.6",
+		"cis_control": "1.6",
+		"profile_level": "Level 1",
+		"severity": "High",
+		"title": "Ensure That Service Account Has No Admin Privileges",
+		"description": _desc_1_6,
+	}
+}
