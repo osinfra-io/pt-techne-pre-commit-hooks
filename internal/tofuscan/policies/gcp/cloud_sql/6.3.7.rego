@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_3_7 := concat("", [
 	"Contained databases authenticate users without requiring domain-level credentials, ",

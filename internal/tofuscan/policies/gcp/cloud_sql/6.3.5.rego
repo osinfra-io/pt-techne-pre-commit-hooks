@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_3_5 := concat("", [
 	"The remote access flag controls whether the SQL Server instance can execute stored ",

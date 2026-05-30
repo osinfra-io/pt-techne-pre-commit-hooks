@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_2_7 := concat("", [
 	"Setting log_min_duration_statement=-1 disables logging of statement durations. ",

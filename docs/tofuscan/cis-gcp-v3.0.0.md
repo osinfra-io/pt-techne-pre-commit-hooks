@@ -102,7 +102,7 @@ firewall rules, enabling VPC Flow Logs, and enforcing strong TLS policies.
 | 3.2 | Level 1 | Ensure Legacy Networks Do Not Exist for Older Projects | Automated | | Legacy networks lack subnet support and modern features. Projects must not use legacy network configurations, which are being phased out by Google. |
 | 3.3 | Level 1 | Ensure That DNSSEC Is Enabled for Cloud DNS | Automated | ✅ | DNSSEC prevents DNS spoofing and cache poisoning by cryptographically signing DNS records, ensuring resolvers receive authentic responses. |
 | 3.4 | Level 1 | Ensure That RSASHA1 Is Not Used for the Key-Signing Key in Cloud DNS DNSSEC | Automated | ✅ | RSASHA1 is a weak algorithm for DNSSEC key signing. SHA-1 has known weaknesses; use RSASHA256 or ECDSAP256SHA256 instead. |
-| 3.5 | Level 1 | Ensure That RSASHA1 Is Not Used for the Zone-Signing Key in Cloud DNS DNSSEC | Automated | ✅ | The zone-signing key should not use RSASHA1 for the same reasons as the key-signing key — SHA-1 provides insufficient collision resistance. |
+| 3.5 | Level 1 | Ensure That RSASHA1 Is Not Used for the Zone-Signing Key in Cloud DNS DNSSEC | Automated |  | The zone-signing key should not use RSASHA1 for the same reasons as the key-signing key — SHA-1 provides insufficient collision resistance. The `3.4` policy flags any `default_key_specs` algorithm of `rsasha1` regardless of `key_type`, so this condition is also detected. |
 | 3.6 | Level 1 | Ensure That SSH Access Is Restricted From the Internet | Automated | ✅ | Firewall rules must not allow unrestricted inbound SSH (port 22) from `0.0.0.0/0` or `::/0`. Expose SSH only through IAP or a bastion host. |
 | 3.7 | Level 2 | Ensure That RDP Access Is Restricted From the Internet | Automated | ✅ | Firewall rules must not allow unrestricted inbound RDP (port 3389) from `0.0.0.0/0` or `::/0`. Expose RDP only through IAP or a bastion host. |
 | 3.8 | Level 2 | Ensure that VPC Flow Logs is Enabled for Every Subnet in a VPC Network | Automated | ✅ | VPC Flow Logs capture metadata about IP traffic on network interfaces, enabling network forensics, anomaly detection, and security auditing. |
@@ -215,4 +215,4 @@ unauthorized access.
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 63 | 52 | 11 | 49 |
+| 63 | 52 | 11 | 47 |

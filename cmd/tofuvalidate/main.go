@@ -67,7 +67,7 @@ func RunTofuValidateCLI(
 		if err != nil {
 			relPath = dir // fallback to absolute path
 		}
-		fullPath := relPath
+		var fullPath string
 		if relPath == "." {
 			fullPath = baseDir
 		} else if strings.HasPrefix(relPath, "..") {

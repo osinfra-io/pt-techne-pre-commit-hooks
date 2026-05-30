@@ -2,3 +2,19 @@ rules:
   idiomatic:
     directory-package-mismatch:
       level: ignore
+
+    # Policies are a flat bundle of CIS controls evaluated together by the
+    # engine, not a queryable API with a single entrypoint.
+    no-defined-entrypoint:
+      level: ignore
+
+    # `object.get(..., "")` defaults are intentional: they keep comparisons
+    # total when the key is absent rather than skipping the rule.
+    superfluous-object-get:
+      level: ignore
+
+  style:
+    # CIS control titles and descriptions are reproduced verbatim from the
+    # benchmark and exceed the default line length.
+    line-length:
+      level: ignore

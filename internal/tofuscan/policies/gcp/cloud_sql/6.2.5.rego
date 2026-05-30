@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 # Severity levels less strict than WARNING (more verbose / noisier).
 _too_verbose_6_2_5 := {

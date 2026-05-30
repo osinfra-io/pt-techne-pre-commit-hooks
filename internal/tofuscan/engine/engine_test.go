@@ -179,6 +179,70 @@ func TestViolationFields(t *testing.T) {
 	}
 }
 
+func TestFirewallPortRangeViolations(t *testing.T) {
+	// CIS 3.6 (SSH/22) and 3.7 (RDP/3389) must fire when the open port is
+	// expressed as an inclusive range that spans the sensitive port, not just
+	// as an exact port string.
+	content := `resource "google_compute_firewall" "ssh_range" {
+  name    = "allow-ssh-range"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["20-30"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}
+
+resource "google_compute_firewall" "rdp_range" {
+  name    = "allow-rdp-range"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["3000-4000"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}
+
+resource "google_compute_firewall" "unrelated_range" {
+  name    = "allow-https-range"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["8000-9000"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}
+`
+	tmp := t.TempDir()
+	file := tmp + "/main.tofu"
+	if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := Run(context.Background(), []string{file}, policies.FS)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := map[string][]string{}
+	for _, v := range result.Violations {
+		got[v.RuleID] = append(got[v.RuleID], v.Resource)
+	}
+
+	if res := got["gcp/cis/3.6"]; len(res) != 1 || res[0] != "ssh_range" {
+		t.Errorf("gcp/cis/3.6: got %v, want [ssh_range]", res)
+	}
+	if res := got["gcp/cis/3.7"]; len(res) != 1 || res[0] != "rdp_range" {
+		t.Errorf("gcp/cis/3.7: got %v, want [rdp_range]", res)
+	}
+}
+
 func countStrings(ss []string) map[string]int {
 	m := make(map[string]int)
 	for _, s := range ss {

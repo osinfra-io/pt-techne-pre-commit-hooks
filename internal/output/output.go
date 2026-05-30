@@ -108,7 +108,7 @@ func TermWidth() int {
 		}
 	}
 	if tty, err := os.Open("/dev/tty"); err == nil {
-		defer tty.Close()
+		defer func() { _ = tty.Close() }()
 		if w, _, err := term.GetSize(int(tty.Fd())); err == nil && w > 0 {
 			return w
 		}

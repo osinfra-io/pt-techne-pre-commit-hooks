@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_3_6 := concat("", [
 	"Trace flag 3625 masks the details of SQL Server error messages shown to non-admin ",

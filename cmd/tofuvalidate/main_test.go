@@ -26,12 +26,20 @@ func Test_findDirsWithTfFiles_and_walkDirs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
-	os.Mkdir(filepath.Join(tempDir, "sub1"), 0755)
-	os.Mkdir(filepath.Join(tempDir, "sub2"), 0755)
-	os.WriteFile(filepath.Join(tempDir, "sub1", "main.tf"), []byte("terraform {}"), 0644)
-	os.WriteFile(filepath.Join(tempDir, "sub2", "other.txt"), []byte("not tf"), 0644)
+	if err := os.Mkdir(filepath.Join(tempDir, "sub1"), 0755); err != nil {
+		t.Fatalf("Failed to create sub1: %v", err)
+	}
+	if err := os.Mkdir(filepath.Join(tempDir, "sub2"), 0755); err != nil {
+		t.Fatalf("Failed to create sub2: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempDir, "sub1", "main.tf"), []byte("terraform {}"), 0644); err != nil {
+		t.Fatalf("Failed to write sub1/main.tf: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempDir, "sub2", "other.txt"), []byte("not tf"), 0644); err != nil {
+		t.Fatalf("Failed to write sub2/other.txt: %v", err)
+	}
 
 	dirs := findDirsWithTfFiles(tempDir)
 	found := false
@@ -60,14 +68,26 @@ func Test_walkDirs_ErrorsAndHidden(t *testing.T) {
 	if err2 != nil {
 		t.Fatalf("Failed to create temp dir: %v", err2)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
-	os.Mkdir(filepath.Join(tempDir, ".hidden"), 0755)
-	os.Mkdir(filepath.Join(tempDir, ".terraform"), 0755)
-	os.Mkdir(filepath.Join(tempDir, "visible"), 0755)
-	os.WriteFile(filepath.Join(tempDir, "visible", "main.tf"), []byte("terraform {}"), 0644)
-	os.WriteFile(filepath.Join(tempDir, ".hidden", "main.tf"), []byte("terraform {}"), 0644)
-	os.WriteFile(filepath.Join(tempDir, ".terraform", "main.tf"), []byte("terraform {}"), 0644)
+	if err := os.Mkdir(filepath.Join(tempDir, ".hidden"), 0755); err != nil {
+		t.Fatalf("Failed to create .hidden: %v", err)
+	}
+	if err := os.Mkdir(filepath.Join(tempDir, ".terraform"), 0755); err != nil {
+		t.Fatalf("Failed to create .terraform: %v", err)
+	}
+	if err := os.Mkdir(filepath.Join(tempDir, "visible"), 0755); err != nil {
+		t.Fatalf("Failed to create visible: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempDir, "visible", "main.tf"), []byte("terraform {}"), 0644); err != nil {
+		t.Fatalf("Failed to write visible/main.tf: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempDir, ".hidden", "main.tf"), []byte("terraform {}"), 0644); err != nil {
+		t.Fatalf("Failed to write .hidden/main.tf: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempDir, ".terraform", "main.tf"), []byte("terraform {}"), 0644); err != nil {
+		t.Fatalf("Failed to write .terraform/main.tf: %v", err)
+	}
 
 	foundDirs, err := walkDirs(tempDir)
 	if err != nil {

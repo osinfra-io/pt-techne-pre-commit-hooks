@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_2_8 := concat("", [
 	"The pgaudit extension provides detailed session and object audit logging for ",

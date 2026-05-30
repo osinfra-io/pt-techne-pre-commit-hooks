@@ -1,7 +1,7 @@
 package tofuscan
 
-import rego.v1
 import data.tofuscan.lib
+import rego.v1
 
 _desc_6_1_2 := concat("", [
 	"Setting skip_show_database=on prevents non-privileged users from using SHOW DATABASES ",

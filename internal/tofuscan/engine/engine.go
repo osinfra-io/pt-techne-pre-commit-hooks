@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/open-policy-agent/conftest/parser"
-	"github.com/open-policy-agent/opa/ast"
-	"github.com/open-policy-agent/opa/rego"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/rego"
 	"github.com/zclconf/go-cty/cty"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
 )
@@ -92,6 +92,12 @@ func Run(ctx context.Context, files []string, policiesFS fs.FS) (*RunResult, err
 	// Merged evaluation for global/existence checks (e.g. "a log sink must
 	// exist somewhere"). Combining all files into one input prevents
 	// existence rules from firing once per file.
+	//
+	// Known limitation: all scanned files are merged into a single input
+	// regardless of which module or project they belong to. A satisfying
+	// resource in one module (e.g. a log sink) therefore suppresses a global
+	// violation for every other module in the same run. Scan one project
+	// directory at a time if per-project isolation is required.
 	merged := mergeConfigs(normalizedConfigs)
 	globalViolations, err := evaluate(ctx, "", merged, prepared)
 	if err != nil {
@@ -203,13 +209,18 @@ func evaluate(ctx context.Context, file string, input interface{}, prepared rego
 // map of resource label to line number. This is a best-effort text scan — it
 // does not use an HCL parser, so line numbers may be missing for resources
 // with unusual formatting.
+//
+// Known limitation: resources are keyed by label only, not by type+label. Two
+// resources of different types sharing a label (commonly "this") collide, and
+// the first one scanned wins. The reported line number may then point at the
+// wrong resource. Skip directives in skip.go share the same label-only keying.
 func resourceLineIndex(file string) map[string]int {
 	index := make(map[string]int)
 	f, err := os.Open(file)
 	if err != nil {
 		return index
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	scanner := bufio.NewScanner(f)
 	lineNum := 0
