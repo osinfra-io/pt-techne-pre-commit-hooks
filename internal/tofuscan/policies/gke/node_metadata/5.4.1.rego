@@ -14,7 +14,7 @@ deny contains violation if {
 	some wmc in object.get(nc, "workload_metadata_config", [{}])
 	object.get(wmc, "mode", "") != "GKE_METADATA"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_node_pool", name]),
 		"rule_id": "gke/cis/5.4.1",
 		"cis_control": "5.4.1",
 		"profile_level": "Level 2",

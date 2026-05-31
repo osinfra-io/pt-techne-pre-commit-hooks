@@ -16,7 +16,7 @@ deny contains violation if {
 	some ip_config in ip_config_arr
 	object.get(ip_config, "ipv4_enabled", true) == true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.7",
 		"cis_control": "6.7",
 		"profile_level": "Level 2",

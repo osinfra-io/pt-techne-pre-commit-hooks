@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	resource.can_ip_forward == true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.6",
 		"cis_control": "4.6",
 		"profile_level": "Level 1",

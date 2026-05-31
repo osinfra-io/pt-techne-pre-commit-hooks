@@ -14,7 +14,7 @@ deny contains violation if {
 	some dashboard in object.get(addons, "kubernetes_dashboard", [])
 	object.get(dashboard, "disabled", true) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.10.1",
 		"cis_control": "5.10.1",
 		"profile_level": "Level 1",

@@ -16,7 +16,7 @@ deny contains violation if {
 	lib.is_postgres(resource)
 	not _has_pg_flag_on(resource, "cloudsql.enable_pgaudit")
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.2.8",
 		"cis_control": "6.2.8",
 		"profile_level": "Level 1",

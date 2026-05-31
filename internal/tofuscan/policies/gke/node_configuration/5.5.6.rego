@@ -14,7 +14,7 @@ deny contains violation if {
 	some sic in object.get(nc, "shielded_instance_config", [{}])
 	object.get(sic, "enable_integrity_monitoring", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_node_pool", name]),
 		"rule_id": "gke/cis/5.5.6",
 		"cis_control": "5.5.6",
 		"profile_level": "Level 2",

@@ -15,7 +15,7 @@ deny contains violation if {
 	lib.is_postgres(resource)
 	not _has_pg_flag_on(resource, "log_connections")
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.2.2",
 		"cis_control": "6.2.2",
 		"profile_level": "Level 1",

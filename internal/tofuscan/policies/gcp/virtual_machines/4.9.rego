@@ -14,7 +14,7 @@ deny contains violation if {
 	access_configs := object.get(iface, "access_config", [])
 	count(access_configs) > 0
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.9",
 		"cis_control": "4.9",
 		"profile_level": "Level 2",

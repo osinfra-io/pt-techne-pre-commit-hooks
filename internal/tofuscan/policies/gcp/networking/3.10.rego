@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	not log_config_enabled(resource)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_subnetwork", name]),
 		"rule_id": "gcp/cis/3.10",
 		"cis_control": "3.10",
 		"profile_level": "Level 2",

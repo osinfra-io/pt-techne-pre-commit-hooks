@@ -25,7 +25,7 @@ deny contains violation if {
 	some scope in sa.scopes
 	scope in _cloud_platform_full_scopes
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.2",
 		"cis_control": "4.2",
 		"profile_level": "Level 1",

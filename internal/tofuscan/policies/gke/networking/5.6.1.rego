@@ -13,7 +13,7 @@ deny contains violation if {
 	some resource in resources
 	object.get(resource, "enable_intranode_visibility", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.6.1",
 		"cis_control": "5.6.1",
 		"profile_level": "Level 2",

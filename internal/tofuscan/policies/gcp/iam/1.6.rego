@@ -15,7 +15,7 @@ deny contains violation if {
 	startswith(resource.member, "serviceAccount:")
 	resource.role in _admin_roles
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_project_iam_member", name]),
 		"rule_id": "gcp/cis/1.6",
 		"cis_control": "1.6",
 		"profile_level": "Level 1",
@@ -32,7 +32,7 @@ deny contains violation if {
 	startswith(member, "serviceAccount:")
 	resource.role in _admin_roles
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_project_iam_binding", name]),
 		"rule_id": "gcp/cis/1.6",
 		"cis_control": "1.6",
 		"profile_level": "Level 1",

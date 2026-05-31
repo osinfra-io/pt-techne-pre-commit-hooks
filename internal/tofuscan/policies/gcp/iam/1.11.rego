@@ -15,7 +15,7 @@ deny contains violation if {
 	some resource in resources
 	not resource.rotation_period
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_kms_crypto_key", name]),
 		"rule_id": "gcp/cis/1.11",
 		"cis_control": "1.11",
 		"profile_level": "Level 1",
@@ -36,7 +36,7 @@ deny contains violation if {
 	seconds := to_number(seconds_str)
 	seconds > _max_rotation_seconds
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_kms_crypto_key", name]),
 		"rule_id": "gcp/cis/1.11",
 		"cis_control": "1.11",
 		"profile_level": "Level 1",
@@ -53,7 +53,7 @@ deny contains violation if {
 	period != ""
 	not regex.match(`^[0-9]+(?:\.[0-9]{1,9})?s$`, period)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_kms_crypto_key", name]),
 		"rule_id": "gcp/cis/1.11",
 		"cis_control": "1.11",
 		"profile_level": "Level 1",

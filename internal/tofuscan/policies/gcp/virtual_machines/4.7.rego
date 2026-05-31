@@ -13,7 +13,7 @@ deny contains violation if {
 	some resource in resources
 	not _has_csek(resource)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_disk", name]),
 		"rule_id": "gcp/cis/4.7",
 		"cis_control": "4.7",
 		"profile_level": "Level 2",

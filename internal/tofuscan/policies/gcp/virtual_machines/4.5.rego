@@ -14,7 +14,7 @@ deny contains violation if {
 	val := object.get(metadata, "serial-port-enable", "false")
 	val == "true"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.5",
 		"cis_control": "4.5",
 		"profile_level": "Level 1",
@@ -31,7 +31,7 @@ deny contains violation if {
 	val := object.get(metadata, "serial-port-enable", "false")
 	val == "1"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.5",
 		"cis_control": "4.5",
 		"profile_level": "Level 1",
@@ -48,7 +48,7 @@ deny contains violation if {
 	val := object.get(metadata, "serial-port-enable", false)
 	val == true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.5",
 		"cis_control": "4.5",
 		"profile_level": "Level 1",

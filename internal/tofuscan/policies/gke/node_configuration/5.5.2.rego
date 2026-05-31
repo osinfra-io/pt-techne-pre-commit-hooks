@@ -13,7 +13,7 @@ deny contains violation if {
 	some mgmt in object.get(resource, "management", [{}])
 	object.get(mgmt, "auto_repair", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_node_pool", name]),
 		"rule_id": "gke/cis/5.5.2",
 		"cis_control": "5.5.2",
 		"profile_level": "Level 1",

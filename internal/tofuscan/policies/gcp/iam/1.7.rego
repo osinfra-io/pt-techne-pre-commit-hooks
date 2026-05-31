@@ -19,7 +19,7 @@ deny contains violation if {
 	some resource in resources
 	resource.role in _sa_roles_1_7
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_project_iam_member", name]),
 		"rule_id": "gcp/cis/1.7",
 		"cis_control": "1.7",
 		"profile_level": "Level 1",
@@ -34,7 +34,7 @@ deny contains violation if {
 	some resource in resources
 	resource.role in _sa_roles_1_7
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_project_iam_binding", name]),
 		"rule_id": "gcp/cis/1.7",
 		"cis_control": "1.7",
 		"profile_level": "Level 1",

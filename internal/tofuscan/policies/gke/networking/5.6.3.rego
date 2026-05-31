@@ -15,7 +15,7 @@ deny contains violation if {
 	cidr_blocks := object.get(manc, "cidr_blocks", [])
 	count(cidr_blocks) == 0
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.6.3",
 		"cis_control": "5.6.3",
 		"profile_level": "Level 1",

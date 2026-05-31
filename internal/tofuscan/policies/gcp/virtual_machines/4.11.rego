@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	not resource.confidential_instance_config
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.11",
 		"cis_control": "4.11",
 		"profile_level": "Level 2",
@@ -28,7 +28,7 @@ deny contains violation if {
 	some config in resource.confidential_instance_config
 	object.get(config, "enable_confidential_compute", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.11",
 		"cis_control": "4.11",
 		"profile_level": "Level 2",

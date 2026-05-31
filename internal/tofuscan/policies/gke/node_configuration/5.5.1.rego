@@ -21,7 +21,7 @@ deny contains violation if {
 	not startswith(image_type_val, "${")
 	upper(image_type_val) != "COS_CONTAINERD"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_node_pool", name]),
 		"rule_id": "gke/cis/5.5.1",
 		"cis_control": "5.5.1",
 		"profile_level": "Level 1",

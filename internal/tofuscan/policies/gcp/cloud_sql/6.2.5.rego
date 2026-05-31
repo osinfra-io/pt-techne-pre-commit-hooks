@@ -26,7 +26,7 @@ deny contains violation if {
 	flag.name == "log_min_messages"
 	flag.value in _too_verbose_6_2_5
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.2.5",
 		"cis_control": "6.2.5",
 		"profile_level": "Level 1",

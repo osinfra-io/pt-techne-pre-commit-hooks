@@ -14,7 +14,7 @@ deny contains violation if {
 	some ccc in object.get(ma, "client_certificate_config", [{}])
 	ccc.issue_client_certificate == true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.8.1",
 		"cis_control": "5.8.1",
 		"profile_level": "Level 1",

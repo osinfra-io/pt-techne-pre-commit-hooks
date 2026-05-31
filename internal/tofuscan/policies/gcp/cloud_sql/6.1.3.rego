@@ -15,7 +15,7 @@ deny contains violation if {
 	lib.is_mysql(resource)
 	not _has_sql_flag(resource, "local_infile", "off")
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.1.3",
 		"cis_control": "6.1.3",
 		"profile_level": "Level 1",

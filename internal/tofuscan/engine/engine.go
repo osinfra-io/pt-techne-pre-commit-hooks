@@ -206,14 +206,9 @@ func evaluate(ctx context.Context, file string, input interface{}, prepared rego
 }
 
 // resourceLineIndex scans a file for HCL resource declarations and returns a
-// map of resource label to line number. This is a best-effort text scan — it
-// does not use an HCL parser, so line numbers may be missing for resources
+// map of "type.name" address to line number. This is a best-effort text scan —
+// it does not use an HCL parser, so line numbers may be missing for resources
 // with unusual formatting.
-//
-// Known limitation: resources are keyed by label only, not by type+label. Two
-// resources of different types sharing a label (commonly "this") collide, and
-// the first one scanned wins. The reported line number may then point at the
-// wrong resource. Skip directives in skip.go share the same label-only keying.
 func resourceLineIndex(file string) map[string]int {
 	index := make(map[string]int)
 	f, err := os.Open(file)
@@ -232,9 +227,11 @@ func resourceLineIndex(file string) map[string]int {
 		}
 		parts := strings.Fields(line)
 		if len(parts) >= 3 {
-			name := strings.Trim(parts[2], `"{}`)
-			if _, exists := index[name]; !exists {
-				index[name] = lineNum
+			rtype := strings.Trim(parts[1], `"`)
+			rname := strings.Trim(parts[2], `"{}`)
+			address := rtype + "." + rname
+			if _, exists := index[address]; !exists {
+				index[address] = lineNum
 			}
 		}
 	}

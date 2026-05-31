@@ -13,7 +13,7 @@ deny contains violation if {
 	some resource in resources
 	resource.name == "default"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_network", name]),
 		"rule_id": "gcp/cis/3.1",
 		"cis_control": "3.1",
 		"profile_level": "Level 1",

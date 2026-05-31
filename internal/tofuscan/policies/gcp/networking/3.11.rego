@@ -16,7 +16,7 @@ deny contains violation if {
 	min_tls := object.get(resource, "min_tls_version", "TLS_1_0")
 	min_tls in _weak_tls_versions
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_ssl_policy", name]),
 		"rule_id": "gcp/cis/3.11",
 		"cis_control": "3.11",
 		"profile_level": "Level 1",
@@ -32,7 +32,7 @@ deny contains violation if {
 	profile := object.get(resource, "profile", "COMPATIBLE")
 	profile == "COMPATIBLE"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_ssl_policy", name]),
 		"rule_id": "gcp/cis/3.11",
 		"cis_control": "3.11",
 		"profile_level": "Level 1",

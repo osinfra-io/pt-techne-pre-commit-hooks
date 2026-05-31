@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	object.get(resource, "uniform_bucket_level_access", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_storage_bucket", name]),
 		"rule_id": "gcp/cis/5.2",
 		"cis_control": "5.2",
 		"profile_level": "Level 2",

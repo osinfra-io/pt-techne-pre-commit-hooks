@@ -99,8 +99,9 @@ func parseFileSkips(file string) map[string]map[string]string {
 		if braceDepth == 0 && strings.HasPrefix(trimmed, "resource ") {
 			parts := strings.Fields(trimmed)
 			if len(parts) >= 3 {
-				name := strings.Trim(parts[2], `"{}`)
-				currentResource = name
+				rtype := strings.Trim(parts[1], `"`)
+				rname := strings.Trim(parts[2], `"{}`)
+				currentResource = rtype + "." + rname
 				braceDepth += countBraces(trimmed)
 				continue
 			}
