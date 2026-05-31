@@ -68,7 +68,7 @@ cryptographic keys, and protecting API credentials.
 | 1.15 | Level 2 | Ensure API Keys Are Restricted to Only APIs That Application Needs Access | Automated | | API keys should be scoped to only the APIs the application actually uses. Unrestricted keys can be exploited to access any GCP service. |
 | 1.16 | Level 2 | Ensure API Keys Are Rotated Every 90 Days | Automated | | If API keys must be used, rotate them every 90 days to limit the exposure window from a compromised key. |
 | 1.17 | Level 1 | Ensure Essential Contacts is Configured for Organization | Automated | | Configure Essential Contacts with designated email addresses so GCP can deliver important security and operational notifications. |
-| 1.18 | Level 1 | Ensure Secrets are Not Stored in Cloud Functions Environment Variables | Manual | | Cloud Functions environment variables are not encrypted and visible in the GCP console. Store secrets in Secret Manager instead. |
+| 1.18 | Level 1 | Ensure Secrets are Not Stored in Cloud Functions Environment Variables | Manual | ✅ | Cloud Functions environment variables are not encrypted and visible in the GCP console. Store secrets in Secret Manager instead. |
 
 ---
 
@@ -81,23 +81,23 @@ configuration changes including IAM, networking, and database modifications.
 
 | Control | Level | Title | Type | Covered | Description |
 | --------- | ------- | ------- | ------ | --------- | ------------- |
-| 2.1 | Level 2 | Ensure That Cloud Audit Logging Is Configured Properly | Automated | | Cloud Audit Logs record admin activity and data access events across GCP services. Both Admin Activity and Data Access audit logs should be enabled for all services. |
+| 2.1 | Level 2 | Ensure That Cloud Audit Logging Is Configured Properly | Automated | ✅ | Cloud Audit Logs record admin activity and data access events across GCP services. Both Admin Activity and Data Access audit logs should be enabled for all services. |
 | 2.2 | Level 1 | Ensure Google Workspace/Cloud Identity Data Sharing with Google Cloud is Enabled for Audit Data from GCP | Manual | | Enabling data sharing between Google Workspace/Cloud Identity and Google Cloud ensures that GCP audit log data is available for security review and compliance reporting in the Admin console. |
 | 2.3 | Level 1 | Ensure That Sinks Are Configured for All Log Entries | Automated | ✅ | A log sink exports copies of all log entries to a durable destination (Cloud Storage, BigQuery, Pub/Sub) enabling long-term retention and SIEM integration. |
-| 2.4 | Level 1 | Ensure That Retention Policies on Cloud Storage Buckets Used for Exporting Logs Are Configured Using Bucket Lock | Automated | | Retention policies with Bucket Lock prevent log data from being modified or deleted before the retention period expires, protecting audit trails from tampering. |
-| 2.5 | Level 2 | Ensure Log Metric Filter and Alerts Exist for Project Ownership Assignments/Changes | Automated | | Project ownership grants the highest privilege level. Metric filters and alerts on ownership assignment changes detect unauthorized privilege escalation. |
-| 2.6 | Level 1 | Ensure That the Log Metric Filter and Alerts Exist for Audit Configuration Changes | Automated | | Changes to audit configuration could disable logging for critical events. Alerting on these changes helps detect attempts to cover tracks. |
-| 2.7 | Level 1 | Ensure That the Log Metric Filter and Alerts Exist for Custom Role Changes | Automated | | Custom IAM roles can be modified to include broader permissions. Monitoring changes to custom roles detects unauthorized privilege expansion. |
-| 2.8 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for VPC Network Firewall Rule Changes | Automated | | VPC firewall rule changes can open unintended network access. Metric filters and alerts provide visibility into firewall configuration drift. |
-| 2.9 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for VPC Network Route Changes | Automated | | Route changes can redirect traffic to malicious destinations. A metric filter and alarm should be established for VPC network route changes. |
-| 2.10 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for VPC Network Changes | Automated | | Changes to VPC networks, such as peer connections or subnet modifications, can alter the network security boundary and should be alerted on. |
-| 2.11 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for Cloud Storage IAM Permission Changes | Automated | | IAM permission changes on Cloud Storage buckets can expose sensitive data. Monitoring these changes enables early detection of unauthorized access grants. |
-| 2.12 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for SQL Instance Configuration Changes | Automated | | SQL instance configuration changes (e.g., disabling SSL, enabling public IPs) can weaken database security and should trigger alerts. |
-| 2.13 | Level 1 | Ensure That Cloud DNS Logging Is Enabled for All VPC Networks | Automated | | Cloud DNS logs record DNS queries made from within VPC networks to Stackdriver, providing visibility into potentially malicious DNS activity. |
+| 2.4 | Level 1 | Ensure That Retention Policies on Cloud Storage Buckets Used for Exporting Logs Are Configured Using Bucket Lock | Automated | ✅ | Retention policies with Bucket Lock prevent log data from being modified or deleted before the retention period expires, protecting audit trails from tampering. |
+| 2.5 | Level 2 | Ensure Log Metric Filter and Alerts Exist for Project Ownership Assignments/Changes | Automated | ✅ | Project ownership grants the highest privilege level. Metric filters and alerts on ownership assignment changes detect unauthorized privilege escalation. |
+| 2.6 | Level 1 | Ensure That the Log Metric Filter and Alerts Exist for Audit Configuration Changes | Automated | ✅ | Changes to audit configuration could disable logging for critical events. Alerting on these changes helps detect attempts to cover tracks. |
+| 2.7 | Level 1 | Ensure That the Log Metric Filter and Alerts Exist for Custom Role Changes | Automated | ✅ | Custom IAM roles can be modified to include broader permissions. Monitoring changes to custom roles detects unauthorized privilege expansion. |
+| 2.8 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for VPC Network Firewall Rule Changes | Automated | ✅ | VPC firewall rule changes can open unintended network access. Metric filters and alerts provide visibility into firewall configuration drift. |
+| 2.9 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for VPC Network Route Changes | Automated | ✅ | Route changes can redirect traffic to malicious destinations. A metric filter and alarm should be established for VPC network route changes. |
+| 2.10 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for VPC Network Changes | Automated | ✅ | Changes to VPC networks, such as peer connections or subnet modifications, can alter the network security boundary and should be alerted on. |
+| 2.11 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for Cloud Storage IAM Permission Changes | Automated | ✅ | IAM permission changes on Cloud Storage buckets can expose sensitive data. Monitoring these changes enables early detection of unauthorized access grants. |
+| 2.12 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for SQL Instance Configuration Changes | Automated | ✅ | SQL instance configuration changes (e.g., disabling SSL, enabling public IPs) can weaken database security and should trigger alerts. |
+| 2.13 | Level 1 | Ensure That Cloud DNS Logging Is Enabled for All VPC Networks | Automated | ✅ | Cloud DNS logs record DNS queries made from within VPC networks to Stackdriver, providing visibility into potentially malicious DNS activity. |
 | 2.14 | Level 1 | Ensure Cloud Asset Inventory Is Enabled | Automated | | Cloud Asset Inventory provides a time-series record of GCP resource metadata and IAM policies, enabling change tracking and compliance auditing. |
 | 2.15 | Level 2 | Ensure Access Transparency is Enabled | Manual | | Access Transparency provides audit logs of actions taken by Google personnel on customer resources, improving accountability for support interactions. |
 | 2.16 | Level 2 | Ensure Access Approval is Enabled | Manual | | Access Approval requires explicit customer approval before Google support can access project resources, adding an additional control over privileged access. |
-| 2.17 | Level 2 | Ensure Logging is Enabled for HTTP(S) Load Balancer | Automated | | Enabling logging on HTTPS Load Balancers captures all network traffic and destinations, providing visibility into request patterns and potential attacks. |
+| 2.17 | Level 2 | Ensure Logging is Enabled for HTTP(S) Load Balancer | Automated | ✅ | Enabling logging on HTTPS Load Balancers captures all network traffic and destinations, providing visibility into request patterns and potential attacks. |
 
 ---
 
@@ -172,7 +172,7 @@ to prevent unauthorized access and data loss.
 
 | Control | Level | Title | Type | Covered | Description |
 | --------- | ------- | ------- | ------ | --------- | ------------- |
-| 6.1.1 | Level 1 | Ensure That a MySQL Instance Does Not Allow Anyone To Connect With Administrative Privileges | Manual | | The MySQL root account should be configured with a strong password and restricted to localhost, preventing unauthorized administrative access. |
+| 6.1.1 | Level 1 | Ensure That a MySQL Instance Does Not Allow Anyone To Connect With Administrative Privileges | Manual | ✅ | The MySQL root account should be configured with a strong password and restricted to localhost, preventing unauthorized administrative access. |
 | 6.1.2 | Level 1 | Ensure Skip_show_database Database Flag for Cloud SQL MySQL Instance Is Set to On | Automated | ✅ | Setting `skip_show_database=on` prevents users from using `SHOW DATABASES` unless they have the `SHOW DATABASES` privilege, reducing information disclosure. |
 | 6.1.3 | Level 1 | Ensure That the Local_infile Database Flag for a Cloud SQL MySQL Instance Is Set to Off | Automated | ✅ | The `local_infile` flag enables loading data from client-side files, which can be exploited to read arbitrary files on the client system. It should be disabled. |
 | 6.2.1 | Level 1 | Ensure Log_error_verbosity Database Flag for Cloud SQL PostgreSQL Instance Is Set to Default or Stricter | Automated | ✅ | Controls the verbosity of error messages logged by PostgreSQL. Overly verbose error logging can expose sensitive internal state. |

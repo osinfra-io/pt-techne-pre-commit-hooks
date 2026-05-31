@@ -166,7 +166,7 @@ authentication, and cluster-level settings.
 | 5.6.4 | Ensure clusters are created with Private Endpoint Enabled and Public Access Disabled | Automated | ✅ | Enabling a private endpoint and disabling public access ensures the GKE API server is only reachable from within the VPC, eliminating internet exposure. |
 | 5.6.5 | Ensure clusters are created with Private Nodes | Automated | ✅ | Private Nodes have no public IP addresses, so they cannot be directly reached from the internet. Outbound internet access is provided via Cloud NAT. |
 | 5.6.6 | Consider firewalling GKE worker nodes | Manual | | VPC firewall rules should restrict traffic to GKE worker nodes to only what is required for cluster operation, reducing the attack surface of node-level services. |
-| 5.6.7 | Ensure use of Google-managed SSL Certificates | Automated | | Google-managed SSL certificates for GKE Ingress are automatically provisioned and renewed, eliminating the risk of certificate expiry and manual key management errors. |
+| 5.6.7 | Ensure use of Google-managed SSL Certificates | Automated | ✅ | Google-managed SSL certificates for GKE Ingress are automatically provisioned and renewed, eliminating the risk of certificate expiry and manual key management errors. |
 
 ### 5.7 Logging
 

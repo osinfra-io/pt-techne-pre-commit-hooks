@@ -75,6 +75,18 @@ resource "google_storage_bucket" "bucket" {
   uniform_bucket_level_access = true
 }
 
+# GCP CIS 2.4 — retention policy with bucket lock enabled
+resource "google_storage_bucket" "good_log_bucket" {
+  location                    = "US"
+  name                        = "good-log-bucket"
+  uniform_bucket_level_access = true
+
+  retention_policy {
+    is_locked        = true
+    retention_period = 86400
+  }
+}
+
 # GCP CIS 2.2 — project resource with log sink present
 resource "google_project" "good_project" {
   name       = "good-project"
@@ -189,6 +201,43 @@ resource "google_sql_database_instance" "good_sql" {
   }
 }
 
+# GCP CIS 6.1.1 — root user restricted to a specific host (not "%" or "")
+# GCP CIS 6.1.2 — skip_show_database = on
+# GCP CIS 6.1.3 — local_infile = off
+resource "google_sql_database_instance" "good_mysql" {
+  name             = "good-mysql"
+  database_version = "MYSQL_8_0"
+
+  settings {
+    tier = "db-f1-micro"
+
+    database_flags {
+      name  = "local_infile"
+      value = "off"
+    }
+
+    database_flags {
+      name  = "skip_show_database"
+      value = "on"
+    }
+
+    ip_configuration {
+      ipv4_enabled = false
+      ssl_mode     = "TRUSTED_CLIENT_CERTIFICATE_REQUIRED"
+    }
+
+    backup_configuration {
+      enabled = true
+    }
+  }
+}
+
+resource "google_sql_user" "good_root_user" {
+  host     = "127.0.0.1"
+  instance = "good-mysql"
+  name     = "root"
+}
+
 # GCP CIS 7.1 — access granted to a specific user, not allUsers/allAuthenticatedUsers
 # GCP CIS 7.3 — default_encryption_configuration with kms_key_name set
 resource "google_bigquery_dataset" "good_dataset" {
@@ -286,6 +335,282 @@ resource "google_container_node_pool" "good_pool" {
 
     workload_metadata_config {
       mode = "GKE_METADATA"
+    }
+  }
+}
+
+# GCP CIS 2.13 — DNS policy with logging enabled
+resource "google_dns_policy" "good_dns_policy" {
+  enable_logging = true
+  name           = "good-dns-policy"
+}
+
+# GCP CIS 1.18 — v1 Cloud Function with non-sensitive environment variable keys
+resource "google_cloudfunctions_function" "good_function" {
+  name    = "good-function"
+  runtime = "python39"
+
+  environment_variables = {
+    LOG_LEVEL = "INFO"
+    REGION    = "us-central1"
+  }
+}
+
+# GCP CIS 1.18 — v2 Cloud Function using Secret Manager for secrets (not env vars)
+resource "google_cloudfunctions2_function" "good_function_v2" {
+  location = "us-central1"
+  name     = "good-function-v2"
+
+  service_config {
+    environment_variables = {
+      LOG_LEVEL = "INFO"
+    }
+
+    secret_environment_variables {
+      key        = "API_KEY"
+      project_id = "my-project"
+      secret     = "my-api-key-secret"
+      version    = "latest"
+    }
+  }
+}
+
+# GKE CIS 5.6.7 — Ingress (kubernetes_manifest) with TLS and Google-managed cert annotation
+resource "kubernetes_manifest" "good_ingress" {
+  manifest = {
+    apiVersion = "networking.k8s.io/v1"
+    kind       = "Ingress"
+
+    metadata = {
+      annotations = {
+        "networking.gke.io/managed-certificates" = "my-managed-cert"
+      }
+
+      name      = "good-ingress"
+      namespace = "default"
+    }
+
+    spec = {
+      tls = [
+        {
+          hosts = ["example.com"]
+        }
+      ]
+    }
+  }
+}
+
+# GKE CIS 5.6.7 — Ingress (kubernetes_ingress_v1) with TLS and Google-managed cert annotation
+resource "kubernetes_ingress_v1" "good_ingress" {
+  metadata {
+    annotations = {
+      "networking.gke.io/managed-certificates" = "my-managed-cert"
+    }
+
+    name      = "good-ingress"
+    namespace = "default"
+  }
+
+  spec {
+    tls {
+      hosts       = ["example.com"]
+      secret_name = "my-managed-cert-secret"
+    }
+  }
+}
+
+# GCP CIS 2.17 — backend service with logging enabled and non-zero sample rate
+resource "google_compute_backend_service" "good_backend" {
+  name = "good-backend"
+
+  log_config {
+    enable      = true
+    sample_rate = 1
+  }
+}
+
+# GCP CIS 2.1 — allServices audit config with all three log types and no exempted members
+resource "google_project_iam_audit_config" "good_audit_config" {
+  project = "my-project"
+  service = "allServices"
+
+  audit_log_config {
+    log_type = "ADMIN_READ"
+  }
+
+  audit_log_config {
+    log_type = "DATA_READ"
+  }
+
+  audit_log_config {
+    log_type = "DATA_WRITE"
+  }
+}
+
+# GCP CIS 2.5 — log metric filter for project ownership changes
+resource "google_logging_metric" "project_ownership_changes" {
+  filter = "protoPayload.serviceData.policyDelta.bindingDeltas.role=\"roles/owner\""
+  name   = "project_ownership_changes"
+}
+
+resource "google_monitoring_alert_policy" "project_ownership_changes_alert" {
+  combiner     = "OR"
+  display_name = "Project Ownership Changes"
+
+  conditions {
+    display_name = "Project Ownership Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/project_ownership_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 2.6 — log metric filter for audit configuration changes
+resource "google_logging_metric" "audit_config_changes" {
+  filter = "protoPayload.methodName=\"SetIamPolicy\" AND protoPayload.serviceData.policyDelta.auditConfigDeltas:*"
+  name   = "audit_config_changes"
+}
+
+resource "google_monitoring_alert_policy" "audit_config_changes_alert" {
+  combiner     = "OR"
+  display_name = "Audit Config Changes"
+
+  conditions {
+    display_name = "Audit Config Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/audit_config_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 2.7 — log metric filter for custom role changes
+resource "google_logging_metric" "custom_role_changes" {
+  filter = "resource.type=\"iam_role\" AND protoPayload.methodName=\"google.iam.admin.v1.CreateRole\""
+  name   = "custom_role_changes"
+}
+
+resource "google_monitoring_alert_policy" "custom_role_changes_alert" {
+  combiner     = "OR"
+  display_name = "Custom Role Changes"
+
+  conditions {
+    display_name = "Custom Role Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/custom_role_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 2.8 — log metric filter for VPC firewall rule changes
+resource "google_logging_metric" "firewall_rule_changes" {
+  filter = "resource.type=\"gce_firewall_rule\" AND protoPayload.methodName:\"compute.firewalls.patch\""
+  name   = "firewall_rule_changes"
+}
+
+resource "google_monitoring_alert_policy" "firewall_rule_changes_alert" {
+  combiner     = "OR"
+  display_name = "Firewall Rule Changes"
+
+  conditions {
+    display_name = "Firewall Rule Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/firewall_rule_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 2.9 — log metric filter for VPC route changes
+resource "google_logging_metric" "vpc_route_changes" {
+  filter = "resource.type=\"gce_route\" AND protoPayload.methodName:\"compute.routes.delete\""
+  name   = "vpc_route_changes"
+}
+
+resource "google_monitoring_alert_policy" "vpc_route_changes_alert" {
+  combiner     = "OR"
+  display_name = "VPC Route Changes"
+
+  conditions {
+    display_name = "VPC Route Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/vpc_route_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 2.10 — log metric filter for VPC network changes
+resource "google_logging_metric" "vpc_network_changes" {
+  filter = "resource.type=\"gce_network\" AND protoPayload.methodName:\"compute.networks.insert\""
+  name   = "vpc_network_changes"
+}
+
+resource "google_monitoring_alert_policy" "vpc_network_changes_alert" {
+  combiner     = "OR"
+  display_name = "VPC Network Changes"
+
+  conditions {
+    display_name = "VPC Network Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/vpc_network_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 2.11 — log metric filter for Cloud Storage IAM permission changes
+resource "google_logging_metric" "storage_iam_changes" {
+  filter = "resource.type=\"gcs_bucket\" AND protoPayload.methodName=\"storage.setIamPermissions\""
+  name   = "storage_iam_changes"
+}
+
+resource "google_monitoring_alert_policy" "storage_iam_changes_alert" {
+  combiner     = "OR"
+  display_name = "Storage IAM Changes"
+
+  conditions {
+    display_name = "Storage IAM Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/storage_iam_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 2.12 — log metric filter for SQL instance configuration changes
+resource "google_logging_metric" "sql_instance_changes" {
+  filter = "protoPayload.methodName=\"cloudsql.instances.update\""
+  name   = "sql_instance_changes"
+}
+
+resource "google_monitoring_alert_policy" "sql_instance_changes_alert" {
+  combiner     = "OR"
+  display_name = "SQL Instance Changes"
+
+  conditions {
+    display_name = "SQL Instance Changes Condition"
+
+    condition_threshold {
+      comparison = "COMPARISON_GT"
+      duration   = "0s"
+      filter     = "metric.type=\"logging.googleapis.com/user/sql_instance_changes\" resource.type=\"global\""
     }
   }
 }
