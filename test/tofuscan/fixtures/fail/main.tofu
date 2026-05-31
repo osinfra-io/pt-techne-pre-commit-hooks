@@ -251,6 +251,10 @@ resource "google_container_cluster" "bad_cluster" {
 
   addons_config {
   }
+
+  # GKE CIS 5.9.2 — node_config present but no boot_disk_kms_key
+  node_config {
+  }
 }
 
 # GKE CIS 5.2.1 — service_account = "default" (should use dedicated SA)
@@ -346,6 +350,8 @@ resource "google_sql_user" "bad_root_user" {
 
 # GCP CIS 6.3.1 — SQL Server external scripts enabled flag absent (defaults to on)
 # GCP CIS 6.3.2 — SQL Server cross db ownership chaining flag absent (defaults to on)
+# GCP CIS 6.3.3 — user connections flag absent (will be caught only when set to non-zero)
+# GCP CIS 6.3.4 — user options flag absent (no violation; absence is the passing state)
 # GCP CIS 6.3.5 — SQL Server remote access flag absent (defaults to on)
 # GCP CIS 6.3.6 — SQL Server trace flag 3625 absent (error messages not masked)
 # GCP CIS 6.3.7 — SQL Server contained database authentication flag absent (defaults to on)
@@ -365,6 +371,67 @@ resource "google_sql_database_instance" "bad_sqlserver" {
       enabled = true
     }
   }
+}
+
+# GCP CIS 6.3.3 — user connections flag set to a non-zero value (should be 0 or absent)
+# GCP CIS 6.3.4 — user options flag present (should be absent)
+resource "google_sql_database_instance" "bad_sqlserver_flags" {
+  name             = "bad-sqlserver-flags"
+  database_version = "SQLSERVER_2019_STANDARD"
+
+  settings {
+    tier = "db-custom-1-3840"
+
+    backup_configuration {
+      enabled = true
+    }
+
+    database_flags {
+      name  = "3625"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "contained database authentication"
+      value = "off"
+    }
+
+    database_flags {
+      name  = "cross db ownership chaining"
+      value = "off"
+    }
+
+    database_flags {
+      name  = "external scripts enabled"
+      value = "off"
+    }
+
+    database_flags {
+      name  = "remote access"
+      value = "off"
+    }
+
+    database_flags {
+      name  = "user connections"
+      value = "100"
+    }
+
+    database_flags {
+      name  = "user options"
+      value = "1"
+    }
+
+    ip_configuration {
+      ipv4_enabled = false
+      ssl_mode     = "ENCRYPTED_ONLY"
+    }
+  }
+}
+
+# GCP CIS 8.1 — Dataproc cluster without customer-managed encryption key
+resource "google_dataproc_cluster" "bad_dataproc" {
+  name   = "bad-dataproc"
+  region = "us-central1"
 }
 
 # GCP CIS 7.2 — BigQuery table has no customer-managed encryption key

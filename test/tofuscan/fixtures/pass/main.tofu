@@ -326,7 +326,12 @@ resource "google_container_node_pool" "good_pool" {
   }
 
   node_config {
-    service_account = "my-gke-sa@my-project.iam.gserviceaccount.com"
+    boot_disk_kms_key = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/my-key"
+    service_account   = "my-gke-sa@my-project.iam.gserviceaccount.com"
+
+    sandbox_config {
+      sandbox_type = "GVISOR"
+    }
 
     shielded_instance_config {
       enable_integrity_monitoring = true
@@ -611,6 +616,18 @@ resource "google_monitoring_alert_policy" "sql_instance_changes_alert" {
       comparison = "COMPARISON_GT"
       duration   = "0s"
       filter     = "metric.type=\"logging.googleapis.com/user/sql_instance_changes\" resource.type=\"global\""
+    }
+  }
+}
+
+# GCP CIS 8.1 — Dataproc cluster with customer-managed encryption key
+resource "google_dataproc_cluster" "good_dataproc" {
+  name   = "good-dataproc"
+  region = "us-central1"
+
+  cluster_config {
+    encryption_config {
+      kms_key_name = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/my-key"
     }
   }
 }

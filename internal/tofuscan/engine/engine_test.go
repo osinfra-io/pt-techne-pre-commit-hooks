@@ -30,6 +30,7 @@ func TestFailFixtureViolations(t *testing.T) {
 	// gke/cis/5.7.1 fires twice (logging + monitoring are separate deny rules).
 	// gcp/cis/5.1 fires twice (iam_member + iam_binding resources).
 	expected := []string{
+		"gcp/cis/1.5",
 		"gcp/cis/1.11",
 		"gcp/cis/1.6",
 		"gcp/cis/1.7",
@@ -85,6 +86,8 @@ func TestFailFixtureViolations(t *testing.T) {
 		"gcp/cis/6.2.8",
 		"gcp/cis/6.3.1",
 		"gcp/cis/6.3.2",
+		"gcp/cis/6.3.3",
+		"gcp/cis/6.3.4",
 		"gcp/cis/6.3.5",
 		"gcp/cis/6.3.6",
 		"gcp/cis/6.3.7",
@@ -95,7 +98,12 @@ func TestFailFixtureViolations(t *testing.T) {
 		"gcp/cis/7.1",
 		"gcp/cis/7.2",
 		"gcp/cis/7.3",
+		"gcp/cis/8.1",
+		"gke/cis/5.9.1",
+		"gke/cis/5.9.2",
+		"gke/cis/5.9.2",
 		"gke/cis/5.10.2",
+		"gke/cis/5.10.3",
 		"gke/cis/5.2.1",
 		"gke/cis/5.3.1",
 		"gke/cis/5.4.1",

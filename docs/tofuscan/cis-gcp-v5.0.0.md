@@ -55,7 +55,7 @@ cryptographic keys, and protecting API credentials.
 | 1.2 | Level 1 | Ensure that Corporate Login Credentials are Used | Manual | | Use corporate login credentials instead of consumer accounts such as Gmail accounts, ensuring visibility and auditing over access. |
 | 1.3 | Level 1 | Ensure that Multi-Factor Authentication is Enabled for All Non-Service Accounts | Manual | | Require MFA for all user accounts to protect against credential compromise. |
 | 1.4 | Level 1 | Ensure that Security Key Enforcement is Enabled for All Admin Accounts | Manual | | Require phishing-resistant hardware security keys for all admin accounts. |
-| 1.5 | Level 1 | Ensure That There Are Only GCP-Managed Service Account Keys for Each Service Account | Automated | | User-managed service account keys are difficult to rotate and audit; only GCP-managed keys should be used. |
+| 1.5 | Level 1 | Ensure That There Are Only GCP-Managed Service Account Keys for Each Service Account | Automated | ✅ | User-managed service account keys are difficult to rotate and audit; only GCP-managed keys should be used. |
 | 1.6 | Level 1 | Ensure That Service Account Has No Admin Privileges | Automated | ✅ | Service accounts should use the minimum necessary permissions; admin roles grant overly broad access to all GCP services. |
 | 1.7 | Level 1 | Ensure That IAM Users Are Not Assigned the Service Account User or Service Account Token Creator Roles at Project Level | Automated | ✅ | Assign the `serviceAccountUser` and `serviceAccountTokenCreator` roles at the service account level, not the project level, to limit blast radius. |
 | 1.8 | Level 1 | Ensure User-Managed/External Keys for Service Accounts Are Rotated Every 90 Days or Fewer | Automated | ✅ | Service Account keys used to authenticate API requests must be rotated regularly to limit exposure from key compromise. |
@@ -185,8 +185,8 @@ to prevent unauthorized access and data loss.
 | 6.2.8 | Level 1 | Ensure That cloudsql.enable_pgaudit Database Flag for each Cloud SQL PostgreSQL Instance Is Set to On | Automated | ✅ | The `pgaudit` extension provides detailed session and object audit logging required for compliance with standards like PCI DSS and HIPAA. |
 | 6.3.1 | Level 1 | Ensure external scripts enabled Database Flag for Cloud SQL SQL Server Instance Is Set to Off | Automated | ✅ | Disabling `external scripts enabled` prevents execution of scripts in external languages (e.g., Python, R) which can be exploited for code execution. |
 | 6.3.2 | Level 1 | Ensure That the cross db ownership chaining Database Flag for Cloud SQL SQL Server Instance Is Set to Off | Automated | ✅ | Cross-database ownership chaining can allow users to access objects in other databases. It should be disabled unless explicitly required. |
-| 6.3.3 | Level 1 | Ensure user Connections Database Flag for Cloud SQL SQL Server Instance Is Set to a Non-limiting Value | Automated | | The `user connections` flag should be set to 0 (unlimited) to prevent denial of service from connection limits while still allowing monitoring. |
-| 6.3.4 | Level 1 | Ensure user options Database Flag for Cloud SQL SQL Server Instance Is Not Configured | Automated | | The `user options` flag sets global defaults for all user sessions, which can override per-session settings and create unpredictable behavior. |
+| 6.3.3 | Level 1 | Ensure user Connections Database Flag for Cloud SQL SQL Server Instance Is Set to a Non-limiting Value | Automated | ✅ | The `user connections` flag should be set to 0 (unlimited) to prevent denial of service from connection limits while still allowing monitoring. |
+| 6.3.4 | Level 1 | Ensure user options Database Flag for Cloud SQL SQL Server Instance Is Not Configured | Automated | ✅ | The `user options` flag sets global defaults for all user sessions, which can override per-session settings and create unpredictable behavior. |
 | 6.3.5 | Level 1 | Ensure remote access Database Flag for Cloud SQL SQL Server Instance Is Set to Off | Automated | ✅ | Disabling remote access prevents the SQL Server instance from executing stored procedures on remote servers, reducing the attack surface. |
 | 6.3.6 | Level 1 | Ensure 3625 (trace flag) Database Flag for all Cloud SQL Server Instances Is Set to On | Automated | ✅ | Trace flag 3625 masks error message details shown to non-admin users, preventing information disclosure of internal SQL Server state. |
 | 6.3.7 | Level 1 | Ensure That the contained database authentication Database Flag for Cloud SQL SQL Server Instance Is Set to Off | Automated | ✅ | Contained databases can authenticate users without domain-level credentials, which can bypass organizational authentication policies. |
@@ -223,7 +223,7 @@ unauthorized access.
 
 | Control | Level | Title | Type | Covered | Description |
 | --------- | ------- | ------- | ------ | --------- | ------------- |
-| 8.1 | Level 2 | Ensure that Dataproc Cluster is Encrypted Using Customer-Managed Encryption Key | Automated | | Dataproc cluster data on Persistent Disks should be encrypted with CMEK so that the organization controls the key lifecycle and can revoke access independently of GCP. |
+| 8.1 | Level 2 | Ensure that Dataproc Cluster is Encrypted Using Customer-Managed Encryption Key | Automated | ✅ | Dataproc cluster data on Persistent Disks should be encrypted with CMEK so that the organization controls the key lifecycle and can revoke access independently of GCP. |
 
 ---
 
@@ -231,4 +231,4 @@ unauthorized access.
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 93 | 71 | 22 | 47 |
+| 93 | 71 | 22 | 51 |
