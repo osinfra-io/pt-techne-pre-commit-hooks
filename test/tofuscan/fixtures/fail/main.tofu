@@ -65,6 +65,18 @@ resource "google_storage_bucket" "bucket" {
   location = "US"
 }
 
+# GCP CIS 2.4 — retention policy present but bucket lock not enabled
+resource "google_storage_bucket" "bad_log_bucket" {
+  location                    = "US"
+  name                        = "bad-log-bucket"
+  uniform_bucket_level_access = true
+
+  retention_policy {
+    is_locked        = false
+    retention_period = 86400
+  }
+}
+
 # GCP CIS 1.5 — service account assigned an admin/editor role
 resource "google_project_iam_member" "bad_iam" {
   project = "my-project"
@@ -304,6 +316,7 @@ resource "google_compute_disk" "bad_disk" {
   zone = "us-central1-a"
 }
 
+# GCP CIS 6.1.1 — root user with open host on MySQL instance
 # GCP CIS 6.1.2 — MySQL skip_show_database flag absent
 # GCP CIS 6.1.3 — MySQL local_infile flag absent (defaults to on)
 resource "google_sql_database_instance" "bad_mysql" {
@@ -322,6 +335,13 @@ resource "google_sql_database_instance" "bad_mysql" {
       enabled = true
     }
   }
+}
+
+# GCP CIS 6.1.1 — root user with host = "%" allows connections from any host
+resource "google_sql_user" "bad_root_user" {
+  host     = "%"
+  instance = "bad-mysql"
+  name     = "root"
 }
 
 # GCP CIS 6.3.1 — SQL Server external scripts enabled flag absent (defaults to on)
@@ -351,4 +371,114 @@ resource "google_sql_database_instance" "bad_sqlserver" {
 resource "google_bigquery_table" "bad_bigquery_table" {
   dataset_id = "bad_dataset"
   table_id   = "bad_table"
+}
+
+# GCP CIS 2.13 — DNS policy with logging disabled
+resource "google_dns_policy" "bad_dns_policy" {
+  enable_logging = false
+  name           = "bad-dns-policy"
+}
+
+# GCP CIS 1.18 — v1 Cloud Function with secret in environment variable key
+resource "google_cloudfunctions_function" "bad_function" {
+  name    = "bad-function"
+  runtime = "python39"
+
+  environment_variables = {
+    API_KEY   = "my-secret-key"
+    LOG_LEVEL = "INFO"
+  }
+}
+
+# GCP CIS 1.18 — v2 Cloud Function with secret in environment variable key
+resource "google_cloudfunctions2_function" "bad_function_v2" {
+  location = "us-central1"
+  name     = "bad-function-v2"
+
+  service_config {
+    environment_variables = {
+      DATABASE_PASSWORD = "my-password"
+    }
+  }
+}
+
+# GKE CIS 5.6.7 — Ingress (kubernetes_manifest) with TLS and no Google-managed cert annotation
+resource "kubernetes_manifest" "bad_ingress" {
+  manifest = {
+    apiVersion = "networking.k8s.io/v1"
+    kind       = "Ingress"
+
+    metadata = {
+      name      = "bad-ingress"
+      namespace = "default"
+    }
+
+    spec = {
+      tls = [
+        {
+          hosts      = ["example.com"]
+          secretName = "my-tls-secret"
+        }
+      ]
+    }
+  }
+}
+
+# GKE CIS 5.6.7 — Ingress (kubernetes_ingress_v1) with TLS and no Google-managed cert annotation
+resource "kubernetes_ingress_v1" "bad_ingress" {
+  metadata {
+    name      = "bad-ingress"
+    namespace = "default"
+  }
+
+  spec {
+    tls {
+      hosts       = ["example.com"]
+      secret_name = "my-tls-secret"
+    }
+  }
+}
+
+# GCP CIS 2.17 — backend service with no log_config block (logging absent)
+resource "google_compute_backend_service" "bad_backend_no_logging" {
+  name = "bad-backend-no-logging"
+}
+
+# GCP CIS 2.17 — backend service with logging enabled but sample_rate = 0
+resource "google_compute_backend_service" "bad_backend_zero_sample" {
+  name = "bad-backend-zero-sample"
+
+  log_config {
+    enable      = true
+    sample_rate = 0
+  }
+}
+
+# GCP CIS 2.1 — allServices audit config missing DATA_READ and DATA_WRITE log types
+resource "google_project_iam_audit_config" "bad_audit_config_missing_types" {
+  project = "my-project"
+  service = "allServices"
+
+  audit_log_config {
+    log_type = "ADMIN_READ"
+  }
+}
+
+# GCP CIS 2.1 — allServices audit config with exempted members
+resource "google_project_iam_audit_config" "bad_audit_config_exemptions" {
+  project = "my-project"
+  service = "allServices"
+
+  audit_log_config {
+    exempted_members = ["user:exempted@example.com"]
+    log_type         = "ADMIN_READ"
+  }
+
+  audit_log_config {
+    log_type = "DATA_READ"
+  }
+
+  audit_log_config {
+    log_type = "DATA_WRITE"
+  }
 }
