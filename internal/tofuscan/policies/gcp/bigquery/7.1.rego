@@ -15,7 +15,7 @@ deny contains violation if {
 	some access in resource.access
 	access.special_group in _bq_public_groups
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_bigquery_dataset", name]),
 		"rule_id": "gcp/cis/7.1",
 		"cis_control": "7.1",
 		"profile_level": "Level 1",

@@ -15,7 +15,7 @@ deny contains violation if {
 	lib.is_sqlserver(resource)
 	not _has_sql_flag(resource, "contained database authentication", "off")
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.3.7",
 		"cis_control": "6.3.7",
 		"profile_level": "Level 1",

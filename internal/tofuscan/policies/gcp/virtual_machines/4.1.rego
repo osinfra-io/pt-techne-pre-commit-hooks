@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	not resource.service_account
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.1",
 		"cis_control": "4.1",
 		"profile_level": "Level 1",
@@ -29,7 +29,7 @@ deny contains violation if {
 	email := lower(object.get(sa, "email", ""))
 	email == ""
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.1",
 		"cis_control": "4.1",
 		"profile_level": "Level 1",
@@ -46,7 +46,7 @@ deny contains violation if {
 	email := lower(object.get(sa, "email", ""))
 	endswith(email, "-compute@developer.gserviceaccount.com")
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.1",
 		"cis_control": "4.1",
 		"profile_level": "Level 1",

@@ -15,7 +15,7 @@ deny contains violation if {
 	lib.is_sqlserver(resource)
 	not _has_sql_flag(resource, "cross db ownership chaining", "off")
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.3.2",
 		"cis_control": "6.3.2",
 		"profile_level": "Level 1",

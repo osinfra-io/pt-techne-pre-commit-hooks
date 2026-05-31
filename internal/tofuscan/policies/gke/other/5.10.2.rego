@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	resource.enable_kubernetes_alpha == true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.10.2",
 		"cis_control": "5.10.2",
 		"profile_level": "Level 1",

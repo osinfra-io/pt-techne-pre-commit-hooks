@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	object.get(resource, "enable_shielded_nodes", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.5.5",
 		"cis_control": "5.5.5",
 		"profile_level": "Level 2",

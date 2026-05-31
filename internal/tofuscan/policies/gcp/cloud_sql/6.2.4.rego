@@ -18,7 +18,7 @@ deny contains violation if {
 	lib.is_postgres(resource)
 	not _has_acceptable_log_statement(resource)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.2.4",
 		"cis_control": "6.2.4",
 		"profile_level": "Level 1",

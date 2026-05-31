@@ -12,7 +12,7 @@ deny contains violation if {
 	some resource in resources
 	not dnssec_enabled(resource)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_dns_managed_zone", name]),
 		"rule_id": "gcp/cis/3.3",
 		"cis_control": "3.3",
 		"profile_level": "Level 1",

@@ -13,7 +13,7 @@ deny contains violation if {
 	some resource in resources
 	not _has_cmek(resource)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_bigquery_table", name]),
 		"rule_id": "gcp/cis/7.2",
 		"cis_control": "7.2",
 		"profile_level": "Level 2",

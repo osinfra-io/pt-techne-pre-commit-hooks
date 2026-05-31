@@ -14,7 +14,7 @@ deny contains violation if {
 	some resource in resources
 	resource.member in _public_members
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_storage_bucket_iam_member", name]),
 		"rule_id": "gcp/cis/5.1",
 		"cis_control": "5.1",
 		"profile_level": "Level 1",
@@ -30,7 +30,7 @@ deny contains violation if {
 	some member in resource.members
 	member in _public_members
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_storage_bucket_iam_binding", name]),
 		"rule_id": "gcp/cis/5.1",
 		"cis_control": "5.1",
 		"profile_level": "Level 1",

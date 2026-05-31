@@ -14,7 +14,7 @@ deny contains violation if {
 	object.get(metadata, "block-project-ssh-keys", "false") != "true"
 	object.get(metadata, "enable-oslogin", "false") != "true"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.3",
 		"cis_control": "4.3",
 		"profile_level": "Level 1",

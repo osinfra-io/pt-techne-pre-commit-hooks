@@ -14,7 +14,7 @@ deny contains violation if {
 	some cfg in config_arr
 	not _shielded_vm_ok(cfg)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.8",
 		"cis_control": "4.8",
 		"profile_level": "Level 2",

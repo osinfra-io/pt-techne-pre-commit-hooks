@@ -234,11 +234,11 @@ resource "google_compute_firewall" "unrelated_range" {
 		got[v.RuleID] = append(got[v.RuleID], v.Resource)
 	}
 
-	if res := got["gcp/cis/3.6"]; len(res) != 1 || res[0] != "ssh_range" {
-		t.Errorf("gcp/cis/3.6: got %v, want [ssh_range]", res)
+	if res := got["gcp/cis/3.6"]; len(res) != 1 || res[0] != "google_compute_firewall.ssh_range" {
+		t.Errorf("gcp/cis/3.6: got %v, want [google_compute_firewall.ssh_range]", res)
 	}
-	if res := got["gcp/cis/3.7"]; len(res) != 1 || res[0] != "rdp_range" {
-		t.Errorf("gcp/cis/3.7: got %v, want [rdp_range]", res)
+	if res := got["gcp/cis/3.7"]; len(res) != 1 || res[0] != "google_compute_firewall.rdp_range" {
+		t.Errorf("gcp/cis/3.7: got %v, want [google_compute_firewall.rdp_range]", res)
 	}
 }
 
@@ -275,9 +275,9 @@ resource "google_compute_instance" "vm2" {
 	index := resourceLineIndex(f)
 
 	cases := map[string]int{
-		"vm1":    1,
-		"bucket": 5,
-		"vm2":    12,
+		"google_compute_instance.vm1":    1,
+		"google_storage_bucket.bucket":   5,
+		"google_compute_instance.vm2":    12,
 	}
 	for name, wantLine := range cases {
 		if gotLine := index[name]; gotLine != wantLine {
@@ -286,7 +286,7 @@ resource "google_compute_instance" "vm2" {
 	}
 
 	// Non-existent resource returns 0.
-	if line := index["nonexistent"]; line != 0 {
+	if line := index["google_compute_instance.nonexistent"]; line != 0 {
 		t.Errorf("nonexistent resource: got line %d, want 0", line)
 	}
 }
@@ -297,6 +297,34 @@ func TestResourceLineIndexNonexistentFile(t *testing.T) {
 		t.Errorf("expected empty index, got %v", index)
 	}
 }
+
+func TestResourceLineIndexSameLabelDifferentTypes(t *testing.T) {
+	// Two resources share the label "this" but have different types.
+	// Each must resolve to its own correct line number.
+	content := `resource "google_compute_instance" "this" {
+  name = "vm"
+}
+
+resource "google_storage_bucket" "this" {
+  name = "bucket"
+}
+`
+	tmp := t.TempDir()
+	f := tmp + "/test.tofu"
+	if err := os.WriteFile(f, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	index := resourceLineIndex(f)
+
+	if got := index["google_compute_instance.this"]; got != 1 {
+		t.Errorf("google_compute_instance.this: got line %d, want 1", got)
+	}
+	if got := index["google_storage_bucket.this"]; got != 5 {
+		t.Errorf("google_storage_bucket.this: got line %d, want 5", got)
+	}
+}
+
 
 func TestGlobalViolationFiresOnceAcrossFiles(t *testing.T) {
 	// When scanning multiple files where none defines a log sink,

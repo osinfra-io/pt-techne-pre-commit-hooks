@@ -16,7 +16,7 @@ deny contains violation if {
 	some spec in key_specs
 	spec.algorithm == "rsasha1"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_dns_managed_zone", name]),
 		"rule_id": "gcp/cis/3.4",
 		"cis_control": "3.4",
 		"profile_level": "Level 1",

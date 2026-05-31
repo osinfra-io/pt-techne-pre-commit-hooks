@@ -13,7 +13,7 @@ deny contains violation if {
 	some pcc in object.get(resource, "private_cluster_config", [{}])
 	object.get(pcc, "enable_private_nodes", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.6.5",
 		"cis_control": "5.6.5",
 		"profile_level": "Level 1",

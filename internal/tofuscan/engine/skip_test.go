@@ -60,24 +60,24 @@ resource "google_compute_firewall" "allow" {
 
 	resourceLevel := parseFileSkips(f)
 
-	// Resource "primary": CIS 5.5.1 + CIS 5.6.4 (both inside block)
-	primarySkips := resourceLevel["primary"]
+	// Resource "google_container_cluster.primary": CIS 5.5.1 + CIS 5.6.4 (both inside block)
+	primarySkips := resourceLevel["google_container_cluster.primary"]
 	if primarySkips == nil {
-		t.Fatal("expected resource-level skips for 'primary'")
+		t.Fatal("expected resource-level skips for 'google_container_cluster.primary'")
 	}
 	if _, ok := primarySkips["5.5.1"]; !ok {
-		t.Error("expected skip for CIS 5.5.1 on resource 'primary'")
+		t.Error("expected skip for CIS 5.5.1 on resource 'google_container_cluster.primary'")
 	}
 	if _, ok := primarySkips["5.6.4"]; !ok {
-		t.Error("expected skip for CIS 5.6.4 on resource 'primary'")
+		t.Error("expected skip for CIS 5.6.4 on resource 'google_container_cluster.primary'")
 	}
 	if len(primarySkips) != 2 {
-		t.Errorf("expected 2 skips for 'primary', got %d: %v", len(primarySkips), primarySkips)
+		t.Errorf("expected 2 skips for 'google_container_cluster.primary', got %d: %v", len(primarySkips), primarySkips)
 	}
 
-	// Resource "allow": no skips
-	if allowSkips := resourceLevel["allow"]; len(allowSkips) != 0 {
-		t.Errorf("expected no skips for 'allow', got %v", allowSkips)
+	// Resource "google_compute_firewall.allow": no skips
+	if allowSkips := resourceLevel["google_compute_firewall.allow"]; len(allowSkips) != 0 {
+		t.Errorf("expected no skips for 'google_compute_firewall.allow', got %v", allowSkips)
 	}
 }
 
@@ -102,26 +102,26 @@ resource "b" "second" {
 
 	resourceLevel := parseFileSkips(f)
 
-	if firstSkips := resourceLevel["first"]; len(firstSkips) != 0 {
-		t.Errorf("expected no skips for 'first', got %v", firstSkips)
+	if firstSkips := resourceLevel["a.first"]; len(firstSkips) != 0 {
+		t.Errorf("expected no skips for 'a.first', got %v", firstSkips)
 	}
-	if secondSkips := resourceLevel["second"]; len(secondSkips) != 0 {
-		t.Errorf("expected no skips for 'second', got %v", secondSkips)
+	if secondSkips := resourceLevel["b.second"]; len(secondSkips) != 0 {
+		t.Errorf("expected no skips for 'b.second', got %v", secondSkips)
 	}
 }
 
 func TestFilterSkipped(t *testing.T) {
 	violations := []Violation{
-		{File: "a.tofu", Resource: "primary", CISControl: "5.6.4", RuleID: "gke/cis/5.6.4"},
-		{File: "a.tofu", Resource: "primary", CISControl: "5.5.1", RuleID: "gke/cis/5.5.1"},
-		{File: "a.tofu", Resource: "allow", CISControl: "3.3", RuleID: "gcp/cis/3.3"},
+		{File: "a.tofu", Resource: "google_container_cluster.primary", CISControl: "5.6.4", RuleID: "gke/cis/5.6.4"},
+		{File: "a.tofu", Resource: "google_container_cluster.primary", CISControl: "5.5.1", RuleID: "gke/cis/5.5.1"},
+		{File: "a.tofu", Resource: "google_compute_firewall.allow", CISControl: "3.3", RuleID: "gcp/cis/3.3"},
 		{File: "", Resource: "global", CISControl: "2.2", RuleID: "gcp/cis/2.2"},
 	}
 
 	sd := &SkipDirectives{
 		resourceLevel: map[string]map[string]map[string]string{
 			"a.tofu": {
-				"primary": {"5.6.4": "not needed"},
+				"google_container_cluster.primary": {"5.6.4": "not needed"},
 			},
 		},
 	}
@@ -165,12 +165,12 @@ func TestParseFileSkipsNestedBraces(t *testing.T) {
 
 	resourceLevel := parseFileSkips(f)
 
-	primarySkips := resourceLevel["primary"]
+	primarySkips := resourceLevel["google_container_cluster.primary"]
 	if primarySkips == nil || len(primarySkips) != 1 {
-		t.Fatalf("expected 1 skip for 'primary', got %v", primarySkips)
+		t.Fatalf("expected 1 skip for 'google_container_cluster.primary', got %v", primarySkips)
 	}
 	if _, ok := primarySkips["5.6.4"]; !ok {
-		t.Error("expected skip for CIS 5.6.4 on 'primary'")
+		t.Error("expected skip for CIS 5.6.4 on 'google_container_cluster.primary'")
 	}
 }
 
@@ -194,20 +194,20 @@ resource "google_storage_bucket" "bucket" {
 
 	resourceLevel := parseFileSkips(f)
 
-	primarySkips := resourceLevel["primary"]
+	primarySkips := resourceLevel["google_container_cluster.primary"]
 	if primarySkips == nil || len(primarySkips) != 1 {
-		t.Fatalf("expected 1 skip for 'primary', got %v", primarySkips)
+		t.Fatalf("expected 1 skip for 'google_container_cluster.primary', got %v", primarySkips)
 	}
 	if _, ok := primarySkips["5.6.4"]; !ok {
-		t.Error("expected skip for CIS 5.6.4 on 'primary'")
+		t.Error("expected skip for CIS 5.6.4 on 'google_container_cluster.primary'")
 	}
 
-	bucketSkips := resourceLevel["bucket"]
+	bucketSkips := resourceLevel["google_storage_bucket.bucket"]
 	if bucketSkips == nil || len(bucketSkips) != 1 {
-		t.Fatalf("expected 1 skip for 'bucket', got %v", bucketSkips)
+		t.Fatalf("expected 1 skip for 'google_storage_bucket.bucket', got %v", bucketSkips)
 	}
 	if _, ok := bucketSkips["3.3"]; !ok {
-		t.Error("expected skip for CIS 3.3 on 'bucket'")
+		t.Error("expected skip for CIS 3.3 on 'google_storage_bucket.bucket'")
 	}
 }
 
@@ -231,5 +231,39 @@ func TestCountBraces(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("countBraces(%q) = %d, want %d", tc.line, got, tc.want)
 		}
+	}
+}
+
+func TestParseFileSkipsSameLabelDifferentTypes(t *testing.T) {
+	// Two resources share the label "this" but have different types.
+	// A skip inside one block must not apply to the other.
+	content := `resource "google_container_cluster" "this" {
+  # tofu-scan skip: CIS 5.6.4 - cluster skip
+  name = "cluster"
+}
+
+resource "google_storage_bucket" "this" {
+  name = "bucket"
+}
+`
+	tmp := t.TempDir()
+	f := filepath.Join(tmp, "test.tofu")
+	if err := os.WriteFile(f, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	resourceLevel := parseFileSkips(f)
+
+	clusterSkips := resourceLevel["google_container_cluster.this"]
+	if clusterSkips == nil || len(clusterSkips) != 1 {
+		t.Fatalf("expected 1 skip for 'google_container_cluster.this', got %v", clusterSkips)
+	}
+	if _, ok := clusterSkips["5.6.4"]; !ok {
+		t.Error("expected skip for CIS 5.6.4 on 'google_container_cluster.this'")
+	}
+
+	bucketSkips := resourceLevel["google_storage_bucket.this"]
+	if len(bucketSkips) != 0 {
+		t.Errorf("expected no skips for 'google_storage_bucket.this', got %v", bucketSkips)
 	}
 }

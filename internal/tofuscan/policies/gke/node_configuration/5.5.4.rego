@@ -16,7 +16,7 @@ deny contains violation if {
 	channel := object.get(rc, "channel", "UNSPECIFIED")
 	not channel in _valid_channels
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.5.4",
 		"cis_control": "5.5.4",
 		"profile_level": "Level 1",

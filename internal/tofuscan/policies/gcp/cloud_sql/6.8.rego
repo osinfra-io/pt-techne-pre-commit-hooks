@@ -15,7 +15,7 @@ deny contains violation if {
 	some backup in backup_configs
 	object.get(backup, "enabled", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.8",
 		"cis_control": "6.8",
 		"profile_level": "Level 1",

@@ -13,7 +13,7 @@ deny contains violation if {
 	key_type := object.get(resource, "key_type", "USER_MANAGED")
 	key_type == "USER_MANAGED"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_iam_service_account_key", name]),
 		"rule_id": "gcp/cis/1.8",
 		"cis_control": "1.8",
 		"profile_level": "Level 1",

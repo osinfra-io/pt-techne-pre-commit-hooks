@@ -21,7 +21,7 @@ deny contains violation if {
 	flag.name == "log_error_verbosity"
 	flag.value in _verbose_values_6_2_1
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.2.1",
 		"cis_control": "6.2.1",
 		"profile_level": "Level 1",

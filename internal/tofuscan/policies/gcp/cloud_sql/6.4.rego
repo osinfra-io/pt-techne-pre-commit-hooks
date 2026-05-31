@@ -17,7 +17,7 @@ deny contains violation if {
 	object.get(ip_config, "ssl_mode", "ALLOW_UNENCRYPTED_AND_ENCRYPTED") == "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
 	object.get(ip_config, "require_ssl", false) != true
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.4",
 		"cis_control": "6.4",
 		"profile_level": "Level 1",

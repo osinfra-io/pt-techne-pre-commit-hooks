@@ -15,7 +15,7 @@ deny contains violation if {
 	some resource in resources
 	resource.member in _public_members_1_10
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_kms_crypto_key_iam_member", name]),
 		"rule_id": "gcp/cis/1.10",
 		"cis_control": "1.10",
 		"profile_level": "Level 1",
@@ -31,7 +31,7 @@ deny contains violation if {
 	some member in resource.members
 	member in _public_members_1_10
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_kms_crypto_key_iam_binding", name]),
 		"rule_id": "gcp/cis/1.10",
 		"cis_control": "1.10",
 		"profile_level": "Level 1",

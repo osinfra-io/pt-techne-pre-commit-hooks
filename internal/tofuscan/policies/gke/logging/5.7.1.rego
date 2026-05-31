@@ -17,7 +17,7 @@ deny contains violation if {
 	some resource in resources
 	resource.logging_service == "none"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.7.1",
 		"cis_control": "5.7.1",
 		"profile_level": "Level 1",
@@ -32,7 +32,7 @@ deny contains violation if {
 	some resource in resources
 	resource.monitoring_service == "none"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.7.1",
 		"cis_control": "5.7.1",
 		"profile_level": "Level 1",

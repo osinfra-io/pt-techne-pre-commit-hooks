@@ -17,7 +17,7 @@ deny contains violation if {
 	some network in networks
 	network.value == "0.0.0.0/0"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.5",
 		"cis_control": "6.5",
 		"profile_level": "Level 1",

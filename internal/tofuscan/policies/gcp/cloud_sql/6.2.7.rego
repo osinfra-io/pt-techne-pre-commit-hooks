@@ -19,7 +19,7 @@ deny contains violation if {
 	flag.name == "log_min_duration_statement"
 	flag.value != "-1"
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.2.7",
 		"cis_control": "6.2.7",
 		"profile_level": "Level 1",

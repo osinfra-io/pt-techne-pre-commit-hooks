@@ -14,7 +14,7 @@ deny contains violation if {
 	sa := lower(object.get(nc, "service_account", "default"))
 	_is_default_gke_sa(sa)
 	violation := {
-		"resource": name,
+		"resource": concat(".", ["google_container_node_pool", name]),
 		"rule_id": "gke/cis/5.2.1",
 		"cis_control": "5.2.1",
 		"profile_level": "Level 1",
