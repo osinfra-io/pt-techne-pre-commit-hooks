@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _desc_4_3 := concat("", [
 	"Project-wide SSH keys are shared across all instances. Blocking them ensures ",
 	"each instance uses only its own instance-level SSH keys, reducing the blast radius of a compromised key.",
@@ -11,8 +13,8 @@ deny contains violation if {
 	some name, resources in input.resource.google_compute_instance
 	some resource in resources
 	metadata := object.get(resource, "metadata", {})
-	object.get(metadata, "block-project-ssh-keys", "false") != "true"
-	object.get(metadata, "enable-oslogin", "false") != "true"
+	not lib.truthy(object.get(metadata, "block-project-ssh-keys", false))
+	not lib.truthy(object.get(metadata, "enable-oslogin", false))
 	violation := {
 		"resource": concat(".", ["google_compute_instance", name]),
 		"rule_id": "gcp/cis/4.3",

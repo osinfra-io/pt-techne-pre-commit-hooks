@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _public_members := {"allUsers", "allAuthenticatedUsers"}
 
 _desc_5_1 := concat("", [
@@ -31,6 +33,21 @@ deny contains violation if {
 	member in _public_members
 	violation := {
 		"resource": concat(".", ["google_storage_bucket_iam_binding", name]),
+		"rule_id": "gcp/cis/5.1",
+		"cis_control": "5.1",
+		"profile_level": "Level 1",
+		"severity": "High",
+		"title": "Ensure That Cloud Storage Bucket Is Not Anonymously or Publicly Accessible",
+		"description": _desc_5_1,
+	}
+}
+
+deny contains violation if {
+	some name, resources in input.resource.google_storage_bucket_iam_policy
+	some resource in resources
+	lib.policy_data_public(object.get(resource, "policy_data", ""))
+	violation := {
+		"resource": concat(".", ["google_storage_bucket_iam_policy", name]),
 		"rule_id": "gcp/cis/5.1",
 		"cis_control": "5.1",
 		"profile_level": "Level 1",

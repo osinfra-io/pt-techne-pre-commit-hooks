@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _desc_4_4 := concat("", [
 	"OS Login binds SSH access to IAM identity, enabling centralized access management ",
 	"and automatic revocation when a user is removed from IAM. It should be enabled on ",
@@ -23,10 +25,11 @@ deny contains violation if {
 	}
 }
 
-# Instance-level metadata takes precedence; "true" or "TRUE" are both valid.
+# Instance-level metadata takes precedence; a boolean true or the strings
+# "true"/"TRUE" are all valid.
 _oslogin_effective(resource) if {
 	metadata := object.get(resource, "metadata", {})
-	lower(object.get(metadata, "enable-oslogin", "")) == "true"
+	lib.truthy(object.get(metadata, "enable-oslogin", false))
 }
 
 # Fall back to project-level metadata when the instance does not set the key.
@@ -38,5 +41,5 @@ _oslogin_effective(resource) if {
 	some pm in pms
 	object.get(pm, "project", "") == instance_project
 	project_meta := object.get(pm, "metadata", {})
-	lower(object.get(project_meta, "enable-oslogin", "")) == "true"
+	lib.truthy(object.get(project_meta, "enable-oslogin", false))
 }

@@ -4,6 +4,9 @@ Controls extracted from the [CIS Google Cloud Platform Foundation Benchmark
 v5.0.0](https://www.cisecurity.org/benchmark/google_cloud_computing_platform),
 published 2025-03-31.
 `✅` = tofuscan policy implemented.
+`🚫` = not implementable as a static OpenTofu IaC policy (depends on runtime
+state or pre-existing resources outside a configuration scan). See [Controls Not
+Verifiable via IaC](#controls-not-verifiable-via-iac).
 
 ---
 
@@ -59,15 +62,15 @@ cryptographic keys, and protecting API credentials.
 | 1.6 | Level 1 | Ensure That Service Account Has No Admin Privileges | Automated | ✅ | Service accounts should use the minimum necessary permissions; admin roles grant overly broad access to all GCP services. |
 | 1.7 | Level 1 | Ensure That IAM Users Are Not Assigned the Service Account User or Service Account Token Creator Roles at Project Level | Automated | ✅ | Assign the `serviceAccountUser` and `serviceAccountTokenCreator` roles at the service account level, not the project level, to limit blast radius. |
 | 1.8 | Level 1 | Ensure User-Managed/External Keys for Service Accounts Are Rotated Every 90 Days or Fewer | Automated | ✅ | Service Account keys used to authenticate API requests must be rotated regularly to limit exposure from key compromise. |
-| 1.9 | Level 2 | Ensure That Separation of Duties Is Enforced While Assigning Service Account Related Roles to Users | Automated | | No user should hold both `Service Account Admin` and `Service Account User` roles simultaneously to prevent privilege escalation. |
+| 1.9 | Level 2 | Ensure That Separation of Duties Is Enforced While Assigning Service Account Related Roles to Users | Automated | ✅ | No user should hold both `Service Account Admin` and `Service Account User` roles simultaneously to prevent privilege escalation. |
 | 1.10 | Level 1 | Ensure That Cloud KMS Cryptokeys Are Not Anonymously or Publicly Accessible | Automated | ✅ | KMS cryptokeys must restrict IAM policies to prevent `allUsers` or `allAuthenticatedUsers` from accessing encryption keys. |
 | 1.11 | Level 1 | Ensure KMS Encryption Keys Are Rotated Within a Period of 90 Days | Automated | ✅ | KMS keys should be rotated at least every 90 days. Rotation limits the data exposed if a key is compromised and is controlled via a rotation schedule on each CryptoKey. |
-| 1.12 | Level 2 | Ensure That Separation of Duties Is Enforced While Assigning KMS Related Roles to Users | Automated | | The principle of separation of duties requires that no single user holds both `Cloud KMS Admin` and any of the CryptoKey encrypter/decrypter roles. |
-| 1.13 | Level 2 | Ensure API Keys Only Exist for Active Services | Automated | | Unused API keys with intact permissions pose a security risk. Keys for inactive services should be deleted to reduce attack surface. |
+| 1.12 | Level 2 | Ensure That Separation of Duties Is Enforced While Assigning KMS Related Roles to Users | Automated | ✅ | The principle of separation of duties requires that no single user holds both `Cloud KMS Admin` and any of the CryptoKey encrypter/decrypter roles. |
+| 1.13 | Level 2 | Ensure API Keys Only Exist for Active Services | Automated | 🚫 | Unused API keys with intact permissions pose a security risk. Keys for inactive services should be deleted to reduce attack surface. |
 | 1.14 | Level 2 | Ensure API Keys Are Restricted To Use by Only Specified Hosts and Apps | Manual | | API keys should be restricted to specific HTTP referrers or IP addresses to limit misuse if a key is exposed. |
-| 1.15 | Level 2 | Ensure API Keys Are Restricted to Only APIs That Application Needs Access | Automated | | API keys should be scoped to only the APIs the application actually uses. Unrestricted keys can be exploited to access any GCP service. |
-| 1.16 | Level 2 | Ensure API Keys Are Rotated Every 90 Days | Automated | | If API keys must be used, rotate them every 90 days to limit the exposure window from a compromised key. |
-| 1.17 | Level 1 | Ensure Essential Contacts is Configured for Organization | Automated | | Configure Essential Contacts with designated email addresses so GCP can deliver important security and operational notifications. |
+| 1.15 | Level 2 | Ensure API Keys Are Restricted to Only APIs That Application Needs Access | Automated | ✅ | API keys should be scoped to only the APIs the application actually uses. Unrestricted keys can be exploited to access any GCP service. |
+| 1.16 | Level 2 | Ensure API Keys Are Rotated Every 90 Days | Automated | 🚫 | If API keys must be used, rotate them every 90 days to limit the exposure window from a compromised key. |
+| 1.17 | Level 1 | Ensure Essential Contacts is Configured for Organization | Automated | ✅ | Configure Essential Contacts with designated email addresses so GCP can deliver important security and operational notifications. |
 | 1.18 | Level 1 | Ensure Secrets are Not Stored in Cloud Functions Environment Variables | Manual | ✅ | Cloud Functions environment variables are not encrypted and visible in the GCP console. Store secrets in Secret Manager instead. |
 
 ---
@@ -94,7 +97,7 @@ configuration changes including IAM, networking, and database modifications.
 | 2.11 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for Cloud Storage IAM Permission Changes | Automated | ✅ | IAM permission changes on Cloud Storage buckets can expose sensitive data. Monitoring these changes enables early detection of unauthorized access grants. |
 | 2.12 | Level 2 | Ensure That the Log Metric Filter and Alerts Exist for SQL Instance Configuration Changes | Automated | ✅ | SQL instance configuration changes (e.g., disabling SSL, enabling public IPs) can weaken database security and should trigger alerts. |
 | 2.13 | Level 1 | Ensure That Cloud DNS Logging Is Enabled for All VPC Networks | Automated | ✅ | Cloud DNS logs record DNS queries made from within VPC networks to Stackdriver, providing visibility into potentially malicious DNS activity. |
-| 2.14 | Level 1 | Ensure Cloud Asset Inventory Is Enabled | Automated | | Cloud Asset Inventory provides a time-series record of GCP resource metadata and IAM policies, enabling change tracking and compliance auditing. |
+| 2.14 | Level 1 | Ensure Cloud Asset Inventory Is Enabled | Automated | ✅ | Cloud Asset Inventory provides a time-series record of GCP resource metadata and IAM policies, enabling change tracking and compliance auditing. |
 | 2.15 | Level 2 | Ensure Access Transparency is Enabled | Manual | | Access Transparency provides audit logs of actions taken by Google personnel on customer resources, improving accountability for support interactions. |
 | 2.16 | Level 2 | Ensure Access Approval is Enabled | Manual | | Access Approval requires explicit customer approval before Google support can access project resources, adding an additional control over privileged access. |
 | 2.17 | Level 2 | Ensure Logging is Enabled for HTTP(S) Load Balancer | Automated | ✅ | Enabling logging on HTTPS Load Balancers captures all network traffic and destinations, providing visibility into request patterns and potential attacks. |
@@ -111,7 +114,7 @@ firewall rules, enabling VPC Flow Logs, and enforcing strong TLS policies.
 | Control | Level | Title | Type | Covered | Description |
 | --------- | ------- | ------- | ------ | --------- | ------------- |
 | 3.1 | Level 1 | Ensure That the Default Network Does Not Exist in a Project | Automated | ✅ | The default network is automatically created with permissive firewall rules. Projects should use custom VPC networks with explicitly defined rules instead. |
-| 3.2 | Level 1 | Ensure Legacy Networks Do Not Exist for Older Projects | Automated | | Legacy networks lack subnet support and modern features. Projects must not use legacy network configurations, which are being phased out by Google. |
+| 3.2 | Level 1 | Ensure Legacy Networks Do Not Exist for Older Projects | Automated | 🚫 | Legacy networks lack subnet support and modern features. Projects must not use legacy network configurations, which are being phased out by Google. |
 | 3.3 | Level 1 | Ensure That DNSSEC Is Enabled for Cloud DNS | Automated | ✅ | DNSSEC prevents DNS spoofing and cache poisoning by cryptographically signing DNS records, ensuring resolvers receive authentic responses. |
 | 3.4 | Level 1 | Ensure That RSASHA1 Is Not Used for the Key-Signing Key in Cloud DNS DNSSEC | Automated | ✅ | RSASHA1 is a weak algorithm for DNSSEC key signing. SHA-1 has known weaknesses; use RSASHA256 or ECDSAP256SHA256 instead. |
 | 3.5 | Level 1 | Ensure That RSASHA1 Is Not Used for the Zone-Signing Key in Cloud DNS DNSSEC | Automated |  | The zone-signing key should not use RSASHA1 for the same reasons as the key-signing key — SHA-1 provides insufficient collision resistance. The `3.4` policy flags any `default_key_specs` algorithm of `rsasha1` regardless of `key_type`, so this condition is also detected. |
@@ -227,8 +230,23 @@ unauthorized access.
 
 ---
 
+## Controls Not Verifiable via IaC
+
+These Automated controls are marked `🚫` above because they cannot be expressed as
+a static OpenTofu policy — they depend on runtime state or on pre-existing
+resources outside the scope of a configuration scan:
+
+| Control | Reason |
+| --------- | -------- |
+| 1.13 | Runtime-only — requires correlating each API key against the services actively using it; key usage is not declared in OpenTofu. |
+| 1.16 | Runtime-only — API key age and rotation are runtime state; `google_apikeys_key` exposes no rotation attribute to evaluate. |
+| 3.2 | Pre-existing/runtime — legacy networks cannot be created by the current provider and exist only as inherited, out-of-band resources. |
+
+> Note: 3.5 has no dedicated policy but is effectively covered by the 3.4 policy,
+> which flags an `rsasha1` `default_key_specs` algorithm regardless of `key_type`.
+
 ## Coverage Summary
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 93 | 71 | 22 | 51 |
+| 93 | 71 | 22 | 67 |

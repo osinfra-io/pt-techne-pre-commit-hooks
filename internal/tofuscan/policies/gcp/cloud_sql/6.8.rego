@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _desc_6_8 := concat("", [
 	"Automated backups ensure that a recovery point is available in the event of ",
 	"data loss, corruption, or accidental deletion.",
@@ -13,7 +15,9 @@ deny contains violation if {
 	some settings in resource.settings
 	backup_configs := object.get(settings, "backup_configuration", [{}])
 	some backup in backup_configs
-	object.get(backup, "enabled", false) != true
+	value := object.get(backup, "enabled", false)
+	not lib.is_unresolved(value)
+	value != true
 	violation := {
 		"resource": concat(".", ["google_sql_database_instance", name]),
 		"rule_id": "gcp/cis/6.8",

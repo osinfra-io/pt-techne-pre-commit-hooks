@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _desc_5_6_4 := concat("", [
 	"Enabling a private endpoint and disabling public access to the GKE control plane ",
 	"prevents direct internet access to the Kubernetes API server.",
@@ -11,7 +13,9 @@ deny contains violation if {
 	some name, resources in input.resource.google_container_cluster
 	some resource in resources
 	some pcc in object.get(resource, "private_cluster_config", [{}])
-	object.get(pcc, "enable_private_endpoint", false) != true
+	value := object.get(pcc, "enable_private_endpoint", false)
+	not lib.is_unresolved(value)
+	value != true
 	violation := {
 		"resource": concat(".", ["google_container_cluster", name]),
 		"rule_id": "gke/cis/5.6.4",

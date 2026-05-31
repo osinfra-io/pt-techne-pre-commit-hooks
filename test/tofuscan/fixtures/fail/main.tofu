@@ -549,3 +549,56 @@ resource "google_project_iam_audit_config" "bad_audit_config_exemptions" {
     log_type = "DATA_WRITE"
   }
 }
+
+# GCP CIS 1.9 — separation of duties: same member holds Service Account Admin
+# and Service Account User on the same project (bad_sa_user above grants the
+# user role to this member on my-project).
+resource "google_project_iam_member" "bad_sa_admin" {
+  project = "my-project"
+  role    = "roles/iam.serviceAccountAdmin"
+  member  = "user:someone@example.com"
+}
+
+# GCP CIS 1.12 — separation of duties: same member holds Cloud KMS Admin and a
+# CryptoKey encrypter/decrypter role on the same key.
+resource "google_kms_crypto_key_iam_member" "bad_kms_admin_dual" {
+  crypto_key_id = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/dual-key"
+  role          = "roles/cloudkms.admin"
+  member        = "user:kmsdual@example.com"
+}
+
+resource "google_kms_crypto_key_iam_member" "bad_kms_user_dual" {
+  crypto_key_id = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/dual-key"
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = "user:kmsdual@example.com"
+}
+
+# GCP CIS 1.15 — API key with no api_targets restriction (usable for any API)
+resource "google_apikeys_key" "bad_api_key" {
+  name = "bad-api-key"
+}
+
+# GCP CIS 1.10 — KMS cryptokey IAM policy grants access to allUsers
+resource "google_kms_crypto_key_iam_policy" "bad_kms_policy" {
+  crypto_key_id = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/my-key"
+  policy_data   = "{\"bindings\":[{\"role\":\"roles/cloudkms.cryptoKeyEncrypterDecrypter\",\"members\":[\"allUsers\"]}]}"
+}
+
+# GCP CIS 5.1 — bucket IAM policy grants access to allUsers
+resource "google_storage_bucket_iam_policy" "bad_bucket_policy" {
+  bucket      = "my-bucket"
+  policy_data = "{\"bindings\":[{\"role\":\"roles/storage.objectViewer\",\"members\":[\"allUsers\"]}]}"
+}
+
+# GCP CIS 7.1 — BigQuery dataset IAM member grants access to allUsers
+resource "google_bigquery_dataset_iam_member" "bad_dataset_member" {
+  dataset_id = "bad_dataset"
+  role       = "roles/bigquery.dataViewer"
+  member     = "allUsers"
+}
+
+# GCP CIS 7.1 — BigQuery dataset IAM policy grants access to allAuthenticatedUsers
+resource "google_bigquery_dataset_iam_policy" "bad_dataset_policy" {
+  dataset_id  = "bad_dataset"
+  policy_data = "{\"bindings\":[{\"role\":\"roles/bigquery.dataViewer\",\"members\":[\"allAuthenticatedUsers\"]}]}"
+}

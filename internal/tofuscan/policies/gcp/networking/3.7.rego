@@ -12,6 +12,7 @@ _desc_3_7 := concat("", [
 deny contains violation if {
 	some name, resources in input.resource.google_compute_firewall
 	some resource in resources
+	object.get(resource, "disabled", false) != true
 	some rule in resource.allow
 	lower(object.get(rule, "protocol", "")) == "tcp"
 	lib.port_covered(object.get(rule, "ports", []), 3389)
@@ -31,6 +32,7 @@ deny contains violation if {
 deny contains violation if {
 	some name, resources in input.resource.google_compute_firewall
 	some resource in resources
+	object.get(resource, "disabled", false) != true
 	some rule in resource.allow
 	lower(object.get(rule, "protocol", "")) == "tcp"
 	not rule.ports
@@ -50,6 +52,7 @@ deny contains violation if {
 deny contains violation if {
 	some name, resources in input.resource.google_compute_firewall
 	some resource in resources
+	object.get(resource, "disabled", false) != true
 	some rule in resource.allow
 	lower(object.get(rule, "protocol", "")) == "all"
 	some cidr in resource.source_ranges
