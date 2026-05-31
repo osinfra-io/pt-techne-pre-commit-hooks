@@ -3,29 +3,28 @@ package tofuscan
 import data.tofuscan.lib
 import rego.v1
 
-_desc_2_12 := concat("", [
-	"SQL instance configuration changes — such as disabling SSL or enabling public IP — can ",
-	"weaken database security. Alerting on cloudsql.instances.update events ensures these ",
-	"changes are detected and reviewed promptly.",
-])
+_violation_2_12 := {
+	"resource": "global",
+	"rule_id": "gcp/cis/2.12",
+	"cis_control": "2.12",
+	"profile_level": "Level 2",
+	"severity": "Medium",
+	"title": "Ensure That the Log Metric Filter and Alerts Exist for SQL Instance Configuration Changes",
+	"description": concat("", [
+		"SQL instance configuration changes — such as disabling SSL or enabling public IP — can ",
+		"weaken database security. Alerting on cloudsql.instances.update events ensures these ",
+		"changes are detected and reviewed promptly.",
+	]),
+}
 
 # No log metric filter exists for SQL instance configuration changes.
-deny contains violation if {
+deny contains _violation_2_12 if {
 	input.resource.google_project
 	not lib.metric_filter_exists("cloudsql.instances.update")
-	violation := {
-		"resource": "global",
-		"rule_id": "gcp/cis/2.12",
-		"cis_control": "2.12",
-		"profile_level": "Level 2",
-		"severity": "Medium",
-		"title": "Ensure That the Log Metric Filter and Alerts Exist for SQL Instance Configuration Changes",
-		"description": _desc_2_12,
-	}
 }
 
 # Log metric exists but no alert policy references it.
-deny contains violation if {
+deny contains _violation_2_12 if {
 	input.resource.google_project
 	some _label, resources in input.resource.google_logging_metric
 	some resource in resources
@@ -33,13 +32,4 @@ deny contains violation if {
 	metric_name := object.get(resource, "name", "")
 	count(metric_name) > 0
 	not lib.alert_exists_for_metric(metric_name)
-	violation := {
-		"resource": "global",
-		"rule_id": "gcp/cis/2.12",
-		"cis_control": "2.12",
-		"profile_level": "Level 2",
-		"severity": "Medium",
-		"title": "Ensure That the Log Metric Filter and Alerts Exist for SQL Instance Configuration Changes",
-		"description": _desc_2_12,
-	}
 }
