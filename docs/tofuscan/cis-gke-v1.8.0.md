@@ -187,8 +187,8 @@ authentication, and cluster-level settings.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.9.1 | Enable Customer-Managed Encryption Keys (CMEK) for GKE Persistent Disks | Manual | | Encrypting GKE Persistent Disk volumes with CMEK gives organizations control over the encryption key lifecycle, enabling independent key revocation. |
-| 5.9.2 | Enable Customer-Managed Encryption Keys (CMEK) for Boot Disks | Automated | | Encrypting GKE node boot disks with CMEK ensures node OS data is encrypted with customer-controlled keys, not just Google-managed defaults. |
+| 5.9.1 | Enable Customer-Managed Encryption Keys (CMEK) for GKE Persistent Disks | Manual | ✅ | Encrypting GKE Persistent Disk volumes with CMEK gives organizations control over the encryption key lifecycle, enabling independent key revocation. |
+| 5.9.2 | Enable Customer-Managed Encryption Keys (CMEK) for Boot Disks | Automated | ✅ | Encrypting GKE node boot disks with CMEK ensures node OS data is encrypted with customer-controlled keys, not just Google-managed defaults. |
 
 ### 5.10 Other Cluster Configurations
 
@@ -196,7 +196,7 @@ authentication, and cluster-level settings.
 | --------- | ------- | ------ | --------- | ------------- |
 | 5.10.1 | Ensure Kubernetes Web UI is Disabled | Automated | ✅ | The Kubernetes Dashboard provides a broad cluster management interface. It should be disabled in GKE as it is an additional attack vector and GCP Console provides equivalent functionality. |
 | 5.10.2 | Ensure that Alpha clusters are not used for production workloads | Automated | ✅ | Alpha clusters enable experimental Kubernetes features but receive no SLA, security updates, or support guarantees. They must not be used for production workloads. |
-| 5.10.3 | Consider GKE Sandbox for running untrusted workloads | Automated | | GKE Sandbox uses gVisor to provide an additional layer of isolation between the host kernel and containerized workloads, suitable for running untrusted or multi-tenant code. |
+| 5.10.3 | Consider GKE Sandbox for running untrusted workloads | Automated | ✅ | GKE Sandbox uses gVisor to provide an additional layer of isolation between the host kernel and containerized workloads, suitable for running untrusted or multi-tenant code. |
 | 5.10.4 | Enable Security Posture | Manual | | GKE Security Posture provides continuous assessment of cluster configuration and workload security, surfacing actionable findings aligned with CIS and other benchmarks. |
 
 ---
@@ -205,4 +205,4 @@ authentication, and cluster-level settings.
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 58 | 43 | 15 | 20 |
+| 58 | 43 | 15 | 23 |
