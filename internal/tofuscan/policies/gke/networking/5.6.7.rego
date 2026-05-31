@@ -19,7 +19,7 @@ deny contains violation if {
 	count(tls) > 0
 	metadata := object.get(resource.manifest, "metadata", {})
 	annotations := object.get(metadata, "annotations", {})
-	not annotations["networking.gke.io/managed-certificates"]
+	object.get(annotations, "networking.gke.io/managed-certificates", "") == ""
 	violation := {
 		"resource": concat(".", ["kubernetes_manifest", name]),
 		"rule_id": "gke/cis/5.6.7",
@@ -44,7 +44,7 @@ deny contains violation if {
 	spec := spec_list[0]
 	tls := object.get(spec, "tls", [])
 	count(tls) > 0
-	not annotations["networking.gke.io/managed-certificates"]
+	object.get(annotations, "networking.gke.io/managed-certificates", "") == ""
 	violation := {
 		"resource": concat(".", ["kubernetes_ingress_v1", name]),
 		"rule_id": "gke/cis/5.6.7",

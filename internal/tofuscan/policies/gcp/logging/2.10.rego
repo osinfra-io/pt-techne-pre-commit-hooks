@@ -17,19 +17,25 @@ _violation_2_10 := {
 	]),
 }
 
+# True when at least one metric matching the VPC network filter is wired to an alert.
+_has_network_metric_with_alert if {
+	some _label, resources in input.resource.google_logging_metric
+	some resource in resources
+	contains(object.get(resource, "filter", ""), "gce_network")
+	metric_name := object.get(resource, "name", "")
+	count(metric_name) > 0
+	lib.alert_exists_for_metric(metric_name)
+}
+
 # No log metric filter exists for VPC network changes.
 deny contains _violation_2_10 if {
 	input.resource.google_project
 	not lib.metric_filter_exists("gce_network")
 }
 
-# Log metric exists but no alert policy references it.
+# Metric(s) matching the filter exist but none are wired to an alert.
 deny contains _violation_2_10 if {
 	input.resource.google_project
-	some _label, resources in input.resource.google_logging_metric
-	some resource in resources
-	contains(object.get(resource, "filter", ""), "gce_network")
-	metric_name := object.get(resource, "name", "")
-	count(metric_name) > 0
-	not lib.alert_exists_for_metric(metric_name)
+	lib.metric_filter_exists("gce_network")
+	not _has_network_metric_with_alert
 }

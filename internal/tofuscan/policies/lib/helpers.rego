@@ -28,15 +28,16 @@ metric_filter_exists(key_term) if {
 
 # alert_exists_for_metric returns true when at least one
 # google_monitoring_alert_policy has a condition_threshold filter referencing
-# the given metric name via the logging.googleapis.com/user/ prefix. Used by
-# CIS 2.5–2.12 policies to verify that an alerting policy exists for each
-# required log metric.
+# the given metric name via the metric.type token. The exact token format
+# (metric.type="logging.googleapis.com/user/<name>") avoids false positives
+# from similarly-named metrics. Used by CIS 2.5–2.12 policies to verify that
+# an alerting policy exists for each required log metric.
 alert_exists_for_metric(metric_name) if {
 	some _label, resources in input.resource.google_monitoring_alert_policy
 	some resource in resources
 	some condition in object.get(resource, "conditions", [])
 	some threshold in object.get(condition, "condition_threshold", [])
-	contains(object.get(threshold, "filter", ""), concat("", ["logging.googleapis.com/user/", metric_name]))
+	contains(object.get(threshold, "filter", ""), concat("", ["metric.type=\"logging.googleapis.com/user/", metric_name, "\""]))
 }
 
 # port_covered returns true when target (a number) is matched by any entry in

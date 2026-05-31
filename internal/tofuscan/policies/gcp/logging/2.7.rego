@@ -16,19 +16,25 @@ _violation_2_7 := {
 	]),
 }
 
+# True when at least one metric matching the custom role filter is wired to an alert.
+_has_custom_role_metric_with_alert if {
+	some _label, resources in input.resource.google_logging_metric
+	some resource in resources
+	contains(object.get(resource, "filter", ""), "iam_role")
+	metric_name := object.get(resource, "name", "")
+	count(metric_name) > 0
+	lib.alert_exists_for_metric(metric_name)
+}
+
 # No log metric filter exists for custom role changes.
 deny contains _violation_2_7 if {
 	input.resource.google_project
 	not lib.metric_filter_exists("iam_role")
 }
 
-# Log metric exists but no alert policy references it.
+# Metric(s) matching the filter exist but none are wired to an alert.
 deny contains _violation_2_7 if {
 	input.resource.google_project
-	some _label, resources in input.resource.google_logging_metric
-	some resource in resources
-	contains(object.get(resource, "filter", ""), "iam_role")
-	metric_name := object.get(resource, "name", "")
-	count(metric_name) > 0
-	not lib.alert_exists_for_metric(metric_name)
+	lib.metric_filter_exists("iam_role")
+	not _has_custom_role_metric_with_alert
 }
