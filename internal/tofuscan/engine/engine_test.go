@@ -101,6 +101,7 @@ func TestFailFixtureViolations(t *testing.T) {
 		"gcp/cis/8.1",
 		"gke/cis/5.9.1",
 		"gke/cis/5.9.2",
+		"gke/cis/5.9.2",
 		"gke/cis/5.10.2",
 		"gke/cis/5.10.3",
 		"gke/cis/5.2.1",

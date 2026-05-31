@@ -251,6 +251,10 @@ resource "google_container_cluster" "bad_cluster" {
 
   addons_config {
   }
+
+  # GKE CIS 5.9.2 — node_config present but no boot_disk_kms_key
+  node_config {
+  }
 }
 
 # GKE CIS 5.2.1 — service_account = "default" (should use dedicated SA)

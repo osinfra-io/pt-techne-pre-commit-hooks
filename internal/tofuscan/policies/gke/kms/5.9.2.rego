@@ -23,3 +23,19 @@ deny contains violation if {
 		"description": _desc_5_9_2,
 	}
 }
+
+deny contains violation if {
+	some name, resources in input.resource.google_container_cluster
+	some resource in resources
+	some nc in object.get(resource, "node_config", [])
+	object.get(nc, "boot_disk_kms_key", "") == ""
+	violation := {
+		"resource": concat(".", ["google_container_cluster", name]),
+		"rule_id": "gke/cis/5.9.2",
+		"cis_control": "5.9.2",
+		"profile_level": "Level 2",
+		"severity": "Medium",
+		"title": "Enable Customer-Managed Encryption Keys (CMEK) for Boot Disks",
+		"description": _desc_5_9_2,
+	}
+}
