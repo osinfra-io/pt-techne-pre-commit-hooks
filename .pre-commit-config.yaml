@@ -12,6 +12,6 @@ repos:
       - id: regal-lint
         name: regal lint
         entry: regal lint internal/tofuscan/policies
-        language: system
-        files: \.rego$
+        language: system  # requires regal to be installed locally (see StyraInc/setup-regal in CI)
+        files: internal/tofuscan/policies/.*\.rego$
         pass_filenames: false
