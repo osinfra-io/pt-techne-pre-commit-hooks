@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _desc_5_2_1 := concat("", [
 	"The Compute Engine default service account has broad project-level permissions. ",
 	"GKE node pools should use a dedicated, least-privilege service account instead.",
@@ -11,7 +13,9 @@ deny contains violation if {
 	some name, resources in input.resource.google_container_node_pool
 	some resource in resources
 	some nc in object.get(resource, "node_config", [{}])
-	sa := lower(object.get(nc, "service_account", "default"))
+	raw := object.get(nc, "service_account", "default")
+	not lib.is_unresolved(raw)
+	sa := lower(raw)
 	_is_default_gke_sa(sa)
 	violation := {
 		"resource": concat(".", ["google_container_node_pool", name]),

@@ -88,9 +88,11 @@ resource "google_storage_bucket" "good_log_bucket" {
 }
 
 # GCP CIS 2.2 — project resource with log sink present
+# GCP CIS 3.1 — auto_create_network disabled (no default network)
 resource "google_project" "good_project" {
-  name       = "good-project"
-  project_id = "good-project-id"
+  name                = "good-project"
+  project_id          = "good-project-id"
+  auto_create_network = false
 }
 
 resource "google_logging_project_sink" "main" {
@@ -306,6 +308,11 @@ resource "google_container_cluster" "good_cluster" {
 
   binary_authorization {
     evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
+  }
+
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_BASIC"
   }
 }
 
@@ -628,6 +635,30 @@ resource "google_dataproc_cluster" "good_dataproc" {
   cluster_config {
     encryption_config {
       kms_key_name = "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/my-key"
+    }
+  }
+}
+
+# GCP CIS 1.17 — Essential Contacts configured for the project
+resource "google_essential_contacts_contact" "good_contact" {
+  email                               = "security@example.com"
+  language_tag                        = "en-US"
+  notification_category_subscriptions = ["SECURITY"]
+}
+
+# GCP CIS 2.14 — Cloud Asset Inventory API enabled
+resource "google_project_service" "good_cloud_asset" {
+  project = "good-project-id"
+  service = "cloudasset.googleapis.com"
+}
+
+# GCP CIS 1.15 — API key restricted to specific API targets
+resource "google_apikeys_key" "good_api_key" {
+  name = "good-api-key"
+
+  restrictions {
+    api_targets {
+      service = "translate.googleapis.com"
     }
   }
 }

@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _desc_5_4_1 := concat("", [
 	"The GKE Metadata Server prevents pods from accessing sensitive VM metadata ",
 	"via the legacy metadata endpoint and is required for Workload Identity.",
@@ -12,7 +14,9 @@ deny contains violation if {
 	some resource in resources
 	some nc in object.get(resource, "node_config", [{}])
 	some wmc in object.get(nc, "workload_metadata_config", [{}])
-	object.get(wmc, "mode", "") != "GKE_METADATA"
+	mode := object.get(wmc, "mode", "")
+	not lib.is_unresolved(mode)
+	mode != "GKE_METADATA"
 	violation := {
 		"resource": concat(".", ["google_container_node_pool", name]),
 		"rule_id": "gke/cis/5.4.1",

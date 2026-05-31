@@ -10,7 +10,10 @@ _desc_2_13 := concat("", [
 ])
 
 # No google_dns_policy resource is defined — DNS logging is disabled by default.
+# Gated on google_project so the check only fires in a project-setup layer and does
+# not bleed into unrelated module scans that legitimately contain no DNS policy.
 deny contains violation if {
+	input.resource.google_project
 	not input.resource.google_dns_policy
 	violation := {
 		"resource": "global",

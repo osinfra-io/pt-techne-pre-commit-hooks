@@ -3,6 +3,9 @@
 Controls extracted from the [CIS Google Kubernetes Engine (GKE) Benchmark
 v1.8.0](https://www.cisecurity.org/benchmark/kubernetes).
 `✅` = tofuscan policy implemented.
+`🚫` = not implementable as a static OpenTofu IaC policy (evaluates live
+Kubernetes or node state rather than GCP resource configuration). See [Controls
+Not Verifiable via IaC](#controls-not-verifiable-via-iac).
 
 ---
 
@@ -43,10 +46,10 @@ modification of node configuration.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 3.1.1 | Ensure that the kubeconfig file permissions are set to 644 or more restrictive | Automated | | The kubelet kubeconfig file controls various parameters of the kubelet service. Permissions should be 644 or more restrictive to prevent unauthorized modification. |
-| 3.1.2 | Ensure that the kubelet kubeconfig file ownership is set to root:root | Automated | | The kubelet kubeconfig file should be owned by root to prevent non-root processes from modifying the kubelet configuration. |
-| 3.1.3 | Ensure that the kubelet configuration file has permissions set to 644 | Automated | | The kubelet configuration file may contain sensitive parameters. Permissions of 644 ensure only the root user can modify it. |
-| 3.1.4 | Ensure that the kubelet configuration file ownership is set to root:root | Automated | | Kubelet configuration files should be owned by root to prevent tampering by other users or processes on the node. |
+| 3.1.1 | Ensure that the kubeconfig file permissions are set to 644 or more restrictive | Automated | 🚫 | The kubelet kubeconfig file controls various parameters of the kubelet service. Permissions should be 644 or more restrictive to prevent unauthorized modification. |
+| 3.1.2 | Ensure that the kubelet kubeconfig file ownership is set to root:root | Automated | 🚫 | The kubelet kubeconfig file should be owned by root to prevent non-root processes from modifying the kubelet configuration. |
+| 3.1.3 | Ensure that the kubelet configuration file has permissions set to 644 | Automated | 🚫 | The kubelet configuration file may contain sensitive parameters. Permissions of 644 ensure only the root user can modify it. |
+| 3.1.4 | Ensure that the kubelet configuration file ownership is set to root:root | Automated | 🚫 | Kubelet configuration files should be owned by root to prevent tampering by other users or processes on the node. |
 
 ---
 
@@ -60,16 +63,16 @@ security, network policies, and secret management.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 4.1.1 | Ensure that the cluster-admin role is only used where required | Automated | | The `cluster-admin` ClusterRole grants unrestricted access to the entire cluster. It should be bound only to specific service accounts or users with a documented requirement. |
-| 4.1.2 | Minimize access to secrets | Automated | | The Kubernetes API stores secrets including service account tokens. Access via `get`, `watch`, or `list` on secrets should be minimized to reduce credential exposure. |
-| 4.1.3 | Minimize wildcard use in Roles and ClusterRoles | Automated | | Wildcard (`*`) resource or verb entries in RBAC roles grant overly broad permissions. Roles should enumerate only the specific resources and verbs needed. |
-| 4.1.4 | Ensure that default service accounts are not actively used | Automated | | The default service account in each namespace is automatically bound to pods unless overridden. It should not have API access; use dedicated service accounts instead. |
-| 4.1.5 | Ensure that Service Account Tokens are only mounted where necessary | Automated | | Auto-mounting service account tokens into pods that do not need API access increases the risk of token theft. Set `automountServiceAccountToken: false` where not required. |
-| 4.1.6 | Avoid use of system:masters group | Automated | | The `system:masters` group bypasses RBAC entirely. No user or service account should be a member of this group in production clusters. |
-| 4.1.7 | Limit use of the Bind, Impersonate and Escalate permissions in the Kubernetes cluster | Automated | | The `bind`, `impersonate`, and `escalate` verbs allow privilege escalation beyond the principal's own permissions. These verbs must be tightly restricted. |
-| 4.1.8 | Avoid bindings to system:anonymous | Automated | | Binding roles to `system:anonymous` grants permissions to unauthenticated requests. There is no legitimate use case for this in a production cluster. |
-| 4.1.9 | Avoid non-default bindings to system:unauthenticated | Automated | | Non-default role bindings to `system:unauthenticated` extend unauthenticated access beyond Kubernetes defaults and should be removed. |
-| 4.1.10 | Avoid non-default bindings to system:authenticated | Automated | | Bindings to `system:authenticated` grant permissions to every authenticated user in the cluster, which is typically far too broad. |
+| 4.1.1 | Ensure that the cluster-admin role is only used where required | Automated | 🚫 | The `cluster-admin` ClusterRole grants unrestricted access to the entire cluster. It should be bound only to specific service accounts or users with a documented requirement. |
+| 4.1.2 | Minimize access to secrets | Automated | 🚫 | The Kubernetes API stores secrets including service account tokens. Access via `get`, `watch`, or `list` on secrets should be minimized to reduce credential exposure. |
+| 4.1.3 | Minimize wildcard use in Roles and ClusterRoles | Automated | 🚫 | Wildcard (`*`) resource or verb entries in RBAC roles grant overly broad permissions. Roles should enumerate only the specific resources and verbs needed. |
+| 4.1.4 | Ensure that default service accounts are not actively used | Automated | 🚫 | The default service account in each namespace is automatically bound to pods unless overridden. It should not have API access; use dedicated service accounts instead. |
+| 4.1.5 | Ensure that Service Account Tokens are only mounted where necessary | Automated | 🚫 | Auto-mounting service account tokens into pods that do not need API access increases the risk of token theft. Set `automountServiceAccountToken: false` where not required. |
+| 4.1.6 | Avoid use of system:masters group | Automated | 🚫 | The `system:masters` group bypasses RBAC entirely. No user or service account should be a member of this group in production clusters. |
+| 4.1.7 | Limit use of the Bind, Impersonate and Escalate permissions in the Kubernetes cluster | Automated | 🚫 | The `bind`, `impersonate`, and `escalate` verbs allow privilege escalation beyond the principal's own permissions. These verbs must be tightly restricted. |
+| 4.1.8 | Avoid bindings to system:anonymous | Automated | 🚫 | Binding roles to `system:anonymous` grants permissions to unauthenticated requests. There is no legitimate use case for this in a production cluster. |
+| 4.1.9 | Avoid non-default bindings to system:unauthenticated | Automated | 🚫 | Non-default role bindings to `system:unauthenticated` extend unauthenticated access beyond Kubernetes defaults and should be removed. |
+| 4.1.10 | Avoid non-default bindings to system:authenticated | Automated | 🚫 | Bindings to `system:authenticated` grant permissions to every authenticated user in the cluster, which is typically far too broad. |
 
 ### 4.2 Pod Security Standards
 
@@ -82,13 +85,13 @@ security, network policies, and secret management.
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
 | 4.3.1 | Ensure that the CNI in use supports Network Policies | Manual | | The Container Network Interface plugin must support Kubernetes NetworkPolicy so that pod-to-pod traffic can be restricted by policy. GKE uses Calico or Dataplane V2. |
-| 4.3.2 | Ensure that all Namespaces have Network Policies defined | Automated | | Without NetworkPolicy, all pods in a namespace can communicate freely. Each namespace should have at least a default deny policy with explicit allow rules for required traffic. |
+| 4.3.2 | Ensure that all Namespaces have Network Policies defined | Automated | 🚫 | Without NetworkPolicy, all pods in a namespace can communicate freely. Each namespace should have at least a default deny policy with explicit allow rules for required traffic. |
 
 ### 4.4 Secrets Management
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 4.4.1 | Prefer using secrets as files over secrets as environment variables | Automated | | Secrets mounted as environment variables can be exposed through logs, `/proc` introspection, or child process inheritance. Mounting secrets as files limits their exposure. |
+| 4.4.1 | Prefer using secrets as files over secrets as environment variables | Automated | 🚫 | Secrets mounted as environment variables can be exposed through logs, `/proc` introspection, or child process inheritance. Mounting secrets as files limits their exposure. |
 | 4.4.2 | Consider external secret storage | Manual | | Kubernetes secrets are base64-encoded in etcd, not encrypted by default. External secret stores (e.g., GCP Secret Manager, HashiCorp Vault) provide stronger access control and auditing. |
 
 ### 4.5 Extensible Admission Control
@@ -102,9 +105,9 @@ security, network policies, and secret management.
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
 | 4.6.1 | Create administrative boundaries between resources using namespaces | Manual | | Kubernetes namespaces provide logical isolation between workloads. Separate teams and applications into dedicated namespaces to enforce RBAC and network policy boundaries. |
-| 4.6.2 | Ensure that the seccomp profile is set to RuntimeDefault in the pod definitions | Automated | | The `RuntimeDefault` seccomp profile restricts the system calls available to containers to a safe subset, reducing the kernel attack surface. |
+| 4.6.2 | Ensure that the seccomp profile is set to RuntimeDefault in the pod definitions | Automated | 🚫 | The `RuntimeDefault` seccomp profile restricts the system calls available to containers to a safe subset, reducing the kernel attack surface. |
 | 4.6.3 | Apply Security Context to Pods and Containers | Manual | | Security contexts define privilege and access control settings for pods and containers, such as `runAsNonRoot`, `readOnlyRootFilesystem`, and `allowPrivilegeEscalation: false`. |
-| 4.6.4 | The default namespace should not be used | Automated | | Workloads in the `default` namespace are difficult to isolate with NetworkPolicy and RBAC. All production workloads should be deployed to dedicated namespaces. |
+| 4.6.4 | The default namespace should not be used | Automated | 🚫 | Workloads in the `default` namespace are difficult to isolate with NetworkPolicy and RBAC. All production workloads should be deployed to dedicated namespaces. |
 
 ---
 
@@ -120,7 +123,7 @@ authentication, and cluster-level settings.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.1.1 | Ensure Image Vulnerability Scanning is enabled | Automated | | Enable container image vulnerability scanning (via Artifact Registry or GKE Security Posture) to detect known CVEs in container images before or after deployment. |
+| 5.1.1 | Ensure Image Vulnerability Scanning is enabled | Automated | ✅ | Enable container image vulnerability scanning (via Artifact Registry or GKE Security Posture) to detect known CVEs in container images before or after deployment. |
 | 5.1.2 | Minimize user access to Container Image repositories | Manual | | Restrict write access to image repositories to only CI/CD pipelines and administrators, preventing unauthorized image pushes. |
 | 5.1.3 | Minimize cluster access to read-only for Container Image repositories | Manual | | GKE node service accounts should have read-only access to container image repositories, following least-privilege for image pulls. |
 | 5.1.4 | Ensure only trusted container images are used | Manual | | Deploy only images from trusted, verified registries. Use Binary Authorization to enforce image provenance policies at deployment time. |
@@ -187,7 +190,7 @@ authentication, and cluster-level settings.
 
 | Control | Title | Type | Covered | Description |
 | --------- | ------- | ------ | --------- | ------------- |
-| 5.9.1 | Enable Customer-Managed Encryption Keys (CMEK) for GKE Persistent Disks | Manual | ✅ | Encrypting GKE Persistent Disk volumes with CMEK gives organizations control over the encryption key lifecycle, enabling independent key revocation. |
+| 5.9.1 | Enable Customer-Managed Encryption Keys (CMEK) for GKE Persistent Disks | Manual | | Encrypting GKE Persistent Disk volumes with CMEK gives organizations control over the encryption key lifecycle, enabling independent key revocation. |
 | 5.9.2 | Enable Customer-Managed Encryption Keys (CMEK) for Boot Disks | Automated | ✅ | Encrypting GKE node boot disks with CMEK ensures node OS data is encrypted with customer-controlled keys, not just Google-managed defaults. |
 
 ### 5.10 Other Cluster Configurations
@@ -201,8 +204,23 @@ authentication, and cluster-level settings.
 
 ---
 
+## Controls Not Verifiable via IaC
+
+These Automated controls are marked `🚫` above because they cannot be expressed as
+a static OpenTofu policy — they evaluate live Kubernetes or node state rather than
+GCP resource configuration:
+
+| Control | Reason |
+| --------- | -------- |
+| 3.1.1–3.1.4 | Node OS-level — kubelet config and kubeconfig file permissions/ownership are runtime node state, not declared in OpenTofu. |
+| 4.1.1–4.1.10 | Kubernetes RBAC — role and binding restrictions are evaluated against the live cluster API and are not managed as OpenTofu resources in this platform. |
+| 4.3.2 | Runtime workload state — NetworkPolicy coverage per namespace is a property of the live cluster. |
+| 4.4.1 | Runtime workload state — secret mount style (file vs environment variable) is defined in pod specs, not OpenTofu. |
+| 4.6.2 | Runtime workload state — the seccomp profile is set in pod/container specs at deploy time. |
+| 4.6.4 | Runtime workload state — namespace usage is a property of deployed workloads, not configuration. |
+
 ## Coverage Summary
 
 | Total Controls | Automated | Manual | Implemented |
 | ---------------- | ----------- | -------- | ------------- |
-| 58 | 43 | 15 | 23 |
+| 58 | 43 | 15 | 24 |

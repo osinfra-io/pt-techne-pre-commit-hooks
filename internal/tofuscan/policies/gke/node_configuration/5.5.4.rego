@@ -2,6 +2,8 @@ package tofuscan
 
 import rego.v1
 
+import data.tofuscan.lib
+
 _desc_5_5_4 := concat("", [
 	"Release channels (RAPID, REGULAR, or STABLE) automate GKE version management, ",
 	"ensuring clusters receive timely security patches and Kubernetes upgrades.",
@@ -14,6 +16,7 @@ deny contains violation if {
 	some resource in resources
 	some rc in object.get(resource, "release_channel", [{}])
 	channel := object.get(rc, "channel", "UNSPECIFIED")
+	not lib.is_unresolved(channel)
 	not channel in _valid_channels
 	violation := {
 		"resource": concat(".", ["google_container_cluster", name]),
