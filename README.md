@@ -1,5 +1,8 @@
 # Hooks for Infrastructure as Code (IaC) tools
 
+[![Go Tests](https://img.shields.io/github/actions/workflow/status/osinfra-io/pt-techne-pre-commit-hooks/go-test.yml?style=for-the-badge&logo=go&color=00ADD8&label=Go%20Tests)](https://github.com/osinfra-io/pt-techne-pre-commit-hooks/actions/workflows/go-test.yml)
+[![Dependabot](https://img.shields.io/github/actions/workflow/status/osinfra-io/pt-techne-pre-commit-hooks/dependabot.yml?style=for-the-badge&logo=github&color=2088FF&label=Dependabot)](https://github.com/osinfra-io/pt-techne-pre-commit-hooks/actions/workflows/dependabot.yml)
+
 This repository contains a collection of hooks for Infrastructure as Code (IaC) tools. The hooks are designed to be used with [pre-commit](https://pre-commit.com/), a framework for managing and maintaining multi-language pre-commit hooks.
 
 ## Available Hooks
@@ -26,7 +29,7 @@ Runs `tofu test` to execute automated tests defined in `.tftest.hcl` files. This
 
 #### Checks OpenTofu files against CIS benchmarks
 
-Runs `tofuscan` to check your OpenTofu (`.tofu`) files against CIS benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v5.0.0 (47 policies) and CIS Google Kubernetes Engine (GKE) Benchmark v1.8.0 (20 policies). It will not scan files in `.terraform/` directories.
+Runs `tofuscan` to check your OpenTofu (`.tofu`) files against CIS benchmark policies using OPA/Rego. Covers [CIS Google Cloud Platform Foundation Benchmark v5.0.0](docs/tofuscan/cis-gcp-v5.0.0.md) and [CIS Google Kubernetes Engine (GKE) Benchmark v1.8.0](docs/tofuscan/cis-gke-v1.8.0.md). It will not scan files in `.terraform/` directories.
 
 ---
 
