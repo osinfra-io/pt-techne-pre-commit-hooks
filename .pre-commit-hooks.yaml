@@ -35,3 +35,11 @@
   pass_filenames: false
   language: golang
   name: tofu scan
+
+- id: regal-lint
+  description: Lint Rego policies using Regal, the linter for Open Policy Agent (OPA).
+  entry: regallint
+  exclude: \.terraform/.*$
+  files: \.rego$
+  language: golang
+  name: regal lint

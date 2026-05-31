@@ -12,10 +12,23 @@ func CheckOpenTofuInstalled() bool {
 	return err == nil
 }
 
+// CheckRegalInstalled returns true if the 'regal' binary is found in PATH.
+func CheckRegalInstalled() bool {
+	_, err := exec.LookPath("regal")
+	return err == nil
+}
+
 // SkipIfTofuNotInstalled skips the test if tofu is not installed
 func SkipIfTofuNotInstalled(t *testing.T) {
 	if !CheckOpenTofuInstalled() {
 		t.Skip("Skipping test as tofu is not installed")
+	}
+}
+
+// SkipIfRegalNotInstalled skips the test if regal is not installed.
+func SkipIfRegalNotInstalled(t *testing.T) {
+	if !CheckRegalInstalled() {
+		t.Skip("Skipping test as regal is not installed")
 	}
 }
 

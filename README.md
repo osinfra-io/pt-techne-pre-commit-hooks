@@ -28,6 +28,12 @@ Runs `tofu test` to execute automated tests defined in `.tftest.hcl` files. This
 
 Runs `tofuscan` to check your OpenTofu (`.tofu`) files against CIS benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v5.0.0 (47 policies) and CIS Google Kubernetes Engine (GKE) Benchmark v1.8.0 (20 policies). It will not scan files in `.terraform/` directories.
 
+### regal-lint
+
+#### Lints Rego policies using Regal
+
+Runs `regal lint` to check your Rego (`.rego`) policy files against Regal's built-in linting rules. Catches style violations, deprecated constructs, and common mistakes in OPA/Rego code. It will not lint files in `.terraform/` directories.
+
 ---
 
 ## Usage
@@ -105,6 +111,22 @@ resource "google_compute_firewall" "allow_ssh" {
 ```
 
 The format is `# tofu-scan skip: CIS <control> [- <reason>]`. Skip comments placed outside a resource block are ignored. Skipped violations appear in the output summary so they remain visible.
+
+### Example: `regal-lint`
+
+Lints Rego policy files using [Regal](https://docs.styra.com/regal).
+
+```yaml
+- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+  rev: <release-or-commit-sha>
+  hooks:
+    - id: regal-lint
+      # Optional: pass additional args to regal lint
+      # args: ["--fail-level", "warning"]  # also fail on warnings (default: error)
+      # args: ["--config-file", ".regal.yaml"]  # use a specific config file
+```
+
+Regal is triggered on `.rego` file changes. It respects any `.regal.yaml` configuration file in your repository.
 
 Replace `<release-or-commit-sha>` with the desired version or commit hash.
 

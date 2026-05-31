@@ -13,6 +13,13 @@ func TestCheckOpenTofuInstalled(t *testing.T) {
 	}
 }
 
+func TestCheckRegalInstalled(t *testing.T) {
+	SkipIfRegalNotInstalled(t)
+	if !CheckRegalInstalled() {
+		t.Error("CheckRegalInstalled should return true when regal is installed")
+	}
+}
+
 func TestCreateTempDir(t *testing.T) {
 	dir, cleanup := CreateTempDir(t, "testutil_temp_")
 	defer cleanup()
