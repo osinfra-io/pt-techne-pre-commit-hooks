@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/open-policy-agent/conftest v0.68.2
 	github.com/open-policy-agent/opa v1.17.0
-	github.com/zclconf/go-cty v1.16.3
+	github.com/zclconf/go-cty v1.18.1
 	golang.org/x/term v0.43.0
 )
 
