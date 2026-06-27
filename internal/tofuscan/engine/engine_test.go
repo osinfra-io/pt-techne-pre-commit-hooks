@@ -451,6 +451,88 @@ resource "google_container_cluster" "primary" {
 	}
 }
 
+// TestDynamicBlockExpansionWithLocalFunctions covers the false-positive pattern
+// seen in the pt-arche-google-cloud-sql module, where database_flags are
+// defined via concat() and startswith() in locals.tofu, then used in a dynamic
+// block in main.tofu. Both the function evaluation and dynamic block expansion
+// must work together to avoid false-positive CIS 6.2.x violations.
+func TestDynamicBlockExpansionWithLocalFunctions(t *testing.T) {
+	tmp := t.TempDir()
+
+	variablesContent := `variable "database_version" {
+  default = "POSTGRES_16"
+  type    = string
+}
+
+variable "postgres_database_flags" {
+  default = []
+  type = list(object({
+    name  = string
+    value = string
+  }))
+}
+`
+
+	localsContent := `locals {
+  postgres_database_flags = concat([
+    {
+      name  = "log_connections"
+      value = "on"
+    },
+    {
+      name  = "log_disconnections"
+      value = "on"
+    },
+  ], var.postgres_database_flags)
+
+  database_flags = startswith(var.database_version, "POSTGRES_") ? local.postgres_database_flags : []
+}
+`
+
+	mainContent := `resource "google_sql_database_instance" "this" {
+  database_version = var.database_version
+
+  settings {
+    dynamic "database_flags" {
+      for_each = local.database_flags
+      content {
+        name  = database_flags.value.name
+        value = database_flags.value.value
+      }
+    }
+
+    tier = "db-n1-standard-1"
+  }
+}
+`
+
+	variablesFile := tmp + "/variables.tofu"
+	localsFile := tmp + "/locals.tofu"
+	mainFile := tmp + "/main.tofu"
+
+	for path, content := range map[string]string{
+		variablesFile: variablesContent,
+		localsFile:    localsContent,
+		mainFile:      mainContent,
+	} {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	result, err := Run(context.Background(), []string{variablesFile, localsFile, mainFile}, policies.FS)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// CIS 6.2.2 (log_connections) and 6.2.3 (log_disconnections) must not fire.
+	for _, v := range result.Violations {
+		if v.RuleID == "gcp/cis/6.2.2" || v.RuleID == "gcp/cis/6.2.3" {
+			t.Errorf("false positive: %s fired on resource with dynamic database_flags via locals", v.RuleID)
+		}
+	}
+}
+
 func TestNormalizeConfigResolvesReferencesAcrossFiles(t *testing.T) {
 	tmp := t.TempDir()
 

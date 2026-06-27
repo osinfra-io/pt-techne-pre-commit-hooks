@@ -291,7 +291,77 @@ func normalizeConfig(file string, config interface{}, dirSymbols map[string]*sym
 		return config
 	}
 
-	return resolveReferences(config, symbols)
+	resolved := resolveReferences(config, symbols)
+	return expandDynamicBlocks(resolved)
+}
+
+// expandDynamicBlocks recursively expands HCL dynamic blocks where for_each
+// has been resolved to a concrete list. It replaces
+//
+//	"dynamic": { "X": [{"for_each": [...], "content": [...]}] }
+//
+// with
+//
+//	"X": [...]
+//
+// at the same map level, using the for_each items directly as block entries.
+// This lets Rego policies that inspect resource attributes (e.g. database_flags)
+// find the expanded values rather than the raw dynamic block structure.
+func expandDynamicBlocks(value interface{}) interface{} {
+	switch typed := value.(type) {
+	case []interface{}:
+		result := make([]interface{}, 0, len(typed))
+		for _, item := range typed {
+			result = append(result, expandDynamicBlocks(item))
+		}
+		return result
+
+	case map[string]interface{}:
+		result := make(map[string]interface{}, len(typed))
+
+		// First pass: copy all non-dynamic keys (recursively expanded).
+		for key, item := range typed {
+			if key != "dynamic" {
+				result[key] = expandDynamicBlocks(item)
+			}
+		}
+
+		// Second pass: expand dynamic blocks into their block-name keys.
+		if dynVal, ok := typed["dynamic"]; ok {
+			dynamicMap, ok := dynVal.(map[string]interface{})
+			if !ok {
+				result["dynamic"] = dynVal
+				return result
+			}
+			for blockName, blockEntries := range dynamicMap {
+				entries, ok := blockEntries.([]interface{})
+				if !ok {
+					continue
+				}
+				for _, entry := range entries {
+					entryMap, ok := entry.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					forEach, ok := entryMap["for_each"]
+					if !ok {
+						continue
+					}
+					items, ok := forEach.([]interface{})
+					if !ok {
+						continue
+					}
+					existing, _ := result[blockName].([]interface{})
+					result[blockName] = append(existing, items...)
+				}
+			}
+		}
+
+		return result
+
+	default:
+		return value
+	}
 }
 
 // buildDirSymbolTables groups the given files by directory and builds one
@@ -396,6 +466,7 @@ func resolveLocals(pending map[string]*hclsyntax.Attribute, variables map[string
 	for len(pending) > 0 {
 		resolvedAny := false
 		ctx := &hcl.EvalContext{
+			Functions: hclFunctions(),
 			Variables: map[string]cty.Value{
 				"local": ctyObject(locals),
 				"var":   ctyObject(variables),
