@@ -296,15 +296,14 @@ func normalizeConfig(file string, config interface{}, dirSymbols map[string]*sym
 }
 
 // expandDynamicBlocks recursively expands HCL dynamic blocks where for_each
-// has been resolved to a concrete list. It replaces
+// has been resolved to a concrete list. For each item in for_each it
+// materialises the content template by substituting "<blockName>.value.<attr>"
+// references with the corresponding attribute from that item, then promotes the
+// result to a top-level key at the same map level:
 //
 //	"dynamic": { "X": [{"for_each": [...], "content": [...]}] }
+//	→  "X": [<materialised content per item>, ...]
 //
-// with
-//
-//	"X": [...]
-//
-// at the same map level, using the for_each items directly as block entries.
 // This lets Rego policies that inspect resource attributes (e.g. database_flags)
 // find the expanded values rather than the raw dynamic block structure.
 func expandDynamicBlocks(value interface{}) interface{} {
@@ -343,22 +342,74 @@ func expandDynamicBlocks(value interface{}) interface{} {
 					if !ok {
 						continue
 					}
-					forEach, ok := entryMap["for_each"]
+					forEachVal, ok := entryMap["for_each"]
 					if !ok {
 						continue
 					}
-					items, ok := forEach.([]interface{})
+					items, ok := forEachVal.([]interface{})
 					if !ok {
 						continue
 					}
+					contentEntries, _ := entryMap["content"].([]interface{})
 					existing, _ := result[blockName].([]interface{})
-					result[blockName] = append(existing, items...)
+					for _, item := range items {
+						if len(contentEntries) > 0 {
+							// Materialise each content entry by substituting
+							// "<blockName>.value.<attr>" references with values
+							// from the current for_each item.
+							for _, ce := range contentEntries {
+								materialised := applyEachValue(ce, blockName, item)
+								existing = append(existing, expandDynamicBlocks(materialised))
+							}
+						} else {
+							existing = append(existing, expandDynamicBlocks(item))
+						}
+					}
+					result[blockName] = existing
 				}
 			}
 		}
 
 		return result
 
+	default:
+		return value
+	}
+}
+
+// applyEachValue recursively replaces "${<blockName>.value.<attr>}" reference
+// strings in a content template with the corresponding attribute value from
+// the current for_each item. This mimics OpenTofu's dynamic block iteration
+// variable (<blockName>.value) at the level of static policy analysis.
+func applyEachValue(value interface{}, blockName string, item interface{}) interface{} {
+	prefix := blockName + ".value."
+	switch typed := value.(type) {
+	case string:
+		if !strings.HasPrefix(typed, "${") || !strings.HasSuffix(typed, "}") {
+			return typed
+		}
+		expr := strings.TrimSuffix(strings.TrimPrefix(typed, "${"), "}")
+		if strings.HasPrefix(expr, prefix) {
+			attr := strings.TrimPrefix(expr, prefix)
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				if v, exists := itemMap[attr]; exists {
+					return v
+				}
+			}
+		}
+		return typed
+	case map[string]interface{}:
+		resolved := make(map[string]interface{}, len(typed))
+		for k, v := range typed {
+			resolved[k] = applyEachValue(v, blockName, item)
+		}
+		return resolved
+	case []interface{}:
+		resolved := make([]interface{}, len(typed))
+		for i, v := range typed {
+			resolved[i] = applyEachValue(v, blockName, item)
+		}
+		return resolved
 	default:
 		return value
 	}

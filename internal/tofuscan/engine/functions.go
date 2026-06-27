@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
@@ -46,6 +47,8 @@ var endsWithFn = function.New(&function.Spec{
 
 // concatFn implements the OpenTofu concat(lists...) built-in.
 // It concatenates any number of lists or tuples into a single tuple value.
+// Returns an error for any argument that is not a list or tuple type, matching
+// OpenTofu's behaviour.
 // A tuple is used as the return type to accommodate lists with differing
 // element types (e.g. list(object) merged with list(object)).
 var concatFn = function.New(&function.Spec{
@@ -57,9 +60,10 @@ var concatFn = function.New(&function.Spec{
 	Type: function.StaticReturnType(cty.DynamicPseudoType),
 	Impl: func(args []cty.Value, _ cty.Type) (cty.Value, error) {
 		var elems []cty.Value
-		for _, arg := range args {
-			if !arg.CanIterateElements() {
-				continue
+		for i, arg := range args {
+			ty := arg.Type()
+			if !ty.IsListType() && !ty.IsTupleType() {
+				return cty.NilVal, fmt.Errorf("argument %d: list or tuple required, got %s", i+1, ty.FriendlyName())
 			}
 			for it := arg.ElementIterator(); it.Next(); {
 				_, v := it.Element()

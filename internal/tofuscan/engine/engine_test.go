@@ -533,6 +533,60 @@ variable "postgres_database_flags" {
 	}
 }
 
+// TestExpandDynamicBlocksMaterialisesContent verifies that expandDynamicBlocks
+// resolves "<blockName>.value.<attr>" references in the content template rather
+// than using the for_each items verbatim. This covers cases where content
+// renames or restructures the iterator value.
+func TestExpandDynamicBlocksMaterialisesContent(t *testing.T) {
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"tag": []interface{}{
+				map[string]interface{}{
+					"for_each": []interface{}{
+						map[string]interface{}{"k": "env", "v": "prod"},
+						map[string]interface{}{"k": "team", "v": "platform"},
+					},
+					"content": []interface{}{
+						map[string]interface{}{
+							"key":   "${tag.value.k}",
+							"value": "${tag.value.v}",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	tags, ok := got["tag"].([]interface{})
+	if !ok {
+		t.Fatalf("expected tag to be []interface{}, got %T", got["tag"])
+	}
+	if len(tags) != 2 {
+		t.Fatalf("expected 2 tag entries, got %d", len(tags))
+	}
+
+	want := []map[string]interface{}{
+		{"key": "env", "value": "prod"},
+		{"key": "team", "value": "platform"},
+	}
+	for i, entry := range tags {
+		m, ok := entry.(map[string]interface{})
+		if !ok {
+			t.Fatalf("tag[%d]: expected map, got %T", i, entry)
+		}
+		for k, wantV := range want[i] {
+			if got := m[k]; got != wantV {
+				t.Errorf("tag[%d][%q]: got %v, want %v", i, k, got, wantV)
+			}
+		}
+	}
+
+	if _, hasDynamic := got["dynamic"]; hasDynamic {
+		t.Error("dynamic key should have been removed after expansion")
+	}
+}
+
 func TestNormalizeConfigResolvesReferencesAcrossFiles(t *testing.T) {
 	tmp := t.TempDir()
 
