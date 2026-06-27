@@ -587,6 +587,116 @@ func TestExpandDynamicBlocksMaterialisesContent(t *testing.T) {
 	}
 }
 
+// TestExpandDynamicBlocksMapForEach verifies that map for_each values are
+// normalised to a slice of their values for content materialisation.
+func TestExpandDynamicBlocksMapForEach(t *testing.T) {
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"setting": []interface{}{
+				map[string]interface{}{
+					"for_each": map[string]interface{}{
+						"a": map[string]interface{}{"name": "key-a", "value": "val-a"},
+						"b": map[string]interface{}{"name": "key-b", "value": "val-b"},
+					},
+					"content": []interface{}{
+						map[string]interface{}{
+							"name":  "${setting.value.name}",
+							"value": "${setting.value.value}",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	settings, ok := got["setting"].([]interface{})
+	if !ok {
+		t.Fatalf("expected setting to be []interface{}, got %T", got["setting"])
+	}
+	if len(settings) != 2 {
+		t.Fatalf("expected 2 setting entries, got %d", len(settings))
+	}
+	// Collect names to verify both items expanded regardless of map iteration order.
+	names := make(map[string]string)
+	for _, s := range settings {
+		m := s.(map[string]interface{})
+		names[m["name"].(string)] = m["value"].(string)
+	}
+	if names["key-a"] != "val-a" {
+		t.Errorf("key-a: got %q, want %q", names["key-a"], "val-a")
+	}
+	if names["key-b"] != "val-b" {
+		t.Errorf("key-b: got %q, want %q", names["key-b"], "val-b")
+	}
+}
+
+// TestExpandDynamicBlocksCustomIterator verifies that an explicit "iterator"
+// attribute overrides the default iteration variable name (the block label).
+func TestExpandDynamicBlocksCustomIterator(t *testing.T) {
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"database_flags": []interface{}{
+				map[string]interface{}{
+					"iterator": "flag",
+					"for_each": []interface{}{
+						map[string]interface{}{"name": "log_connections", "value": "on"},
+					},
+					"content": []interface{}{
+						map[string]interface{}{
+							"name":  "${flag.value.name}",
+							"value": "${flag.value.value}",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	flags, ok := got["database_flags"].([]interface{})
+	if !ok {
+		t.Fatalf("expected database_flags to be []interface{}, got %T", got["database_flags"])
+	}
+	if len(flags) != 1 {
+		t.Fatalf("expected 1 flag, got %d", len(flags))
+	}
+	m := flags[0].(map[string]interface{})
+	if m["name"] != "log_connections" {
+		t.Errorf("name: got %v, want %q", m["name"], "log_connections")
+	}
+	if m["value"] != "on" {
+		t.Errorf("value: got %v, want %q", m["value"], "on")
+	}
+}
+
+// TestExpandDynamicBlocksUnresolvedPreserved verifies that a dynamic block
+// whose for_each could not be resolved is preserved rather than silently dropped.
+func TestExpandDynamicBlocksUnresolvedPreserved(t *testing.T) {
+	entry := map[string]interface{}{
+		"for_each": "${local.unresolved}",
+		"content":  []interface{}{},
+	}
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"setting": []interface{}{entry},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	dynVal, hasDynamic := got["dynamic"]
+	if !hasDynamic {
+		t.Fatal("expected dynamic key to be preserved for unresolved for_each")
+	}
+	dynMap, ok := dynVal.(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected dynamic to be map, got %T", dynVal)
+	}
+	if _, ok := dynMap["setting"]; !ok {
+		t.Error("expected unresolved setting block to be preserved under dynamic")
+	}
+}
+
 func TestNormalizeConfigResolvesReferencesAcrossFiles(t *testing.T) {
 	tmp := t.TempDir()
 

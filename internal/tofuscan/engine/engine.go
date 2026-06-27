@@ -296,13 +296,19 @@ func normalizeConfig(file string, config interface{}, dirSymbols map[string]*sym
 }
 
 // expandDynamicBlocks recursively expands HCL dynamic blocks where for_each
-// has been resolved to a concrete list. For each item in for_each it
-// materialises the content template by substituting "<blockName>.value.<attr>"
+// has been resolved to a concrete list or map. For each item in for_each it
+// materialises the content template by substituting "<iterName>.value.<attr>"
 // references with the corresponding attribute from that item, then promotes the
 // result to a top-level key at the same map level:
 //
 //	"dynamic": { "X": [{"for_each": [...], "content": [...]}] }
 //	→  "X": [<materialised content per item>, ...]
+//
+// The iterator name defaults to the block label but may be overridden via the
+// optional "iterator" attribute. When for_each is a map, its values are used as
+// items (map keys are not accessible in content templates at this analysis
+// level). Dynamic block entries whose for_each remains unresolved are preserved
+// in the output rather than silently dropped.
 //
 // This lets Rego policies that inspect resource attributes (e.g. database_flags)
 // find the expanded values rather than the raw dynamic block structure.
@@ -325,40 +331,64 @@ func expandDynamicBlocks(value interface{}) interface{} {
 			}
 		}
 
-		// Second pass: expand dynamic blocks into their block-name keys.
+		// Second pass: expand dynamic blocks into their block-name keys,
+		// collecting any that cannot be expanded back into result["dynamic"].
 		if dynVal, ok := typed["dynamic"]; ok {
 			dynamicMap, ok := dynVal.(map[string]interface{})
 			if !ok {
 				result["dynamic"] = dynVal
 				return result
 			}
+			remaining := make(map[string]interface{})
 			for blockName, blockEntries := range dynamicMap {
 				entries, ok := blockEntries.([]interface{})
 				if !ok {
+					remaining[blockName] = blockEntries
 					continue
 				}
+				var unexpanded []interface{}
 				for _, entry := range entries {
 					entryMap, ok := entry.(map[string]interface{})
 					if !ok {
+						unexpanded = append(unexpanded, entry)
 						continue
 					}
-					forEachVal, ok := entryMap["for_each"]
-					if !ok {
+					forEachVal, hasFE := entryMap["for_each"]
+					if !hasFE {
+						unexpanded = append(unexpanded, entry)
 						continue
 					}
-					items, ok := forEachVal.([]interface{})
-					if !ok {
+
+					// Normalise for_each to a []interface{} of items.
+					// For maps, the values become the iteration items; keys
+					// are not surfaced in content templates at this level.
+					var items []interface{}
+					switch v := forEachVal.(type) {
+					case []interface{}:
+						items = v
+					case map[string]interface{}:
+						for _, val := range v {
+							items = append(items, val)
+						}
+					default:
+						// Unresolved or unsupported type — preserve the entry.
+						unexpanded = append(unexpanded, entry)
 						continue
 					}
+
+					// Respect the optional "iterator" attribute that overrides
+					// the default iteration variable name (the block label).
+					iterName := blockName
+					if iter, ok := entryMap["iterator"].(string); ok && iter != "" {
+						iterName = iter
+					}
+
 					contentEntries, _ := entryMap["content"].([]interface{})
 					existing, _ := result[blockName].([]interface{})
 					for _, item := range items {
 						if len(contentEntries) > 0 {
-							// Materialise each content entry by substituting
-							// "<blockName>.value.<attr>" references with values
-							// from the current for_each item.
 							for _, ce := range contentEntries {
-								materialised := applyEachValue(ce, blockName, item)
+								materialised := applyEachValue(ce, iterName, item)
 								existing = append(existing, expandDynamicBlocks(materialised))
 							}
 						} else {
@@ -367,6 +397,12 @@ func expandDynamicBlocks(value interface{}) interface{} {
 					}
 					result[blockName] = existing
 				}
+				if len(unexpanded) > 0 {
+					remaining[blockName] = unexpanded
+				}
+			}
+			if len(remaining) > 0 {
+				result["dynamic"] = remaining
 			}
 		}
 
