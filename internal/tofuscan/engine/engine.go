@@ -291,7 +291,164 @@ func normalizeConfig(file string, config interface{}, dirSymbols map[string]*sym
 		return config
 	}
 
-	return resolveReferences(config, symbols)
+	resolved := resolveReferences(config, symbols)
+	return expandDynamicBlocks(resolved)
+}
+
+// expandDynamicBlocks recursively expands HCL dynamic blocks where for_each
+// has been resolved to a concrete list or map. For each item in for_each it
+// materialises the content template by substituting "<iterName>.value.<attr>"
+// references with the corresponding attribute from that item, then promotes the
+// result to a top-level key at the same map level:
+//
+//	"dynamic": { "X": [{"for_each": [...], "content": [...]}] }
+//	→  "X": [<materialised content per item>, ...]
+//
+// The iterator name defaults to the block label but may be overridden via the
+// optional "iterator" attribute. When for_each is a map, its values are used as
+// items (map keys are not accessible in content templates at this analysis
+// level). Dynamic block entries whose for_each remains unresolved are preserved
+// in the output rather than silently dropped.
+//
+// This lets Rego policies that inspect resource attributes (e.g. database_flags)
+// find the expanded values rather than the raw dynamic block structure.
+func expandDynamicBlocks(value interface{}) interface{} {
+	switch typed := value.(type) {
+	case []interface{}:
+		result := make([]interface{}, 0, len(typed))
+		for _, item := range typed {
+			result = append(result, expandDynamicBlocks(item))
+		}
+		return result
+
+	case map[string]interface{}:
+		result := make(map[string]interface{}, len(typed))
+
+		// First pass: copy all non-dynamic keys (recursively expanded).
+		for key, item := range typed {
+			if key != "dynamic" {
+				result[key] = expandDynamicBlocks(item)
+			}
+		}
+
+		// Second pass: expand dynamic blocks into their block-name keys,
+		// collecting any that cannot be expanded back into result["dynamic"].
+		if dynVal, ok := typed["dynamic"]; ok {
+			dynamicMap, ok := dynVal.(map[string]interface{})
+			if !ok {
+				result["dynamic"] = dynVal
+				return result
+			}
+			remaining := make(map[string]interface{})
+			for blockName, blockEntries := range dynamicMap {
+				entries, ok := blockEntries.([]interface{})
+				if !ok {
+					remaining[blockName] = blockEntries
+					continue
+				}
+				var unexpanded []interface{}
+				for _, entry := range entries {
+					entryMap, ok := entry.(map[string]interface{})
+					if !ok {
+						unexpanded = append(unexpanded, entry)
+						continue
+					}
+					forEachVal, hasFE := entryMap["for_each"]
+					if !hasFE {
+						unexpanded = append(unexpanded, entry)
+						continue
+					}
+
+					// Normalise for_each to a []interface{} of items.
+					// For maps, the values become the iteration items; keys
+					// are not surfaced in content templates at this level.
+					var items []interface{}
+					switch v := forEachVal.(type) {
+					case []interface{}:
+						items = v
+					case map[string]interface{}:
+						for _, val := range v {
+							items = append(items, val)
+						}
+					default:
+						// Unresolved or unsupported type — preserve the entry.
+						unexpanded = append(unexpanded, entry)
+						continue
+					}
+
+					// Respect the optional "iterator" attribute that overrides
+					// the default iteration variable name (the block label).
+					iterName := blockName
+					if iter, ok := entryMap["iterator"].(string); ok && iter != "" {
+						iterName = iter
+					}
+
+					contentEntries, _ := entryMap["content"].([]interface{})
+					existing, _ := result[blockName].([]interface{})
+					for _, item := range items {
+						if len(contentEntries) > 0 {
+							for _, ce := range contentEntries {
+								materialised := applyEachValue(ce, iterName, item)
+								existing = append(existing, expandDynamicBlocks(materialised))
+							}
+						} else {
+							existing = append(existing, expandDynamicBlocks(item))
+						}
+					}
+					result[blockName] = existing
+				}
+				if len(unexpanded) > 0 {
+					remaining[blockName] = unexpanded
+				}
+			}
+			if len(remaining) > 0 {
+				result["dynamic"] = remaining
+			}
+		}
+
+		return result
+
+	default:
+		return value
+	}
+}
+
+// applyEachValue recursively replaces "${<blockName>.value.<attr>}" reference
+// strings in a content template with the corresponding attribute value from
+// the current for_each item. This mimics OpenTofu's dynamic block iteration
+// variable (<blockName>.value) at the level of static policy analysis.
+func applyEachValue(value interface{}, blockName string, item interface{}) interface{} {
+	prefix := blockName + ".value."
+	switch typed := value.(type) {
+	case string:
+		if !strings.HasPrefix(typed, "${") || !strings.HasSuffix(typed, "}") {
+			return typed
+		}
+		expr := strings.TrimSuffix(strings.TrimPrefix(typed, "${"), "}")
+		if strings.HasPrefix(expr, prefix) {
+			attr := strings.TrimPrefix(expr, prefix)
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				if v, exists := itemMap[attr]; exists {
+					return v
+				}
+			}
+		}
+		return typed
+	case map[string]interface{}:
+		resolved := make(map[string]interface{}, len(typed))
+		for k, v := range typed {
+			resolved[k] = applyEachValue(v, blockName, item)
+		}
+		return resolved
+	case []interface{}:
+		resolved := make([]interface{}, len(typed))
+		for i, v := range typed {
+			resolved[i] = applyEachValue(v, blockName, item)
+		}
+		return resolved
+	default:
+		return value
+	}
 }
 
 // buildDirSymbolTables groups the given files by directory and builds one
@@ -396,6 +553,7 @@ func resolveLocals(pending map[string]*hclsyntax.Attribute, variables map[string
 	for len(pending) > 0 {
 		resolvedAny := false
 		ctx := &hcl.EvalContext{
+			Functions: hclFunctions(),
 			Variables: map[string]cty.Value{
 				"local": ctyObject(locals),
 				"var":   ctyObject(variables),

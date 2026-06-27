@@ -451,6 +451,252 @@ resource "google_container_cluster" "primary" {
 	}
 }
 
+// TestDynamicBlockExpansionWithLocalFunctions covers the false-positive pattern
+// seen in the pt-arche-google-cloud-sql module, where database_flags are
+// defined via concat() and startswith() in locals.tofu, then used in a dynamic
+// block in main.tofu. Both the function evaluation and dynamic block expansion
+// must work together to avoid false-positive CIS 6.2.x violations.
+func TestDynamicBlockExpansionWithLocalFunctions(t *testing.T) {
+	tmp := t.TempDir()
+
+	variablesContent := `variable "database_version" {
+  default = "POSTGRES_16"
+  type    = string
+}
+
+variable "postgres_database_flags" {
+  default = []
+  type = list(object({
+    name  = string
+    value = string
+  }))
+}
+`
+
+	localsContent := `locals {
+  postgres_database_flags = concat([
+    {
+      name  = "log_connections"
+      value = "on"
+    },
+    {
+      name  = "log_disconnections"
+      value = "on"
+    },
+  ], var.postgres_database_flags)
+
+  database_flags = startswith(var.database_version, "POSTGRES_") ? local.postgres_database_flags : []
+}
+`
+
+	mainContent := `resource "google_sql_database_instance" "this" {
+  database_version = var.database_version
+
+  settings {
+    dynamic "database_flags" {
+      for_each = local.database_flags
+      content {
+        name  = database_flags.value.name
+        value = database_flags.value.value
+      }
+    }
+
+    tier = "db-n1-standard-1"
+  }
+}
+`
+
+	variablesFile := tmp + "/variables.tofu"
+	localsFile := tmp + "/locals.tofu"
+	mainFile := tmp + "/main.tofu"
+
+	for path, content := range map[string]string{
+		variablesFile: variablesContent,
+		localsFile:    localsContent,
+		mainFile:      mainContent,
+	} {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	result, err := Run(context.Background(), []string{variablesFile, localsFile, mainFile}, policies.FS)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// CIS 6.2.2 (log_connections) and 6.2.3 (log_disconnections) must not fire.
+	for _, v := range result.Violations {
+		if v.RuleID == "gcp/cis/6.2.2" || v.RuleID == "gcp/cis/6.2.3" {
+			t.Errorf("false positive: %s fired on resource with dynamic database_flags via locals", v.RuleID)
+		}
+	}
+}
+
+// TestExpandDynamicBlocksMaterialisesContent verifies that expandDynamicBlocks
+// resolves "<blockName>.value.<attr>" references in the content template rather
+// than using the for_each items verbatim. This covers cases where content
+// renames or restructures the iterator value.
+func TestExpandDynamicBlocksMaterialisesContent(t *testing.T) {
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"tag": []interface{}{
+				map[string]interface{}{
+					"for_each": []interface{}{
+						map[string]interface{}{"k": "env", "v": "prod"},
+						map[string]interface{}{"k": "team", "v": "platform"},
+					},
+					"content": []interface{}{
+						map[string]interface{}{
+							"key":   "${tag.value.k}",
+							"value": "${tag.value.v}",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	tags, ok := got["tag"].([]interface{})
+	if !ok {
+		t.Fatalf("expected tag to be []interface{}, got %T", got["tag"])
+	}
+	if len(tags) != 2 {
+		t.Fatalf("expected 2 tag entries, got %d", len(tags))
+	}
+
+	want := []map[string]interface{}{
+		{"key": "env", "value": "prod"},
+		{"key": "team", "value": "platform"},
+	}
+	for i, entry := range tags {
+		m, ok := entry.(map[string]interface{})
+		if !ok {
+			t.Fatalf("tag[%d]: expected map, got %T", i, entry)
+		}
+		for k, wantV := range want[i] {
+			if got := m[k]; got != wantV {
+				t.Errorf("tag[%d][%q]: got %v, want %v", i, k, got, wantV)
+			}
+		}
+	}
+
+	if _, hasDynamic := got["dynamic"]; hasDynamic {
+		t.Error("dynamic key should have been removed after expansion")
+	}
+}
+
+// TestExpandDynamicBlocksMapForEach verifies that map for_each values are
+// normalised to a slice of their values for content materialisation.
+func TestExpandDynamicBlocksMapForEach(t *testing.T) {
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"setting": []interface{}{
+				map[string]interface{}{
+					"for_each": map[string]interface{}{
+						"a": map[string]interface{}{"name": "key-a", "value": "val-a"},
+						"b": map[string]interface{}{"name": "key-b", "value": "val-b"},
+					},
+					"content": []interface{}{
+						map[string]interface{}{
+							"name":  "${setting.value.name}",
+							"value": "${setting.value.value}",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	settings, ok := got["setting"].([]interface{})
+	if !ok {
+		t.Fatalf("expected setting to be []interface{}, got %T", got["setting"])
+	}
+	if len(settings) != 2 {
+		t.Fatalf("expected 2 setting entries, got %d", len(settings))
+	}
+	// Collect names to verify both items expanded regardless of map iteration order.
+	names := make(map[string]string)
+	for _, s := range settings {
+		m := s.(map[string]interface{})
+		names[m["name"].(string)] = m["value"].(string)
+	}
+	if names["key-a"] != "val-a" {
+		t.Errorf("key-a: got %q, want %q", names["key-a"], "val-a")
+	}
+	if names["key-b"] != "val-b" {
+		t.Errorf("key-b: got %q, want %q", names["key-b"], "val-b")
+	}
+}
+
+// TestExpandDynamicBlocksCustomIterator verifies that an explicit "iterator"
+// attribute overrides the default iteration variable name (the block label).
+func TestExpandDynamicBlocksCustomIterator(t *testing.T) {
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"database_flags": []interface{}{
+				map[string]interface{}{
+					"iterator": "flag",
+					"for_each": []interface{}{
+						map[string]interface{}{"name": "log_connections", "value": "on"},
+					},
+					"content": []interface{}{
+						map[string]interface{}{
+							"name":  "${flag.value.name}",
+							"value": "${flag.value.value}",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	flags, ok := got["database_flags"].([]interface{})
+	if !ok {
+		t.Fatalf("expected database_flags to be []interface{}, got %T", got["database_flags"])
+	}
+	if len(flags) != 1 {
+		t.Fatalf("expected 1 flag, got %d", len(flags))
+	}
+	m := flags[0].(map[string]interface{})
+	if m["name"] != "log_connections" {
+		t.Errorf("name: got %v, want %q", m["name"], "log_connections")
+	}
+	if m["value"] != "on" {
+		t.Errorf("value: got %v, want %q", m["value"], "on")
+	}
+}
+
+// TestExpandDynamicBlocksUnresolvedPreserved verifies that a dynamic block
+// whose for_each could not be resolved is preserved rather than silently dropped.
+func TestExpandDynamicBlocksUnresolvedPreserved(t *testing.T) {
+	entry := map[string]interface{}{
+		"for_each": "${local.unresolved}",
+		"content":  []interface{}{},
+	}
+	input := map[string]interface{}{
+		"dynamic": map[string]interface{}{
+			"setting": []interface{}{entry},
+		},
+	}
+
+	got := expandDynamicBlocks(input).(map[string]interface{})
+	dynVal, hasDynamic := got["dynamic"]
+	if !hasDynamic {
+		t.Fatal("expected dynamic key to be preserved for unresolved for_each")
+	}
+	dynMap, ok := dynVal.(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected dynamic to be map, got %T", dynVal)
+	}
+	if _, ok := dynMap["setting"]; !ok {
+		t.Error("expected unresolved setting block to be preserved under dynamic")
+	}
+}
+
 func TestNormalizeConfigResolvesReferencesAcrossFiles(t *testing.T) {
 	tmp := t.TempDir()
 
