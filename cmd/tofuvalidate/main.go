@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/output"
+	"pre-commit-hooks/internal/testutil"
 	"pre-commit-hooks/internal/tofuvalidate"
 )
 
@@ -22,7 +23,7 @@ func main() {
 	}
 	err := RunTofuValidateCLI(
 		extraArgs,
-		tofuvalidate.CheckOpenTofuInstalled,
+		testutil.CheckOpenTofuInstalled,
 		os.Getwd,
 		findDirsWithTfFiles,
 		runCmdInDir,

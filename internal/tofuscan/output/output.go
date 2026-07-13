@@ -378,6 +378,21 @@ func truncatePath(path string, maxLen int) string {
 	return path[:headLen] + "…" + tail
 }
 
+// applicableRuleIDs returns the set of rule IDs whose associated resource types
+// overlap with resourceTypes. Caller must have called initRuleMetadata() first.
+func applicableRuleIDs(resourceTypes map[string]struct{}) map[string]struct{} {
+	matched := make(map[string]struct{})
+	for ruleID, ruleTypes := range ruleResourceMap {
+		for rt := range ruleTypes {
+			if _, present := resourceTypes[rt]; present {
+				matched[ruleID] = struct{}{}
+				break
+			}
+		}
+	}
+	return matched
+}
+
 // computePassingRules returns metadata for rules that matched scanned
 // resource types but produced no violations and were not skipped.
 func computePassingRules(violations, skipped []engine.Violation, resourceTypes map[string]struct{}) []*RuleMetadata {
@@ -390,30 +405,20 @@ func computePassingRules(violations, skipped []engine.Violation, resourceTypes m
 		return nil
 	}
 
-	failingOrSkippedRules := make(map[string]struct{})
-	for _, v := range violations {
+	failedRules := make(map[string]struct{})
+	for _, v := range append(violations, skipped...) {
 		if v.RuleID != "" {
-			failingOrSkippedRules[v.RuleID] = struct{}{}
-		}
-	}
-	for _, v := range skipped {
-		if v.RuleID != "" {
-			failingOrSkippedRules[v.RuleID] = struct{}{}
+			failedRules[v.RuleID] = struct{}{}
 		}
 	}
 
 	var passing []*RuleMetadata
-	for ruleID, ruleTypes := range ruleResourceMap {
-		if _, failed := failingOrSkippedRules[ruleID]; failed {
+	for ruleID := range applicableRuleIDs(resourceTypes) {
+		if _, failed := failedRules[ruleID]; failed {
 			continue
 		}
-		for rt := range ruleTypes {
-			if _, present := resourceTypes[rt]; present {
-				if meta, ok := ruleMetadataMap[ruleID]; ok {
-					passing = append(passing, meta)
-				}
-				break
-			}
+		if meta, ok := ruleMetadataMap[ruleID]; ok {
+			passing = append(passing, meta)
 		}
 	}
 
@@ -441,38 +446,21 @@ func computePassedRulesCount(violations, skipped []engine.Violation, resourceTyp
 		return 0, false
 	}
 
-	// Count rules whose target resource types are present in the scanned code.
-	matchingRules := make(map[string]struct{})
-	for ruleID, ruleTypes := range ruleResourceMap {
-		for rt := range ruleTypes {
-			if _, present := resourceTypes[rt]; present {
-				matchingRules[ruleID] = struct{}{}
-				break
-			}
-		}
-	}
-
-	if len(matchingRules) == 0 {
+	matched := applicableRuleIDs(resourceTypes)
+	if len(matched) == 0 {
 		return 0, false
 	}
 
-	failingOrSkippedRules := make(map[string]struct{})
-	for _, v := range violations {
+	failedRules := make(map[string]struct{})
+	for _, v := range append(violations, skipped...) {
 		if v.RuleID != "" {
-			if _, matching := matchingRules[v.RuleID]; matching {
-				failingOrSkippedRules[v.RuleID] = struct{}{}
-			}
-		}
-	}
-	for _, v := range skipped {
-		if v.RuleID != "" {
-			if _, matching := matchingRules[v.RuleID]; matching {
-				failingOrSkippedRules[v.RuleID] = struct{}{}
+			if _, ok := matched[v.RuleID]; ok {
+				failedRules[v.RuleID] = struct{}{}
 			}
 		}
 	}
 
-	passed := len(matchingRules) - len(failingOrSkippedRules)
+	passed := len(matched) - len(failedRules)
 	if passed < 0 {
 		passed = 0
 	}

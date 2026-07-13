@@ -5,12 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"pre-commit-hooks/internal/testutil"
 )
-
-// CheckOpenTofuInstalled delegates to shared testutil implementation.
-var CheckOpenTofuInstalled = testutil.CheckOpenTofuInstalled
 
 // HasTestFiles recursively searches for .tftest.hcl files in the given directory.
 // Returns true if any test files are found, false otherwise.

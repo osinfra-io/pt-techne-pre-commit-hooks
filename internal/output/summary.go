@@ -112,32 +112,21 @@ func normalizeBlock(block string) string {
 	return strings.Join(parts, "\n")
 }
 
-// PrintWarningSummary prints warning messages as styled cards,
-// deduplicating equivalent warnings across directories.
-func PrintWarningSummary(warningMessages []TofuMessage) {
-	if len(warningMessages) == 0 {
+// printSummaryCards renders grouped messages as styled cards.
+func printSummaryCards(msgs []TofuMessage, badge, badgeColor, borderColor, titleSuffix string, extractLines func(string) []string) {
+	if len(msgs) == 0 {
 		return
 	}
-
-	groups := groupMessages(warningMessages)
+	groups := groupMessages(msgs)
 	for i, g := range groups {
-		c := NewCard(Yellow)
-		c.Open(Badge("WARNING", BoldYellow), Title("OpenTofu "+g.step))
+		c := NewCard(borderColor)
+		c.Open(Badge(badge, badgeColor), Title("OpenTofu "+g.step+titleSuffix))
 		for _, p := range g.paths {
 			c.Line(fmt.Sprintf("%s %s", File, Colorize(p, Gray)))
 		}
 		c.Blank()
-
-		lines := strings.Split(g.raw, "\n")
-		inWarning := false
-		for _, line := range lines {
-			trimmed := strings.TrimSpace(line)
-			if strings.Contains(trimmed, "Warning:") {
-				inWarning = true
-			}
-			if inWarning && trimmed != "" {
-				c.Line(fmt.Sprintf("%s%s%s", Dim, line, Reset))
-			}
+		for _, line := range extractLines(g.raw) {
+			c.Line(fmt.Sprintf("%s%s%s", Dim, line, Reset))
 		}
 		c.Close()
 		if i < len(groups)-1 {
@@ -146,31 +135,39 @@ func PrintWarningSummary(warningMessages []TofuMessage) {
 	}
 }
 
+func warningLines(raw string) []string {
+	var lines []string
+	triggered := false
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.Contains(trimmed, "Warning:") {
+			triggered = true
+		}
+		if triggered && trimmed != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines
+}
+
+func errorLines(raw string) []string {
+	var lines []string
+	for _, line := range strings.Split(raw, "\n") {
+		if strings.TrimSpace(line) != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines
+}
+
+// PrintWarningSummary prints warning messages as styled cards,
+// deduplicating equivalent warnings across directories.
+func PrintWarningSummary(warningMessages []TofuMessage) {
+	printSummaryCards(warningMessages, "WARNING", BoldYellow, Yellow, "", warningLines)
+}
+
 // PrintErrorSummary prints error messages as styled cards,
 // deduplicating equivalent errors across directories.
 func PrintErrorSummary(errorMessages []TofuMessage) {
-	if len(errorMessages) == 0 {
-		return
-	}
-
-	groups := groupMessages(errorMessages)
-	for i, g := range groups {
-		c := NewCard(Red)
-		c.Open(Badge("ERROR", BoldRed), Title("OpenTofu "+g.step+" failed"))
-		for _, p := range g.paths {
-			c.Line(fmt.Sprintf("%s %s", File, Colorize(p, Gray)))
-		}
-		c.Blank()
-
-		lines := strings.Split(g.raw, "\n")
-		for _, line := range lines {
-			if strings.TrimSpace(line) != "" {
-				c.Line(fmt.Sprintf("%s%s%s", Dim, line, Reset))
-			}
-		}
-		c.Close()
-		if i < len(groups)-1 {
-			fmt.Println()
-		}
-	}
+	printSummaryCards(errorMessages, "ERROR", BoldRed, Red, " failed", errorLines)
 }

@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/output"
+	"pre-commit-hooks/internal/testutil"
 	"pre-commit-hooks/internal/tofutest"
 )
 
 func main() {
 	err := RunTofuTestCLI(
 		parseExtraArgs(os.Args[1:]),
-		tofutest.CheckOpenTofuInstalled,
+		testutil.CheckOpenTofuInstalled,
 		os.Getwd,
 		tofutest.HasTestFiles,
 		tofutest.RunTofuTest,
