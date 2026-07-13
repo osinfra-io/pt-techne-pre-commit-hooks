@@ -2,12 +2,7 @@ package tofufmt
 
 import (
 	"os/exec"
-
-	"pre-commit-hooks/internal/testutil"
 )
-
-// CheckOpenTofuInstalled delegates to shared testutil implementation.
-var CheckOpenTofuInstalled = testutil.CheckOpenTofuInstalled
 
 // RunTofuFmt runs tofu fmt recursively in the given directory with extra args.
 // Returns output and error.

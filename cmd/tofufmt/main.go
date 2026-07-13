@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/output"
+	"pre-commit-hooks/internal/testutil"
 	"pre-commit-hooks/internal/tofufmt"
 )
 
@@ -23,7 +24,7 @@ func truncateLine(s string, maxWidth int) string {
 func main() {
 	err := RunTofuFmtCLI(
 		os.Args[1:],
-		tofufmt.CheckOpenTofuInstalled,
+		testutil.CheckOpenTofuInstalled,
 		os.Getwd,
 		tofufmt.RunTofuFmt,
 		tofufmt.FormatFiles,

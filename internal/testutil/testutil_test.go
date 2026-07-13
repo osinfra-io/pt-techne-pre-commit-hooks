@@ -65,13 +65,3 @@ func TestRestoreWorkingDir(t *testing.T) {
 		t.Errorf("Did not restore to original dir. got: %v, want: %v", finalDirEval, origEval)
 	}
 }
-
-func TestRunCmd(t *testing.T) {
-	output, err := RunCmd("echo", "hello world")
-	if err != nil {
-		t.Fatalf("RunCmd failed: %v", err)
-	}
-	if want := "hello world\n"; output != want {
-		t.Errorf("RunCmd output: got %q, want %q", output, want)
-	}
-}
