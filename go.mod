@@ -3,7 +3,7 @@ module pre-commit-hooks
 go 1.26.3
 
 require (
-	github.com/hashicorp/hcl/v2 v2.24.0
+	github.com/hashicorp/hcl/v2 v2.25.0
 	github.com/open-policy-agent/conftest v0.70.0
 	github.com/open-policy-agent/opa v1.20.2
 	github.com/zclconf/go-cty v1.19.0
