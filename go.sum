@@ -151,8 +151,8 @@ github.com/muhammadmuzzammil1998/jsonc v1.0.0 h1:8o5gBQn4ZA3NBA9DlTujCj2a4w0tqWr
 github.com/muhammadmuzzammil1998/jsonc v1.0.0/go.mod h1:saF2fIVw4banK0H4+/EuqfFLpRnoy5S+ECwTOCcRcSU=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
-github.com/open-policy-agent/conftest v0.70.0 h1:zLbUDwSSxc07ysvXw7lUUz3zkGCPZ9TyoWD6zscRyrU=
-github.com/open-policy-agent/conftest v0.70.0/go.mod h1:s5oH7rMPiE6lJKzA99U62ByjOVDzAhWwuGAAxOOiHo4=
+github.com/open-policy-agent/conftest v0.70.1 h1:Oqn7tXYIH3mEGm4XHIqqmcwIn2cKjRAkRhhdjClEZks=
+github.com/open-policy-agent/conftest v0.70.1/go.mod h1:s5oH7rMPiE6lJKzA99U62ByjOVDzAhWwuGAAxOOiHo4=
 github.com/open-policy-agent/opa v1.20.2 h1:dlX5VEGA5M62W8+X1nRPEaQIh/CMRn5FcD1mebpKWKg=
 github.com/open-policy-agent/opa v1.20.2/go.mod h1:yYKTQAlkbefoXSYChT4ek8gc8WCtScL7L7OSZxFVe0s=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
