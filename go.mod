@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	github.com/hashicorp/hcl/v2 v2.25.0
-	github.com/open-policy-agent/conftest v0.70.0
+	github.com/open-policy-agent/conftest v0.70.1
 	github.com/open-policy-agent/opa v1.20.2
 	github.com/zclconf/go-cty v1.19.0
 	golang.org/x/term v0.46.0
