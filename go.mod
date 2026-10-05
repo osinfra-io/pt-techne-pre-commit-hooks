@@ -4,8 +4,8 @@ go 1.26.3
 
 require (
 	github.com/hashicorp/hcl/v2 v2.25.0
-	github.com/open-policy-agent/conftest v0.70.1
-	github.com/open-policy-agent/opa v1.21.0
+	github.com/open-policy-agent/conftest v0.71.0
+	github.com/open-policy-agent/opa v1.21.1
 	github.com/zclconf/go-cty v1.19.0
 	golang.org/x/term v0.46.0
 )
@@ -39,6 +39,7 @@ require (
 	github.com/google/go-jsonnet v0.22.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/hmarr/codeowners v1.2.1 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/dsig v1.4.0 // indirect
 	github.com/lestrrat-go/dsig-secp256k1 v1.0.0 // indirect
@@ -46,7 +47,7 @@ require (
 	github.com/lestrrat-go/httprc/v3 v3.0.6 // indirect
 	github.com/lestrrat-go/jwx/v3 v3.3.0 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
-	github.com/magiconair/properties v1.18.11 // indirect
+	github.com/magiconair/properties v1.18.12 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/moby/buildkit v0.33.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
