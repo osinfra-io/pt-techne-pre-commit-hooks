@@ -36,6 +36,42 @@ func TestPrintWarningSummary(t *testing.T) {
 	}
 }
 
+func TestHasWarning(t *testing.T) {
+	tests := []struct {
+		name   string
+		output string
+		want   bool
+	}{
+		{name: "warning at start of line", output: "Warning: deprecated feature\nother text", want: true},
+		{name: "box-drawing warning format", output: "│ Warning: something is wrong\n│ more details", want: true},
+		{name: "warning in filename should not match", output: "processing file warning.tf\neverything is fine", want: false},
+		{name: "warning in middle of line should not match", output: "this is a warning about something", want: false},
+		{name: "no warning", output: "success\nvalidation passed", want: false},
+		{name: "case insensitive warning", output: "WARNING: This is a problem", want: true},
+		{name: "warning with leading whitespace", output: "  Warning: indented warning", want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := HasWarning(tt.output); got != tt.want {
+				t.Errorf("HasWarning() = %v, want %v for output:\n%s", got, tt.want, tt.output)
+			}
+		})
+	}
+}
+
+func TestHasLintWarning(t *testing.T) {
+	experimentalNotice := "Warning: Experimental linting enabled\nThe linting functionality is under active development."
+	lintWarning := "Warning: Variable with no type (core:no-type-variable)\nVariable has no type specified."
+
+	if HasLintWarning(experimentalNotice) {
+		t.Error("HasLintWarning() = true for the experimental-feature notice, want false")
+	}
+	if !HasLintWarning(experimentalNotice + "\n\n" + lintWarning) {
+		t.Error("HasLintWarning() = false when a lint diagnostic is present, want true")
+	}
+}
+
 func TestPrintErrorSummary(t *testing.T) {
 	msgs := []TofuMessage{
 		{Step: "validate", RelPath: "dir3", Output: "Error: failed validation\nDetails"},

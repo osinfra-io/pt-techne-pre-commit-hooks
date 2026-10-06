@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +9,7 @@ import (
 
 	"pre-commit-hooks/internal/output"
 	"pre-commit-hooks/internal/testutil"
+	"pre-commit-hooks/internal/tofudir"
 )
 
 func main() {
@@ -86,7 +86,7 @@ func RunTofuValidateCLI(
 
 		out, err = runValidate(dir, extraArgs)
 		// Always check for warnings in validate output
-		if hasWarning(out) {
+		if output.HasWarning(out) {
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
@@ -125,55 +125,9 @@ func runCmdInDir(dir string, args []string) (string, error) {
 
 // findDirsWithTfFiles recursively finds directories containing .tf files
 func findDirsWithTfFiles(root string) []string {
-	dirs, err := walkDirs(root)
+	dirs, err := tofudir.FindDirsWithTofuFiles(root)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Error scanning directories: %v\n", err)
 	}
 	return dirs
-}
-
-func walkDirs(dir string) ([]string, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	var dirs []string
-	var errs []error
-	hasTfOrTofu := false
-	for _, entry := range entries {
-		name := entry.Name()
-		if entry.IsDir() {
-			if strings.HasPrefix(name, ".") {
-				continue
-			}
-			path := filepath.Join(dir, name)
-			subDirs, err := walkDirs(path)
-			if err != nil {
-				errs = append(errs, err)
-			}
-			dirs = append(dirs, subDirs...)
-		} else if strings.HasSuffix(name, ".tf") || strings.HasSuffix(name, ".tofu") {
-			hasTfOrTofu = true
-		}
-	}
-	if hasTfOrTofu {
-		dirs = append(dirs, dir)
-	}
-	return dirs, errors.Join(errs...)
-}
-
-// hasWarning checks if output contains a warning message
-// Uses pattern matching to avoid false positives from filenames or unrelated text
-func hasWarning(output string) bool {
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		lower := strings.ToLower(trimmed)
-		if strings.HasPrefix(lower, "warning:") ||
-			strings.HasPrefix(lower, "│ warning:") ||
-			(strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning")) {
-			return true
-		}
-	}
-	return false
 }

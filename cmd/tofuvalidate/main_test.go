@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"pre-commit-hooks/internal/testutil"
+	"pre-commit-hooks/internal/tofudir"
 )
 
 func Test_runCmdInDir(t *testing.T) {
@@ -59,7 +60,7 @@ func Test_findDirsWithTfFiles_and_walkDirs(t *testing.T) {
 }
 
 func Test_walkDirs_ErrorsAndHidden(t *testing.T) {
-	_, err := walkDirs("/nonexistent/path")
+	_, err := tofudir.FindDirsWithTofuFiles("/nonexistent/path")
 	if err == nil {
 		t.Error("Expected error for non-existent directory")
 	}
@@ -89,7 +90,7 @@ func Test_walkDirs_ErrorsAndHidden(t *testing.T) {
 		t.Fatalf("Failed to write .terraform/main.tf: %v", err)
 	}
 
-	foundDirs, err := walkDirs(tempDir)
+	foundDirs, err := tofudir.FindDirsWithTofuFiles(tempDir)
 	if err != nil {
 		t.Fatalf("walkDirs failed: %v", err)
 	}
@@ -260,58 +261,5 @@ func TestInvalidOpenTofuConfig(t *testing.T) {
 	output, err := validateCmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Expected invalid config to fail validation, but it passed. Output: %s", output)
-	}
-}
-
-func TestHasWarning(t *testing.T) {
-	tests := []struct {
-		name   string
-		output string
-		want   bool
-	}{
-		{
-			name:   "warning at start of line",
-			output: "Warning: deprecated feature\nother text",
-			want:   true,
-		},
-		{
-			name:   "box-drawing warning format",
-			output: "│ Warning: something is wrong\n│ more details",
-			want:   true,
-		},
-		{
-			name:   "warning in filename should not match",
-			output: "processing file warning.tf\neverything is fine",
-			want:   false,
-		},
-		{
-			name:   "warning in middle of line should not match",
-			output: "this is a warning about something",
-			want:   false,
-		},
-		{
-			name:   "no warning",
-			output: "success\nvalidation passed",
-			want:   false,
-		},
-		{
-			name:   "case insensitive warning",
-			output: "WARNING: This is a problem",
-			want:   true,
-		},
-		{
-			name:   "warning with leading whitespace",
-			output: "  Warning: indented warning",
-			want:   true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := hasWarning(tt.output)
-			if got != tt.want {
-				t.Errorf("hasWarning() = %v, want %v for output:\n%s", got, tt.want, tt.output)
-			}
-		})
 	}
 }
