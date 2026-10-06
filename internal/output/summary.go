@@ -150,6 +150,37 @@ func warningLines(raw string) []string {
 	return lines
 }
 
+// HasWarning reports whether output contains a warning diagnostic.
+func HasWarning(raw string) bool {
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		lower := strings.ToLower(trimmed)
+		if strings.HasPrefix(lower, "warning:") ||
+			strings.HasPrefix(lower, "│ warning:") ||
+			(strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning")) {
+			return true
+		}
+	}
+	return false
+}
+
+// HasLintWarning ignores OpenTofu's informational experimental-feature warning.
+func HasLintWarning(raw string) bool {
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		lower := strings.ToLower(trimmed)
+		if !strings.HasPrefix(lower, "warning:") && !strings.HasPrefix(lower, "│ warning:") {
+			continue
+		}
+		if strings.HasPrefix(lower, "warning: experimental linting enabled") ||
+			strings.HasPrefix(lower, "│ warning: experimental linting enabled") {
+			continue
+		}
+		return true
+	}
+	return false
+}
+
 func errorLines(raw string) []string {
 	var lines []string
 	for _, line := range strings.Split(raw, "\n") {

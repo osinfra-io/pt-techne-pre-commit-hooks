@@ -19,6 +19,12 @@ Runs `tofu fmt` to rewrite your OpenTofu (`.tf`, `.tofu`, `.tfvars`) files to a 
 
 Runs `tofu validate` to check your configuration for syntax errors and internal consistency, without accessing remote services or APIs. This helps catch mistakes before applying changes. It will not validate files in `.terraform/` directories.
 
+### tofu-lint
+
+#### Lints OpenTofu configuration files
+
+Runs `tofu validate -lint=all` in each directory containing OpenTofu configuration. Lint diagnostics fail the hook; OpenTofu's experimental-linting notice alone does not. This hook requires OpenTofu v1.13 or newer, where built-in linting is experimental and its rules may change.
+
 ### tofu-test
 
 #### Runs OpenTofu automated tests
@@ -59,6 +65,17 @@ Validates your OpenTofu configuration files for syntax and internal consistency.
     - id: tofu-validate
       # Optional: pass additional args to tofu validate
       # args: ["-no-color"]
+```
+
+### Example: `tofu-lint`
+
+Runs OpenTofu's experimental built-in lint rules. It requires OpenTofu v1.13 or newer and fails when lint diagnostics are emitted.
+
+```yaml
+- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+  rev: <release-or-commit-sha>
+  hooks:
+    - id: tofu-lint
 ```
 
 ### Example: `tofu-test`

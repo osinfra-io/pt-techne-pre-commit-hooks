@@ -17,6 +17,16 @@
   language: golang
   name: tofu validate
 
+- id: tofu-lint
+  description: Run OpenTofu v1.13+ experimental lint checks and fail when lint diagnostics are found.
+  entry: tofulint
+  exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
+  files: ^$
+  pass_filenames: false
+  always_run: true
+  language: golang
+  name: tofu lint
+
 - id: tofu-test
   description: The tofu test command runs automated tests against OpenTofu configuration, executing tests defined in .tftest.hcl files.
   entry: tofutest
