@@ -181,6 +181,42 @@ func HasLintWarning(raw string) bool {
 	return false
 }
 
+// cleanLintOutput removes informational boilerplate and separates diagnostics.
+func cleanLintOutput(raw string) string {
+	var lines []string
+	skip := false
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "╷" || trimmed == "╵" {
+			continue
+		}
+		if strings.HasPrefix(line, "│") {
+			line = strings.TrimPrefix(strings.TrimPrefix(line, "│"), " ")
+		}
+		trimmed = strings.TrimSpace(line)
+		lower := strings.ToLower(trimmed)
+		if strings.HasPrefix(lower, "warning:") || strings.HasPrefix(lower, "error:") {
+			skip = strings.HasPrefix(lower, "warning: experimental linting enabled")
+			if !skip && len(lines) > 0 && lines[len(lines)-1] != "" {
+				lines = append(lines, "")
+			}
+		} else if strings.HasPrefix(trimmed, "Success! The configuration is valid") {
+			skip = true
+		}
+		if skip {
+			continue
+		}
+		if trimmed == "" {
+			if len(lines) > 0 && lines[len(lines)-1] != "" {
+				lines = append(lines, "")
+			}
+			continue
+		}
+		lines = append(lines, line)
+	}
+	return strings.TrimSpace(strings.Join(lines, "\n"))
+}
+
 func errorLines(raw string) []string {
 	var lines []string
 	for _, line := range strings.Split(raw, "\n") {

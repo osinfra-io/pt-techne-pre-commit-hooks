@@ -23,7 +23,7 @@ Runs `tofu validate` to check your configuration for syntax errors and internal 
 
 #### Lints OpenTofu configuration files
 
-Runs `tofu validate -lint=all` in each directory containing OpenTofu configuration. Lint diagnostics fail the hook; OpenTofu's experimental-linting notice alone does not. This hook requires OpenTofu v1.13 or newer, where built-in linting is experimental and its rules may change.
+Runs `tofu validate -lint=all` in each directory containing OpenTofu configuration. Warnings are advisory and do not fail the hook; initialization or validation errors still fail it. Each warning uses a scan-style `[WARNING]` card with its title, file and line, rule ID, and description. Source excerpts, the experimental notice, and the validation success footer are omitted. This hook requires OpenTofu v1.13 or newer, where built-in linting is experimental and its rules may change.
 
 ### tofu-test
 
@@ -69,7 +69,7 @@ Validates your OpenTofu configuration files for syntax and internal consistency.
 
 ### Example: `tofu-lint`
 
-Runs OpenTofu's experimental built-in lint rules. It requires OpenTofu v1.13 or newer and fails when lint diagnostics are emitted.
+Runs OpenTofu's experimental built-in lint rules. It requires OpenTofu v1.13 or newer. Warnings are advisory; initialization or validation errors fail the hook. Use `pre-commit run tofu-lint --all-files --verbose` to see warning cards when the hook passes.
 
 ```yaml
 - repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks

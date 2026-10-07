@@ -72,6 +72,36 @@ func TestHasLintWarning(t *testing.T) {
 	}
 }
 
+func TestCleanLintOutput(t *testing.T) {
+	notice := "Warning: Experimental linting enabled\nThe linting functionality is under active development and may change or break\nin future releases. You can provide feedback by opening a new issue."
+	first := "Warning: Input variable not used (core:unused-variable)\n  on variables.tofu line 67:\n  67: variable \"state_bucket\" {\nFound no usage of the variable \"state_bucket\"."
+	second := "Warning: Input variable not used (core:unused-variable)\n  on variables.tofu line 72:\n  72: variable \"state_prefix\" {\nFound no usage of the variable \"state_prefix\"."
+	footer := "Success! The configuration is valid, but there were some validation warnings\nas shown above."
+	framed := func(text string) string {
+		return "╷\n│ " + strings.ReplaceAll(text, "\n", "\n│ ") + "\n╵"
+	}
+	tests := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{"reported output", first + "\n" + second + "\n" + notice + "\n" + footer, first + "\n\n" + second},
+		{"notice first", notice + "\n\n" + first + "\n\n" + footer, first},
+		{"framed diagnostics", framed(first) + "\n" + framed(notice) + "\n" + framed(second) + "\n" + footer, first + "\n\n" + second},
+		{"notice only", notice + "\n" + footer, ""},
+		{"success only", "Success! The configuration is valid.", ""},
+		{"error after notice", notice + "\n\nError: Invalid value\nDetails here", "Error: Invalid value\nDetails here"},
+		{"unstructured failure", "Failed to load plugin:\n  connection refused", "Failed to load plugin:\n  connection refused"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := cleanLintOutput(tt.raw); got != tt.want {
+				t.Errorf("cleanLintOutput() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestPrintErrorSummary(t *testing.T) {
 	msgs := []TofuMessage{
 		{Step: "validate", RelPath: "dir3", Output: "Error: failed validation\nDetails"},
