@@ -58,7 +58,7 @@ func TestPrintLintWarningSummary_PreservesLocations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	oldStdout := os.Stdout
 	os.Stdout = w
 	defer func() { os.Stdout = oldStdout }()
