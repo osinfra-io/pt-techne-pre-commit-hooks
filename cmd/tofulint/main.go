@@ -112,14 +112,11 @@ func RunTofuLintCLI(
 	}
 
 	if len(warningMessages) > 0 {
-		output.PrintWarningSummary(warningMessages)
+		output.PrintLintWarningSummary(warningMessages)
 	}
 	if len(errorMessages) > 0 {
 		output.PrintErrorSummary(errorMessages)
 		return fmt.Errorf("lint failed")
-	}
-	if len(warningMessages) > 0 {
-		return fmt.Errorf("lint warnings found")
 	}
 	return nil
 }

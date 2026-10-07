@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,7 +58,7 @@ func TestRunTofuLintCLI_VersionRequirement(t *testing.T) {
 	}
 }
 
-func TestRunTofuLintCLI_WarningFailsAndPassesArgs(t *testing.T) {
+func TestRunTofuLintCLI_WarningPassesAndPassesArgs(t *testing.T) {
 	var lintArgs []string
 	err := RunTofuLintCLI(
 		[]string{"-var", "message=value", "-lint=core:no-type-variable"},
@@ -71,8 +72,8 @@ func TestRunTofuLintCLI_WarningFailsAndPassesArgs(t *testing.T) {
 			return "Warning: Variable with no type (core:no-type-variable)\n", nil
 		},
 	)
-	if err == nil {
-		t.Fatal("RunTofuLintCLI() error = nil, want lint warning error")
+	if err != nil {
+		t.Fatalf("RunTofuLintCLI() error = %v, want nil for warnings", err)
 	}
 	wantArgs := []string{"validate", "-no-color", "-var", "message=value", "-lint=core:no-type-variable", "-lint=all"}
 	if strings.Join(lintArgs, " ") != strings.Join(wantArgs, " ") {
@@ -94,6 +95,69 @@ func TestRunTofuLintCLI_IgnoresExperimentalNotice(t *testing.T) {
 	)
 	if err != nil {
 		t.Errorf("RunTofuLintCLI() error = %v, want nil for the experimental notice alone", err)
+	}
+}
+
+func TestRunTofuLintCLI_CleanWarningCards(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = r.Close() }()
+	oldStdout := os.Stdout
+	os.Stdout = w
+	defer func() { os.Stdout = oldStdout }()
+
+	err = RunTofuLintCLI(
+		nil,
+		func() bool { return true },
+		func() (string, error) { return "OpenTofu v1.13.0", nil },
+		func() (string, error) { return "/repo", nil },
+		func(string) ([]string, error) { return []string{"/repo"}, nil },
+		func(string, []string) (string, error) { return "", nil },
+		func(string, []string) (string, error) {
+			return `Warning: Input variable not used (core:unused-variable)
+  on variables.tofu line 67:
+  67: variable "state_bucket" {
+Found no usage of the variable "state_bucket".
+Warning: Input variable not used (core:unused-variable)
+  on variables.tofu line 72:
+  72: variable "state_prefix" {
+Found no usage of the variable "state_prefix".
+Warning: Experimental linting enabled
+The linting functionality is under active development and may change or break
+in future releases. You can provide feedback by opening a new issue.
+Success! The configuration is valid, but there were some validation warnings
+as shown above.`, nil
+		},
+	)
+	if err != nil {
+		t.Errorf("RunTofuLintCLI() error = %v, want nil for warnings", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	captured, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(captured)
+	want := `╭─ [WARNING] Input variable not used
+│  📄 repo/variables.tofu:67
+│  🏷  core:unused-variable
+│
+│  Found no usage of the variable "state_bucket".
+╰─
+
+╭─ [WARNING] Input variable not used
+│  📄 repo/variables.tofu:72
+│  🏷  core:unused-variable
+│
+│  Found no usage of the variable "state_prefix".
+╰─
+`
+	if got != want {
+		t.Errorf("output = %q, want %q", got, want)
 	}
 }
 
@@ -132,7 +196,7 @@ func TestTofuLintFixtures(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "pass"},
-		{name: "fail", wantErr: true},
+		{name: "fail"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir, cleanup := testutil.CreateTempDir(t, "tofu-lint-fixture")
@@ -188,7 +252,9 @@ func TestRunTofuLintCLI_InitAndLintErrors(t *testing.T) {
 			func() (string, error) { return "/repo", nil },
 			func(string) ([]string, error) { return []string{"/repo"}, nil },
 			func(string, []string) (string, error) { return "", nil },
-			func(string, []string) (string, error) { return "lint output", lintErr },
+			func(string, []string) (string, error) {
+				return "Warning: Input variable not used (core:unused-variable)\nUnused variable.\nError: Invalid configuration\nValidation failed.", lintErr
+			},
 		)
 		if err == nil {
 			t.Fatal("RunTofuLintCLI() error = nil, want lint command error")
