@@ -9,7 +9,12 @@ import (
 
 func TestRunTofuScanCLI(t *testing.T) {
 	noViolations := &engine.RunResult{Violations: []engine.Violation{}}
-	oneViolation := &engine.RunResult{Violations: []engine.Violation{{RuleID: "CIS-1.1", File: "main.tofu"}}}
+	oneViolation := &engine.RunResult{Violations: []engine.Violation{{RuleID: "CIS-1.1", File: "main.tofu", Severity: "High"}}}
+	mediumViolation := &engine.RunResult{Violations: []engine.Violation{{RuleID: "CIS-1.2", File: "main.tofu", Severity: "Medium"}}}
+	mixedViolations := &engine.RunResult{Violations: []engine.Violation{
+		{RuleID: "CIS-1.1", File: "main.tofu", Severity: "High"},
+		{RuleID: "CIS-1.2", File: "main.tofu", Severity: "Medium"},
+	}}
 	noSkips := engine.ParseSkipDirectives([]string{})
 
 	cases := []struct {
@@ -65,6 +70,20 @@ func TestRunTofuScanCLI(t *testing.T) {
 			files:    []string{"main.tofu"},
 			result:   oneViolation,
 			wantExit: exitSuccess,
+		},
+		{
+			name:     "medium violations do not fail",
+			paths:    []string{"."},
+			files:    []string{"main.tofu"},
+			result:   mediumViolation,
+			wantExit: exitSuccess,
+		},
+		{
+			name:     "high violations fail alongside medium warnings",
+			paths:    []string{"."},
+			files:    []string{"main.tofu"},
+			result:   mixedViolations,
+			wantExit: exitFailure,
 		},
 	}
 

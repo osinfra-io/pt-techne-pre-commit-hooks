@@ -92,8 +92,17 @@ func RunTofuScanCLI(
 
 	printOutput(violations, skipped, result.ResourceTypes)
 
-	if len(violations) > 0 && !warnOnly {
+	if hasBlockingViolations(violations) && !warnOnly {
 		exit(exitFailure)
 	}
 	return nil
+}
+
+func hasBlockingViolations(violations []engine.Violation) bool {
+	for _, violation := range violations {
+		if violation.Severity != "Medium" {
+			return true
+		}
+	}
+	return false
 }

@@ -110,7 +110,7 @@ Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies us
       # args: ["--warn-only"]
 ```
 
-`--warn-only` allows commits to pass even when violations are found. Violations are still printed so they remain visible.
+High-severity violations fail the hook. Medium-severity violations are shown as warnings and do not fail it; unclassified severities fail conservatively. `--warn-only` allows commits to pass even when blocking violations are found. Findings are still printed so they remain visible.
 
 #### Skipping violations
 

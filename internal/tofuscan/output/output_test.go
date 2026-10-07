@@ -104,6 +104,22 @@ func TestPrintSummary_IncludesPassedRules(t *testing.T) {
 	}
 }
 
+func TestPrint_MediumViolationUsesWarningBadge(t *testing.T) {
+	out := captureStdout(t, func() {
+		printViolation(engine.Violation{
+			Severity: "Medium",
+			Title:    "Advisory check",
+		})
+	})
+
+	if !strings.Contains(out, "[WARNING]") {
+		t.Fatalf("expected medium violation to use warning badge, output: %s", out)
+	}
+	if strings.Contains(out, "[FAIL]") {
+		t.Fatalf("medium violation must not use fail badge, output: %s", out)
+	}
+}
+
 func TestPrint_NoViolationsNoResources(t *testing.T) {
 	// When Print is called with no resource types, we cannot determine
 	// whether rules were evaluated against matching resources or simply

@@ -55,7 +55,7 @@ func Print(violations []engine.Violation, skipped []engine.Violation, resourceTy
 		printed = true
 	}
 
-	// Print failing violation cards sorted by severity ascending (low → medium → high).
+	// Print violations sorted by severity ascending (low → medium → high).
 	sorted := sortBySeverity(violations)
 	for _, v := range sorted {
 		if printed {
@@ -131,7 +131,7 @@ func printSummary(violations, skipped []engine.Violation, resourceTypes map[stri
 		return
 	}
 
-	// Failure breakdown on separate lines.
+	// Severity breakdown on separate lines.
 	if highCount > 0 {
 		fmt.Printf("     • %s%d high%s\n", output.BoldRed, highCount, output.Reset)
 	}
@@ -181,7 +181,11 @@ func printViolation(v engine.Violation) {
 		fileRef = fmt.Sprintf("%s%s  %s(resource absent from file)%s", output.Gray, p, output.DarkGray, output.Reset)
 	}
 
-	badge := output.Badge("FAIL", boldCol)
+	badgeText := "FAIL"
+	if v.Severity == "Medium" {
+		badgeText = "WARNING"
+	}
+	badge := output.Badge(badgeText, boldCol)
 	title := output.Title(v.Title)
 
 	c.Open(badge, title)
