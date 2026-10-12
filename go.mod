@@ -1,10 +1,10 @@
 module pre-commit-hooks
 
-go 1.26.3
+go 1.26.8
 
 require (
 	github.com/hashicorp/hcl/v2 v2.25.0
-	github.com/open-policy-agent/conftest v0.71.0
+	github.com/open-policy-agent/conftest v0.71.1
 	github.com/open-policy-agent/opa v1.21.1
 	github.com/zclconf/go-cty v1.19.0
 	golang.org/x/term v0.46.0
@@ -49,7 +49,7 @@ require (
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
 	github.com/magiconair/properties v1.18.12 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
-	github.com/moby/buildkit v0.33.0 // indirect
+	github.com/moby/buildkit v0.33.1 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/muhammadmuzzammil1998/jsonc v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
