@@ -13,6 +13,10 @@
 # Go test coverage
 coverage.out
 
+# OpenTofu
+.terraform/
+.terraform.lock.hcl
+
 # Other Files
 *.log
 *.bak
