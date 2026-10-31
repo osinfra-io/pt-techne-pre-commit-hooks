@@ -14,7 +14,7 @@ deny contains violation if {
 	some resource in resources
 	not _is_vpc_native(resource)
 	violation := {
-		"resource": concat(".", ["google_container_cluster", name]),
+		"resource": $"google_container_cluster.{name}",
 		"rule_id": "gke/cis/5.6.2",
 		"cis_control": "5.6.2",
 		"profile_level": "Level 1",

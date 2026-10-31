@@ -17,7 +17,7 @@ deny contains violation if {
 	some flag in object.get(settings, "database_flags", [])
 	flag.name == "user options"
 	violation := {
-		"resource": concat(".", ["google_sql_database_instance", name]),
+		"resource": $"google_sql_database_instance.{name}",
 		"rule_id": "gcp/cis/6.3.4",
 		"cis_control": "6.3.4",
 		"profile_level": "Level 1",

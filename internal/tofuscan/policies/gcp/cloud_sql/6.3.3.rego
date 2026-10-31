@@ -18,7 +18,7 @@ deny contains violation if {
 	flag.name == "user connections"
 	flag.value != "0"
 	violation := {
-		"resource": concat(".", ["google_sql_database_instance", name]),
+		"resource": $"google_sql_database_instance.{name}",
 		"rule_id": "gcp/cis/6.3.3",
 		"cis_control": "6.3.3",
 		"profile_level": "Level 1",

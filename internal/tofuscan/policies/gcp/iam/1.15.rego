@@ -15,7 +15,7 @@ deny contains violation if {
 	some resource in resources
 	not _has_api_targets(resource)
 	violation := {
-		"resource": concat(".", ["google_apikeys_key", name]),
+		"resource": $"google_apikeys_key.{name}",
 		"rule_id": "gcp/cis/1.15",
 		"cis_control": "1.15",
 		"profile_level": "Level 2",

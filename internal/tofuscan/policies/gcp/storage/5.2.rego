@@ -16,7 +16,7 @@ deny contains violation if {
 	not lib.is_unresolved(value)
 	value != true
 	violation := {
-		"resource": concat(".", ["google_storage_bucket", name]),
+		"resource": $"google_storage_bucket.{name}",
 		"rule_id": "gcp/cis/5.2",
 		"cis_control": "5.2",
 		"profile_level": "Level 2",

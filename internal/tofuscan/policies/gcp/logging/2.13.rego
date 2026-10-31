@@ -32,7 +32,7 @@ deny contains violation if {
 	some resource in resources
 	not resource.enable_logging == true
 	violation := {
-		"resource": concat(".", ["google_dns_policy", name]),
+		"resource": $"google_dns_policy.{name}",
 		"rule_id": "gcp/cis/2.13",
 		"cis_control": "2.13",
 		"profile_level": "Level 1",

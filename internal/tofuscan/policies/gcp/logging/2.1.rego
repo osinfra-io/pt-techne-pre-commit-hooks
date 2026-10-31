@@ -19,7 +19,7 @@ deny contains violation if {
 	existing_types := {config.log_type | some config in log_configs}
 	count(_required_log_types - existing_types) > 0
 	violation := {
-		"resource": concat(".", ["google_project_iam_audit_config", name]),
+		"resource": $"google_project_iam_audit_config.{name}",
 		"rule_id": "gcp/cis/2.1",
 		"cis_control": "2.1",
 		"profile_level": "Level 2",
@@ -38,7 +38,7 @@ deny contains violation if {
 	members := object.get(log_config, "exempted_members", [])
 	count(members) > 0
 	violation := {
-		"resource": concat(".", ["google_project_iam_audit_config", name]),
+		"resource": $"google_project_iam_audit_config.{name}",
 		"rule_id": "gcp/cis/2.1",
 		"cis_control": "2.1",
 		"profile_level": "Level 2",

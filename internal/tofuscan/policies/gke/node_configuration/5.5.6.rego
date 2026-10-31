@@ -22,7 +22,7 @@ deny contains violation if {
 	not lib.is_unresolved(value)
 	value != true
 	violation := {
-		"resource": concat(".", ["google_container_node_pool", name]),
+		"resource": $"google_container_node_pool.{name}",
 		"rule_id": "gke/cis/5.5.6",
 		"cis_control": "5.5.6",
 		"profile_level": "Level 2",

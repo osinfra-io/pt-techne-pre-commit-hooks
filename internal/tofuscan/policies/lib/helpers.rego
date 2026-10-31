@@ -77,7 +77,7 @@ alert_exists_for_metric(metric_name) if {
 	some resource in resources
 	some condition in object.get(resource, "conditions", [])
 	some threshold in object.get(condition, "condition_threshold", [])
-	contains(object.get(threshold, "filter", ""), concat("", ["metric.type=\"logging.googleapis.com/user/", metric_name, "\""]))
+	contains(object.get(threshold, "filter", ""), $"metric.type=\"logging.googleapis.com/user/{metric_name}\"")
 }
 
 # port_covered returns true when target (a number) is matched by any entry in

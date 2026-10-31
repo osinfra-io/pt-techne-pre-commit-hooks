@@ -19,7 +19,7 @@ deny contains violation if {
 	not lib.is_unresolved(value)
 	value != true
 	violation := {
-		"resource": concat(".", ["google_sql_database_instance", name]),
+		"resource": $"google_sql_database_instance.{name}",
 		"rule_id": "gcp/cis/6.8",
 		"cis_control": "6.8",
 		"profile_level": "Level 1",

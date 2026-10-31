@@ -21,7 +21,7 @@ deny contains violation if {
 	annotations := object.get(metadata, "annotations", {})
 	object.get(annotations, "networking.gke.io/managed-certificates", "") == ""
 	violation := {
-		"resource": concat(".", ["kubernetes_manifest", name]),
+		"resource": $"kubernetes_manifest.{name}",
 		"rule_id": "gke/cis/5.6.7",
 		"cis_control": "5.6.7",
 		"profile_level": "Level 1",
@@ -46,7 +46,7 @@ deny contains violation if {
 	count(tls) > 0
 	object.get(annotations, "networking.gke.io/managed-certificates", "") == ""
 	violation := {
-		"resource": concat(".", ["kubernetes_ingress_v1", name]),
+		"resource": $"kubernetes_ingress_v1.{name}",
 		"rule_id": "gke/cis/5.6.7",
 		"cis_control": "5.6.7",
 		"profile_level": "Level 1",

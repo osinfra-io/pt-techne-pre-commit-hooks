@@ -15,7 +15,7 @@ deny contains violation if {
 	some resource in resources
 	resource.name == "default"
 	violation := {
-		"resource": concat(".", ["google_compute_network", name]),
+		"resource": $"google_compute_network.{name}",
 		"rule_id": "gcp/cis/3.1",
 		"cis_control": "3.1",
 		"profile_level": "Level 1",
@@ -34,7 +34,7 @@ deny contains violation if {
 	not lib.is_unresolved(value)
 	value != false
 	violation := {
-		"resource": concat(".", ["google_project", name]),
+		"resource": $"google_project.{name}",
 		"rule_id": "gcp/cis/3.1",
 		"cis_control": "3.1",
 		"profile_level": "Level 1",

@@ -13,7 +13,7 @@ deny contains violation if {
 	some resource in resources
 	object.get(resource, "key_type", "USER_MANAGED") != "GOOGLE_MANAGED"
 	violation := {
-		"resource": concat(".", ["google_iam_service_account_key", name]),
+		"resource": $"google_iam_service_account_key.{name}",
 		"rule_id": "gcp/cis/1.5",
 		"cis_control": "1.5",
 		"profile_level": "Level 1",

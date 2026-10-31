@@ -18,7 +18,7 @@ deny contains violation if {
 	retention := retention_policies[0]
 	not object.get(retention, "is_locked", false) == true
 	violation := {
-		"resource": concat(".", ["google_storage_bucket", name]),
+		"resource": $"google_storage_bucket.{name}",
 		"rule_id": "gcp/cis/2.4",
 		"cis_control": "2.4",
 		"profile_level": "Level 1",

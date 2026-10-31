@@ -15,7 +15,7 @@ deny contains violation if {
 	some sc in object.get(nc, "sandbox_config", [{}])
 	upper(object.get(sc, "sandbox_type", "")) != "GVISOR"
 	violation := {
-		"resource": concat(".", ["google_container_node_pool", name]),
+		"resource": $"google_container_node_pool.{name}",
 		"rule_id": "gke/cis/5.10.3",
 		"cis_control": "5.10.3",
 		"profile_level": "Level 2",

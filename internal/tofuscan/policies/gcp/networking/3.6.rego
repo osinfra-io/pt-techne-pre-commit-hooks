@@ -19,7 +19,7 @@ deny contains violation if {
 	some cidr in resource.source_ranges
 	lib.is_public_cidr(cidr)
 	violation := {
-		"resource": concat(".", ["google_compute_firewall", name]),
+		"resource": $"google_compute_firewall.{name}",
 		"rule_id": "gcp/cis/3.6",
 		"cis_control": "3.6",
 		"profile_level": "Level 1",
@@ -39,7 +39,7 @@ deny contains violation if {
 	some cidr in resource.source_ranges
 	lib.is_public_cidr(cidr)
 	violation := {
-		"resource": concat(".", ["google_compute_firewall", name]),
+		"resource": $"google_compute_firewall.{name}",
 		"rule_id": "gcp/cis/3.6",
 		"cis_control": "3.6",
 		"profile_level": "Level 1",
@@ -58,7 +58,7 @@ deny contains violation if {
 	some cidr in resource.source_ranges
 	lib.is_public_cidr(cidr)
 	violation := {
-		"resource": concat(".", ["google_compute_firewall", name]),
+		"resource": $"google_compute_firewall.{name}",
 		"rule_id": "gcp/cis/3.6",
 		"cis_control": "3.6",
 		"profile_level": "Level 1",

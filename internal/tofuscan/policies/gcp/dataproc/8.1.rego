@@ -17,7 +17,7 @@ deny contains violation if {
 	some enc in enc_arr
 	object.get(enc, "kms_key_name", "") == ""
 	violation := {
-		"resource": concat(".", ["google_dataproc_cluster", name]),
+		"resource": $"google_dataproc_cluster.{name}",
 		"rule_id": "gcp/cis/8.1",
 		"cis_control": "8.1",
 		"profile_level": "Level 2",
