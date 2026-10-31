@@ -46,7 +46,8 @@ func newLintRunner() func(string, []string) (string, error) {
 			}
 			used, err = referencedDeclarations(dirs)
 			if err != nil {
-				return "", err
+				fmt.Fprintf(os.Stderr, "Shared lint indexing failed; reporting unfiltered lint diagnostics: %v\n", err)
+				used = make(map[declaration]bool)
 			}
 		}
 		cmd := exec.Command("tofu", append(args, "-json")...)
@@ -100,16 +101,28 @@ func referencedDeclarations(dirs []string) (map[declaration]bool, error) {
 	used := make(map[declaration]bool)
 	byDir := make(map[string]map[string]declaration)
 	for _, dir := range dirs {
+		canonicalDir, err := filepath.EvalSymlinks(dir)
+		if err != nil {
+			return nil, err
+		}
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			return nil, err
 		}
 		declarations := make(map[string]declaration)
-		byDir[dir] = declarations
+		byDir[canonicalDir] = declarations
+		names := make(map[string]bool, len(entries))
+		for _, entry := range entries {
+			names[entry.Name()] = true
+		}
 		var references []hcl.Traversal
 		for _, entry := range entries {
 			name := entry.Name()
-			if entry.IsDir() || !strings.HasSuffix(name, ".tofu") && !strings.HasSuffix(name, ".tf") {
+			if entry.IsDir() || ignoredConfigFilename(name) ||
+				!strings.HasSuffix(name, ".tofu") && !strings.HasSuffix(name, ".tf") {
+				continue
+			}
+			if strings.HasSuffix(name, ".tf") && names[strings.TrimSuffix(name, ".tf")+".tofu"] {
 				continue
 			}
 			path := filepath.Join(dir, name)
@@ -153,6 +166,9 @@ func referencedDeclarations(dirs []string) (map[declaration]bool, error) {
 				return nil, err
 			}
 			for _, path := range paths {
+				if ignoredConfigFilename(filepath.Base(path)) {
+					continue
+				}
 				raw, err := os.ReadFile(path)
 				if err != nil {
 					return nil, err
@@ -176,17 +192,28 @@ func referencedDeclarations(dirs []string) (map[declaration]bool, error) {
 							}
 						}
 					}
-					_ = hclsyntax.VisitAll(run.Body, func(node hclsyntax.Node) hcl.Diagnostics {
-						if attribute, ok := node.(*hclsyntax.Attribute); ok {
-							markReferences(attribute.Expr.Variables(), byDir[moduleDir], used)
+					canonicalDir, err := filepath.EvalSymlinks(moduleDir)
+					if err != nil {
+						continue
+					}
+					for _, block := range run.Body.Blocks {
+						if block.Type != "assert" {
+							continue
 						}
-						return nil
-					})
+						for _, attribute := range block.Body.Attributes {
+							markReferences(attribute.Expr.Variables(), byDir[canonicalDir], used)
+						}
+					}
 				}
 			}
 		}
 	}
 	return used, nil
+}
+
+func ignoredConfigFilename(name string) bool {
+	return strings.HasPrefix(name, ".") || strings.HasSuffix(name, "~") ||
+		strings.HasPrefix(name, "#") && strings.HasSuffix(name, "#")
 }
 
 func markReferences(references []hcl.Traversal, declarations map[string]declaration, used map[declaration]bool) {
