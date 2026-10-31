@@ -14,7 +14,7 @@ deny contains violation if {
 	some resource in resources
 	not resource.confidential_instance_config
 	violation := {
-		"resource": concat(".", ["google_compute_instance", name]),
+		"resource": $"google_compute_instance.{name}",
 		"rule_id": "gcp/cis/4.11",
 		"cis_control": "4.11",
 		"profile_level": "Level 2",
@@ -32,7 +32,7 @@ deny contains violation if {
 	not lib.is_unresolved(value)
 	value != true
 	violation := {
-		"resource": concat(".", ["google_compute_instance", name]),
+		"resource": $"google_compute_instance.{name}",
 		"rule_id": "gcp/cis/4.11",
 		"cis_control": "4.11",
 		"profile_level": "Level 2",

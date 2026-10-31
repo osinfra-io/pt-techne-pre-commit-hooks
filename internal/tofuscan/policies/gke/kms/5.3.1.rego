@@ -14,7 +14,7 @@ deny contains violation if {
 	some enc in enc_arr
 	object.get(enc, "state", "DECRYPTED") != "ENCRYPTED"
 	violation := {
-		"resource": concat(".", ["google_container_cluster", name]),
+		"resource": $"google_container_cluster.{name}",
 		"rule_id": "gke/cis/5.3.1",
 		"cis_control": "5.3.1",
 		"profile_level": "Level 2",

@@ -15,7 +15,7 @@ deny contains violation if {
 	log_configs := object.get(resource, "log_config", [])
 	not _logging_enabled(log_configs)
 	violation := {
-		"resource": concat(".", ["google_compute_backend_service", name]),
+		"resource": $"google_compute_backend_service.{name}",
 		"rule_id": "gcp/cis/2.17",
 		"cis_control": "2.17",
 		"profile_level": "Level 2",
@@ -34,7 +34,7 @@ deny contains violation if {
 	object.get(log_config, "enable", false) == true
 	object.get(log_config, "sample_rate", 1) == 0
 	violation := {
-		"resource": concat(".", ["google_compute_backend_service", name]),
+		"resource": $"google_compute_backend_service.{name}",
 		"rule_id": "gcp/cis/2.17",
 		"cis_control": "2.17",
 		"profile_level": "Level 2",

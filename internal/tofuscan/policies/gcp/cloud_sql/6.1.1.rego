@@ -19,7 +19,7 @@ deny contains violation if {
 	lib.is_mysql(inst_resource)
 	user_resource.instance == inst_resource.name
 	violation := {
-		"resource": concat(".", ["google_sql_user", user_name]),
+		"resource": $"google_sql_user.{user_name}",
 		"rule_id": "gcp/cis/6.1.1",
 		"cis_control": "6.1.1",
 		"profile_level": "Level 1",

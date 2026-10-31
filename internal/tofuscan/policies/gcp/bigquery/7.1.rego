@@ -17,7 +17,7 @@ deny contains violation if {
 	some access in resource.access
 	access.special_group in _bq_public_groups
 	violation := {
-		"resource": concat(".", ["google_bigquery_dataset", name]),
+		"resource": $"google_bigquery_dataset.{name}",
 		"rule_id": "gcp/cis/7.1",
 		"cis_control": "7.1",
 		"profile_level": "Level 1",
@@ -34,7 +34,7 @@ deny contains violation if {
 	some access in resource.access
 	object.get(access, "iam_member", "") in _bq_public_groups
 	violation := {
-		"resource": concat(".", ["google_bigquery_dataset", name]),
+		"resource": $"google_bigquery_dataset.{name}",
 		"rule_id": "gcp/cis/7.1",
 		"cis_control": "7.1",
 		"profile_level": "Level 1",
@@ -49,7 +49,7 @@ deny contains violation if {
 	some resource in resources
 	resource.member in _bq_public_groups
 	violation := {
-		"resource": concat(".", ["google_bigquery_dataset_iam_member", name]),
+		"resource": $"google_bigquery_dataset_iam_member.{name}",
 		"rule_id": "gcp/cis/7.1",
 		"cis_control": "7.1",
 		"profile_level": "Level 1",
@@ -65,7 +65,7 @@ deny contains violation if {
 	some member in resource.members
 	member in _bq_public_groups
 	violation := {
-		"resource": concat(".", ["google_bigquery_dataset_iam_binding", name]),
+		"resource": $"google_bigquery_dataset_iam_binding.{name}",
 		"rule_id": "gcp/cis/7.1",
 		"cis_control": "7.1",
 		"profile_level": "Level 1",
@@ -80,7 +80,7 @@ deny contains violation if {
 	some resource in resources
 	lib.policy_data_public(object.get(resource, "policy_data", ""))
 	violation := {
-		"resource": concat(".", ["google_bigquery_dataset_iam_policy", name]),
+		"resource": $"google_bigquery_dataset_iam_policy.{name}",
 		"rule_id": "gcp/cis/7.1",
 		"cis_control": "7.1",
 		"profile_level": "Level 1",

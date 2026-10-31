@@ -16,7 +16,7 @@ deny contains violation if {
 	not lib.truthy(object.get(metadata, "block-project-ssh-keys", false))
 	not lib.truthy(object.get(metadata, "enable-oslogin", false))
 	violation := {
-		"resource": concat(".", ["google_compute_instance", name]),
+		"resource": $"google_compute_instance.{name}",
 		"rule_id": "gcp/cis/4.3",
 		"cis_control": "4.3",
 		"profile_level": "Level 1",

@@ -17,7 +17,7 @@ deny contains violation if {
 	some resource in resources
 	not _vuln_scanning_enabled(resource)
 	violation := {
-		"resource": concat(".", ["google_container_cluster", name]),
+		"resource": $"google_container_cluster.{name}",
 		"rule_id": "gke/cis/5.1.1",
 		"cis_control": "5.1.1",
 		"profile_level": "Level 1",

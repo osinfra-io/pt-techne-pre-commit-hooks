@@ -33,7 +33,7 @@ deny contains violation if {
 	some key, _ in env_vars
 	_key_looks_like_secret(key)
 	violation := {
-		"resource": concat(".", ["google_cloudfunctions_function", name]),
+		"resource": $"google_cloudfunctions_function.{name}",
 		"rule_id": "gcp/cis/1.18",
 		"cis_control": "1.18",
 		"profile_level": "Level 1",
@@ -54,7 +54,7 @@ deny contains violation if {
 	some key, _ in env_vars
 	_key_looks_like_secret(key)
 	violation := {
-		"resource": concat(".", ["google_cloudfunctions2_function", name]),
+		"resource": $"google_cloudfunctions2_function.{name}",
 		"rule_id": "gcp/cis/1.18",
 		"cis_control": "1.18",
 		"profile_level": "Level 1",

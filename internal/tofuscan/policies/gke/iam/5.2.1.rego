@@ -18,7 +18,7 @@ deny contains violation if {
 	sa := lower(raw)
 	_is_default_gke_sa(sa)
 	violation := {
-		"resource": concat(".", ["google_container_node_pool", name]),
+		"resource": $"google_container_node_pool.{name}",
 		"rule_id": "gke/cis/5.2.1",
 		"cis_control": "5.2.1",
 		"profile_level": "Level 1",
