@@ -21,7 +21,7 @@ func main() {
 		os.Getwd,
 		tofudir.FindDirsWithTofuFiles,
 		runCmdInDir,
-		runTofuLint,
+		newLintRunner(),
 	)
 	if err != nil {
 		os.Exit(1)
@@ -103,6 +103,9 @@ func RunTofuLintCLI(
 		lintArgs := append([]string{"validate", "-no-color"}, extraArgs...)
 		lintArgs = append(lintArgs, "-lint=all")
 		out, err = runLint(dir, lintArgs)
+		if err != nil && strings.TrimSpace(out) == "" {
+			out = err.Error()
+		}
 		if output.HasLintWarning(out) {
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "lint", RelPath: fullPath, Output: out})
 		}
@@ -144,13 +147,6 @@ func parseOpenTofuVersion(versionOutput string) (string, int, int, error) {
 
 func getOpenTofuVersion() (string, error) {
 	cmd := exec.Command("tofu", "version")
-	out, err := cmd.CombinedOutput()
-	return string(out), err
-}
-
-func runTofuLint(dir string, args []string) (string, error) {
-	cmd := exec.Command("tofu", args...)
-	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	return string(out), err
 }

@@ -217,7 +217,7 @@ func TestTofuLintFixtures(t *testing.T) {
 				func() (string, error) { return tempDir, nil },
 				tofudir.FindDirsWithTofuFiles,
 				runCmdInDir,
-				runTofuLint,
+				newLintRunner(),
 			)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("RunTofuLintCLI() error = %v, wantErr %v", err, tc.wantErr)

@@ -25,6 +25,8 @@ Runs `tofu validate` to check your configuration for syntax errors and internal 
 
 Runs `tofu validate -lint=all` in each directory containing OpenTofu configuration. Warnings are advisory and do not fail the hook; initialization or validation errors still fail it. Each warning uses a scan-style `[WARNING]` card with its title, file and line, rule ID, and description. Source excerpts, the experimental notice, and the validation success footer are omitted. This hook requires OpenTofu v1.13 or newer, where built-in linting is experimental and its rules may change.
 
+Unused-local and unused-variable warnings account for shared files: a declaration referenced by any configuration loading the same canonical file is not reported as unused in a partial fixture or shared-file directory. Test assertions in root and default `tests/` test files also count as variable usage in the run's selected module. Unrelated declarations with the same name do not count, and genuinely unused declarations and validation errors remain visible.
+
 ### tofu-test
 
 #### Runs OpenTofu automated tests
