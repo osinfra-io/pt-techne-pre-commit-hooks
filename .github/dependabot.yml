@@ -5,6 +5,8 @@ version: 2
 updates:
   - package-ecosystem: gomod
     directory: /
+    cooldown:
+      default-days: 7
     schedule:
       interval: daily
     groups:
@@ -17,6 +19,8 @@ updates:
     # NOTE: The "/" here is for checking for workflow files in .github/workflows
 
     directory: /
+    cooldown:
+      default-days: 7
     schedule:
       interval: daily
     groups:
@@ -26,6 +30,8 @@ updates:
 
   - package-ecosystem: pre-commit
     directory: /
+    cooldown:
+      default-days: 7
     schedule:
       interval: daily
     groups:
