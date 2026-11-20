@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"pre-commit-hooks/internal/output"
-	"pre-commit-hooks/internal/testutil"
-	"pre-commit-hooks/internal/tofudir"
+	"tofu-pre-commit-hooks/internal/output"
+	"tofu-pre-commit-hooks/internal/testutil"
+	"tofu-pre-commit-hooks/internal/tofudir"
 )
 
 func main() {

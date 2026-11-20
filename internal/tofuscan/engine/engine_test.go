@@ -9,7 +9,7 @@ import (
 
 	"github.com/open-policy-agent/conftest/parser"
 
-	"pre-commit-hooks/internal/tofuscan/policies"
+	"tofu-pre-commit-hooks/internal/tofuscan/policies"
 )
 
 func TestFailFixtureViolations(t *testing.T) {

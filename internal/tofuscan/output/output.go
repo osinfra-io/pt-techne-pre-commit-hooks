@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"pre-commit-hooks/internal/output"
-	"pre-commit-hooks/internal/tofuscan/engine"
-	"pre-commit-hooks/internal/tofuscan/policies"
+	"tofu-pre-commit-hooks/internal/output"
+	"tofu-pre-commit-hooks/internal/tofuscan/engine"
+	"tofu-pre-commit-hooks/internal/tofuscan/policies"
 )
 
 const descWrapWidth = 76

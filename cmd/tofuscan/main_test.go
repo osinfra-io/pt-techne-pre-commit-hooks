@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"pre-commit-hooks/internal/tofuscan/engine"
+	"tofu-pre-commit-hooks/internal/tofuscan/engine"
 )
 
 func TestRunTofuScanCLI(t *testing.T) {

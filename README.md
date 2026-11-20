@@ -1,7 +1,7 @@
-# Hooks for Infrastructure as Code (IaC) tools
+# OpenTofu Pre-Commit Hooks
 
-[![Go Tests](https://img.shields.io/github/actions/workflow/status/osinfra-io/pt-techne-pre-commit-hooks/go-test.yml?style=for-the-badge&logo=go&color=00ADD8&label=Go%20Tests)](https://github.com/osinfra-io/pt-techne-pre-commit-hooks/actions/workflows/go-test.yml)
-[![Dependabot](https://img.shields.io/github/actions/workflow/status/osinfra-io/pt-techne-pre-commit-hooks/dependabot.yml?style=for-the-badge&logo=github&color=2088FF&label=Dependabot)](https://github.com/osinfra-io/pt-techne-pre-commit-hooks/actions/workflows/dependabot.yml)
+[![Go Tests](https://img.shields.io/github/actions/workflow/status/osinfra-io/tofu-pre-commit-hooks/go-test.yml?style=for-the-badge&logo=go&color=00ADD8&label=Go%20Tests)](https://github.com/osinfra-io/tofu-pre-commit-hooks/actions/workflows/go-test.yml)
+[![Dependabot](https://img.shields.io/github/actions/workflow/status/osinfra-io/tofu-pre-commit-hooks/dependabot.yml?style=for-the-badge&logo=github&color=2088FF&label=Dependabot)](https://github.com/osinfra-io/tofu-pre-commit-hooks/actions/workflows/dependabot.yml)
 
 This repository contains a collection of hooks for Infrastructure as Code (IaC) tools. The hooks are designed to be used with [pre-commit](https://pre-commit.com/), a framework for managing and maintaining multi-language pre-commit hooks.
 
@@ -50,7 +50,7 @@ To use these hooks, add them to your `.pre-commit-config.yaml` file. Below are e
 Formats your OpenTofu configuration files to a canonical format and style.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+- repo: https://github.com/osinfra-io/tofu-pre-commit-hooks
   rev: <release-or-commit-sha>
   hooks:
     - id: tofu-fmt
@@ -61,7 +61,7 @@ Formats your OpenTofu configuration files to a canonical format and style.
 Validates your OpenTofu configuration files for syntax and internal consistency.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+- repo: https://github.com/osinfra-io/tofu-pre-commit-hooks
   rev: <release-or-commit-sha>
   hooks:
     - id: tofu-validate
@@ -74,7 +74,7 @@ Validates your OpenTofu configuration files for syntax and internal consistency.
 Runs OpenTofu's experimental built-in lint rules. It requires OpenTofu v1.13 or newer. Warnings are advisory; initialization or validation errors fail the hook. Use `pre-commit run tofu-lint --all-files --verbose` to see warning cards when the hook passes.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+- repo: https://github.com/osinfra-io/tofu-pre-commit-hooks
   rev: <release-or-commit-sha>
   hooks:
     - id: tofu-lint
@@ -85,7 +85,7 @@ Runs OpenTofu's experimental built-in lint rules. It requires OpenTofu v1.13 or 
 Runs OpenTofu automated tests defined in `.tftest.hcl` files.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+- repo: https://github.com/osinfra-io/tofu-pre-commit-hooks
   rev: <release-or-commit-sha>
   hooks:
     - id: tofu-test
@@ -103,7 +103,7 @@ Both equals-form (`-filter=TestFoo`) and split-form (`-filter TestFoo`) flags ar
 Checks OpenTofu files against CIS Google Cloud Foundations Benchmark policies using OPA/Rego. Covers CIS Google Cloud Platform Foundation Benchmark v5.0.0 and CIS Google Kubernetes Engine (GKE) Benchmark v1.8.0.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
+- repo: https://github.com/osinfra-io/tofu-pre-commit-hooks
   rev: <release-or-commit-sha>
   hooks:
     - id: tofu-scan

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"pre-commit-hooks/internal/tofuscan/engine"
-	"pre-commit-hooks/internal/tofuscan/output"
-	"pre-commit-hooks/internal/tofuscan/policies"
-	"pre-commit-hooks/internal/tofuscan/walker"
+	"tofu-pre-commit-hooks/internal/tofuscan/engine"
+	"tofu-pre-commit-hooks/internal/tofuscan/output"
+	"tofu-pre-commit-hooks/internal/tofuscan/policies"
+	"tofu-pre-commit-hooks/internal/tofuscan/walker"
 )
 
 // Exit codes.

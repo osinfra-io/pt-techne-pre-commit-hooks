@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 
-	"pre-commit-hooks/internal/tofudir"
+	"tofu-pre-commit-hooks/internal/tofudir"
 )
 
 type declaration struct {
