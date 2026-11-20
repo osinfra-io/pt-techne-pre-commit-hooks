@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"pre-commit-hooks/internal/tofuscan/engine"
+	"tofu-pre-commit-hooks/internal/tofuscan/engine"
 )
 
 func TestTruncatePath(t *testing.T) {

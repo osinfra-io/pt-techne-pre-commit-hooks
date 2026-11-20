@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"pre-commit-hooks/internal/testutil"
+	"tofu-pre-commit-hooks/internal/testutil"
 )
 
 func TestRunTofuTestCLI_TofuNotInstalled(t *testing.T) {
